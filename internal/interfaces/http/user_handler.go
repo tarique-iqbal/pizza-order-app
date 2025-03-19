@@ -15,19 +15,19 @@ func NewUserHandler(createUserUseCase *user.CreateUserUseCase) *UserHandler {
 	return &UserHandler{createUserUseCase}
 }
 
-func (h *UserHandler) CreateUser(c *gin.Context) {
+func (h *UserHandler) CreateUser(ctx *gin.Context) {
 	var input user.UserCreateDTO
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	response, err := h.createUserUseCase.Execute(input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, response)
+	ctx.JSON(http.StatusCreated, response)
 }

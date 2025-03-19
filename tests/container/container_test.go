@@ -3,6 +3,8 @@ package container_test
 import (
 	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"pizza-order-api/container"
@@ -17,7 +19,11 @@ var testContainer *container.Container
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
 
-	if err := godotenv.Load("../../.env.test"); err != nil {
+	cmd := exec.Command("go", "env", "GOMOD")
+	output, _ := cmd.Output()
+	moduleRoot := filepath.Dir(string(output))
+
+	if err := godotenv.Load(moduleRoot + "/.env.test"); err != nil {
 		log.Fatalf("Error loading .env.test file: %v", err)
 	}
 
@@ -27,9 +33,8 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Failed to initialize test container: %v", err)
 	}
 
-	code := m.Run()
-
-	os.Exit(code)
+	exitCode := m.Run()
+	os.Exit(exitCode)
 }
 
 func TestNewContainer_ShouldInitializeCorrectly(t *testing.T) {
