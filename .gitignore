@@ -17,7 +17,7 @@ Thumbs.db
 *.swp
 
 .env
-.env.local
+.env.test
 
 coverage.out
 
