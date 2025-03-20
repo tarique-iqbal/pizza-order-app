@@ -26,9 +26,10 @@ func NewContainer() (*Container, error) {
 
 	userRepo := persistence.NewUserRepository(database)
 
-	userUseCase := user.NewCreateUserUseCase(userRepo)
+	createUserUseCase := user.NewCreateUserUseCase(userRepo)
+	signInUserUseCase := user.NewSignInUserUseCase(userRepo)
 
-	userHandler := http.NewUserHandler(userUseCase)
+	userHandler := http.NewUserHandler(createUserUseCase, signInUserUseCase)
 
 	return &Container{
 		UserHandler: userHandler,

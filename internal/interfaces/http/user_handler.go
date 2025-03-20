@@ -9,10 +9,14 @@ import (
 
 type UserHandler struct {
 	createUserUseCase *user.CreateUserUseCase
+	signInUseCase     user.SignInUserUseCase
 }
 
-func NewUserHandler(createUserUseCase *user.CreateUserUseCase) *UserHandler {
-	return &UserHandler{createUserUseCase}
+func NewUserHandler(createUserUseCase *user.CreateUserUseCase, signInUseCase user.SignInUserUseCase) *UserHandler {
+	return &UserHandler{
+		createUserUseCase: createUserUseCase,
+		signInUseCase:     signInUseCase,
+	}
 }
 
 func (h *UserHandler) CreateUser(ctx *gin.Context) {
@@ -30,4 +34,24 @@ func (h *UserHandler) CreateUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, response)
+}
+
+func (h *UserHandler) SignIn(ctx *gin.Context) {
+	var req struct {
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, err := h.signInUseCase.Execute(req.Email, req.Password)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"token": token})
 }
