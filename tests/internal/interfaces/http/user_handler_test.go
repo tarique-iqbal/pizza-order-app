@@ -163,7 +163,7 @@ func TestUserHandler_SignIn_Failed(t *testing.T) {
 				"password": "password123",
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: `{"error":"Key: 'Email' Error:Field validation for 'Email' failed on the 'email' tag"}`,
+			expectedBody: `{"errors":[{"field":"Email","message":"Please provide a valid email address."}]}`,
 		},
 		{
 			name: "Invalid Request Body",
@@ -172,7 +172,7 @@ func TestUserHandler_SignIn_Failed(t *testing.T) {
 				"password": "",
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedBody: `{"error":"Key: 'Password' Error:Field validation for 'Password' failed on the 'required' tag"}`,
+			expectedBody: `{"errors":[{"field":"Password","message":"This field is required."}]}`,
 		},
 	}
 

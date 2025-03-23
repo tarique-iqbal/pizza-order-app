@@ -3,6 +3,7 @@ package http
 import (
 	"net/http"
 	"pizza-order-api/internal/application/user"
+	"pizza-order-api/internal/interfaces/http/validation"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +24,8 @@ func (h *UserHandler) CreateUser(ctx *gin.Context) {
 	var input user.UserCreateDTO
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errors := validation.ExtractValidationErrors(err)
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errors})
 		return
 	}
 
@@ -43,7 +45,8 @@ func (h *UserHandler) SignIn(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errors := validation.ExtractValidationErrors(err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"errors": errors})
 		return
 	}
 
