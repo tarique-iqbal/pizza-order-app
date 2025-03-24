@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	appUser "pizza-order-api/internal/application/user"
+	"os"
+	applicationUser "pizza-order-api/internal/application/user"
 	domainUser "pizza-order-api/internal/domain/user"
 	"pizza-order-api/internal/infrastructure/persistence"
 	"pizza-order-api/internal/infrastructure/security"
+	infrastructureValidator "pizza-order-api/internal/infrastructure/validator"
 	interfacesHttp "pizza-order-api/internal/interfaces/http"
 	"testing"
 	"time"
@@ -19,20 +21,43 @@ import (
 	"gorm.io/gorm"
 )
 
+var testDB *gorm.DB
+var userHandler *interfacesHttp.UserHandler
+
 func setupTestDB() *gorm.DB {
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	db.AutoMigrate(&domainUser.User{})
+
 	return db
 }
 
-func TestCreateUserHandler(t *testing.T) {
-	db := setupTestDB()
-	userRepo := persistence.NewUserRepository(db)
-	createUserUseCase := appUser.NewCreateUserUseCase(userRepo)
-	handler := interfacesHttp.NewUserHandler(createUserUseCase, nil)
+func setupUserHandler() *interfacesHttp.UserHandler {
+	userRepo := persistence.NewUserRepository(testDB)
+	createUserUseCase := applicationUser.NewCreateUserUseCase(userRepo)
+	signInUserUseCase := applicationUser.NewSignInUserUseCase(userRepo)
+	customValidator := infrastructureValidator.NewCustomValidator(userRepo)
+	userUseCases := &interfacesHttp.UserUseCases{
+		CreateUser:      createUserUseCase,
+		SignIn:          signInUserUseCase,
+		CustomValidator: customValidator,
+	}
 
+	return interfacesHttp.NewUserHandler(userUseCases)
+}
+
+func TestMain(m *testing.M) {
+	gin.SetMode(gin.TestMode)
+
+	testDB = setupTestDB()
+	userHandler = setupUserHandler()
+
+	exitCode := m.Run()
+	os.Exit(exitCode)
+}
+
+func TestUserHandler_CreateUser_Success(t *testing.T) {
 	router := gin.Default()
-	router.POST("/api/users/signup", handler.CreateUser)
+	router.POST("/api/users/signup", userHandler.CreateUser)
 
 	reqBody, _ := json.Marshal(map[string]string{
 		"first_name": "Alice",
@@ -52,14 +77,7 @@ func TestCreateUserHandler(t *testing.T) {
 }
 
 func TestUserHandler_SignIn_Success(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
-	db := setupTestDB()
-	userRepo := persistence.NewUserRepository(db)
-	signInUserUseCase := appUser.NewSignInUserUseCase(userRepo)
-	userHandler := interfacesHttp.NewUserHandler(nil, signInUserUseCase)
-
-	repo := persistence.NewUserRepository(db)
+	repo := persistence.NewUserRepository(testDB)
 	hp, _ := security.HashPassword("password123")
 
 	newUser := &domainUser.User{
@@ -110,14 +128,7 @@ func TestUserHandler_SignIn_Success(t *testing.T) {
 }
 
 func TestUserHandler_SignIn_Failed(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
-	db := setupTestDB()
-	userRepo := persistence.NewUserRepository(db)
-	signInUserUseCase := appUser.NewSignInUserUseCase(userRepo)
-	userHandler := interfacesHttp.NewUserHandler(nil, signInUserUseCase)
-
-	repo := persistence.NewUserRepository(db)
+	repo := persistence.NewUserRepository(testDB)
 	hp, _ := security.HashPassword("password123")
 
 	newUser := &domainUser.User{

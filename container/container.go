@@ -5,6 +5,7 @@ import (
 	"pizza-order-api/internal/application/user"
 	"pizza-order-api/internal/infrastructure/db"
 	"pizza-order-api/internal/infrastructure/persistence"
+	"pizza-order-api/internal/infrastructure/validator"
 	"pizza-order-api/internal/interfaces/http"
 	"pizza-order-api/internal/interfaces/http/routes"
 
@@ -26,10 +27,17 @@ func NewContainer() (*Container, error) {
 
 	userRepo := persistence.NewUserRepository(database)
 
+	customValidator := validator.NewCustomValidator(userRepo)
+
 	createUserUseCase := user.NewCreateUserUseCase(userRepo)
 	signInUserUseCase := user.NewSignInUserUseCase(userRepo)
 
-	userHandler := http.NewUserHandler(createUserUseCase, signInUserUseCase)
+	userUseCases := &http.UserUseCases{
+		CreateUser:      createUserUseCase,
+		SignIn:          signInUserUseCase,
+		CustomValidator: customValidator,
+	}
+	userHandler := http.NewUserHandler(userUseCases)
 
 	return &Container{
 		UserHandler: userHandler,

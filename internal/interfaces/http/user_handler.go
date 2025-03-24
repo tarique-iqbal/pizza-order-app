@@ -2,26 +2,36 @@ package http
 
 import (
 	"net/http"
+
 	"pizza-order-api/internal/application/user"
+	infrastructureValidator "pizza-order-api/internal/infrastructure/validator"
 	"pizza-order-api/internal/interfaces/http/validation"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 )
 
 type UserHandler struct {
-	createUserUseCase user.CreateUserUseCase
-	signInUseCase     user.SignInUserUseCase
+	useCases *UserUseCases
 }
 
-func NewUserHandler(createUserUseCase user.CreateUserUseCase, signInUseCase user.SignInUserUseCase) *UserHandler {
-	return &UserHandler{
-		createUserUseCase: createUserUseCase,
-		signInUseCase:     signInUseCase,
-	}
+type UserUseCases struct {
+	CreateUser      user.CreateUserUseCase
+	SignIn          user.SignInUserUseCase
+	CustomValidator *infrastructureValidator.CustomValidator
+}
+
+func NewUserHandler(useCases *UserUseCases) *UserHandler {
+	return &UserHandler{useCases: useCases}
 }
 
 func (h *UserHandler) CreateUser(ctx *gin.Context) {
 	var input user.UserCreateDTO
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("uniqueEmail", h.useCases.CustomValidator.UniqueEmail)
+	}
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		errors := validation.ExtractValidationErrors(err)
@@ -29,7 +39,7 @@ func (h *UserHandler) CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	response, err := h.createUserUseCase.Execute(input)
+	response, err := h.useCases.CreateUser.Execute(input)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
@@ -50,7 +60,7 @@ func (h *UserHandler) SignIn(ctx *gin.Context) {
 		return
 	}
 
-	token, err := h.signInUseCase.Execute(req.Email, req.Password)
+	token, err := h.useCases.SignIn.Execute(req.Email, req.Password)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
