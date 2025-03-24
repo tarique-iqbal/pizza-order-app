@@ -6,19 +6,15 @@ import (
 	"pizza-order-api/internal/infrastructure/security"
 )
 
-type SignInUserUseCase interface {
-	Execute(email string, password string) (string, error)
-}
-
-type signInUserUseCase struct {
+type SignInUserUseCase struct {
 	userRepo user.UserRepository
 }
 
-func NewSignInUserUseCase(repo user.UserRepository) SignInUserUseCase {
-	return &signInUserUseCase{userRepo: repo}
+func NewSignInUserUseCase(repo user.UserRepository) *SignInUserUseCase {
+	return &SignInUserUseCase{userRepo: repo}
 }
 
-func (uc *signInUserUseCase) Execute(email string, password string) (string, error) {
+func (uc *SignInUserUseCase) Execute(email string, password string) (string, error) {
 	user, err := uc.userRepo.FindByEmail(email)
 	if user == nil {
 		return "", errors.New("no record found")

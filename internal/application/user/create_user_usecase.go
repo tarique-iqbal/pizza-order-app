@@ -8,19 +8,15 @@ import (
 
 const defaultRole = "user"
 
-type CreateUserUseCase interface {
-	Execute(UserCreateDTO) (UserResponseDTO, error)
-}
-
-type createUserUseCase struct {
+type CreateUserUseCase struct {
 	repo user.UserRepository
 }
 
-func NewCreateUserUseCase(repo user.UserRepository) CreateUserUseCase {
-	return &createUserUseCase{repo}
+func NewCreateUserUseCase(repo user.UserRepository) *CreateUserUseCase {
+	return &CreateUserUseCase{repo}
 }
 
-func (uc *createUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, error) {
+func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, error) {
 	hashedPassword, err := security.HashPassword(input.Password)
 	if err != nil {
 		return UserResponseDTO{}, err

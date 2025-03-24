@@ -17,8 +17,8 @@ type UserHandler struct {
 }
 
 type UserUseCases struct {
-	CreateUser      user.CreateUserUseCase
-	SignIn          user.SignInUserUseCase
+	CreateUser      *user.CreateUserUseCase
+	SignIn          *user.SignInUserUseCase
 	CustomValidator *infrastructureValidator.CustomValidator
 }
 
