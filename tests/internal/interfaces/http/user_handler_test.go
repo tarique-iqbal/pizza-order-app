@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	applicationUser "pizza-order-api/internal/application/user"
-	domainUser "pizza-order-api/internal/domain/user"
+	aUser "pizza-order-api/internal/application/user"
+	dUser "pizza-order-api/internal/domain/user"
 	"pizza-order-api/internal/infrastructure/persistence"
 	"pizza-order-api/internal/infrastructure/security"
-	infrastructureValidator "pizza-order-api/internal/infrastructure/validator"
-	interfacesHttp "pizza-order-api/internal/interfaces/http"
+	iValidator "pizza-order-api/internal/infrastructure/validator"
+	uiHttp "pizza-order-api/internal/interfaces/http"
 	"testing"
 	"time"
 
@@ -22,27 +22,27 @@ import (
 )
 
 var testDB *gorm.DB
-var userHandler *interfacesHttp.UserHandler
+var userHandler *uiHttp.UserHandler
 
 func setupTestDB() *gorm.DB {
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	db.AutoMigrate(&domainUser.User{})
+	db.AutoMigrate(&dUser.User{})
 
 	return db
 }
 
-func setupUserHandler() *interfacesHttp.UserHandler {
+func setupUserHandler() *uiHttp.UserHandler {
 	userRepo := persistence.NewUserRepository(testDB)
-	createUserUseCase := applicationUser.NewCreateUserUseCase(userRepo)
-	signInUserUseCase := applicationUser.NewSignInUserUseCase(userRepo)
-	customValidator := infrastructureValidator.NewCustomValidator(userRepo)
-	userUseCases := &interfacesHttp.UserUseCases{
+	createUserUseCase := aUser.NewCreateUserUseCase(userRepo)
+	signInUserUseCase := aUser.NewSignInUserUseCase(userRepo)
+	customValidator := iValidator.NewCustomValidator(userRepo)
+	userUseCases := &uiHttp.UserUseCases{
 		CreateUser:      createUserUseCase,
 		SignIn:          signInUserUseCase,
 		CustomValidator: customValidator,
 	}
 
-	return interfacesHttp.NewUserHandler(userUseCases)
+	return uiHttp.NewUserHandler(userUseCases)
 }
 
 func TestMain(m *testing.M) {
@@ -80,7 +80,7 @@ func TestUserHandler_SignIn_Success(t *testing.T) {
 	repo := persistence.NewUserRepository(testDB)
 	hp, _ := security.HashPassword("password123")
 
-	newUser := &domainUser.User{
+	newUser := &dUser.User{
 		FirstName: "John",
 		LastName:  "Doe",
 		Email:     "test@example.com",
@@ -131,7 +131,7 @@ func TestUserHandler_SignIn_Failed(t *testing.T) {
 	repo := persistence.NewUserRepository(testDB)
 	hp, _ := security.HashPassword("password123")
 
-	newUser := &domainUser.User{
+	newUser := &dUser.User{
 		FirstName: "John",
 		LastName:  "Doe",
 		Email:     "test@example.com",

@@ -1,7 +1,7 @@
 package user_test
 
 import (
-	applicationUser "pizza-order-api/internal/application/user"
+	aUser "pizza-order-api/internal/application/user"
 	"pizza-order-api/internal/domain/user"
 	"pizza-order-api/internal/infrastructure/persistence"
 	"testing"
@@ -20,9 +20,9 @@ func setupTestDB() *gorm.DB {
 func TestCreateUserUseCase(t *testing.T) {
 	db := setupTestDB()
 	userRepo := persistence.NewUserRepository(db)
-	useCase := applicationUser.NewCreateUserUseCase(userRepo)
+	useCase := aUser.NewCreateUserUseCase(userRepo)
 
-	input := applicationUser.UserCreateDTO{
+	input := aUser.UserCreateDTO{
 		FirstName: "Jane",
 		LastName:  "Doe",
 		Email:     "jane.doe@example.com",

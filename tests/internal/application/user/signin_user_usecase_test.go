@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	applicationUser "pizza-order-api/internal/application/user"
+	aUser "pizza-order-api/internal/application/user"
 	"pizza-order-api/internal/domain/user"
 	"pizza-order-api/internal/infrastructure/security"
 
@@ -39,7 +39,7 @@ func TestSignInUserUseCase_Success(t *testing.T) {
 		Password: password,
 	}, nil)
 
-	useCase := applicationUser.NewSignInUserUseCase(mockRepo)
+	useCase := aUser.NewSignInUserUseCase(mockRepo)
 
 	token, err := useCase.Execute("test@example.com", "password")
 	assert.NoError(t, err)
@@ -56,7 +56,7 @@ func TestSignInUserUseCase_InvalidPassword(t *testing.T) {
 		Password: password,
 	}, nil)
 
-	useCase := applicationUser.NewSignInUserUseCase(mockRepo)
+	useCase := aUser.NewSignInUserUseCase(mockRepo)
 
 	token, err := useCase.Execute("test@example.com", "wrongpassword")
 	assert.Error(t, err)
@@ -67,7 +67,7 @@ func TestSignInUserUseCase_UserNotFound(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockRepo.On("FindByEmail", "notfound@example.com").Return(nil, errors.New("user not found"))
 
-	useCase := applicationUser.NewSignInUserUseCase(mockRepo)
+	useCase := aUser.NewSignInUserUseCase(mockRepo)
 
 	token, err := useCase.Execute("notfound@example.com", "password")
 	assert.Error(t, err)

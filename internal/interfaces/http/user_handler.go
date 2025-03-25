@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"pizza-order-api/internal/application/user"
-	infrastructureValidator "pizza-order-api/internal/infrastructure/validator"
+	iValidator "pizza-order-api/internal/infrastructure/validator"
 	"pizza-order-api/internal/interfaces/http/validation"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +19,7 @@ type UserHandler struct {
 type UserUseCases struct {
 	CreateUser      *user.CreateUserUseCase
 	SignIn          *user.SignInUserUseCase
-	CustomValidator *infrastructureValidator.CustomValidator
+	CustomValidator *iValidator.CustomValidator
 }
 
 func NewUserHandler(useCases *UserUseCases) *UserHandler {

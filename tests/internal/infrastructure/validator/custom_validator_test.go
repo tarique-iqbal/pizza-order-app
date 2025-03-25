@@ -1,4 +1,4 @@
-package validation_test
+package validator_test
 
 import (
 	"log"
@@ -8,7 +8,7 @@ import (
 
 	"pizza-order-api/internal/domain/user"
 	"pizza-order-api/internal/infrastructure/persistence"
-	infrastructureValidator "pizza-order-api/internal/infrastructure/validator"
+	iValidator "pizza-order-api/internal/infrastructure/validator"
 
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
@@ -17,7 +17,7 @@ import (
 
 var testDB *gorm.DB
 var userRepo user.UserRepository
-var customValidator *infrastructureValidator.CustomValidator
+var customValidator *iValidator.CustomValidator
 
 func TestMain(m *testing.M) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 
 	testDB = db
 	userRepo = persistence.NewUserRepository(testDB)
-	customValidator = infrastructureValidator.NewCustomValidator(userRepo)
+	customValidator = iValidator.NewCustomValidator(userRepo)
 
 	code := m.Run()
 	os.Exit(code)
