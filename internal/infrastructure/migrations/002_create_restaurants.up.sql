@@ -1,0 +1,10 @@
+CREATE TABLE restaurants (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    address VARCHAR(511) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT NULL,
+    CONSTRAINT fk_restaurants_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
