@@ -25,8 +25,10 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 	ctx.Request = req
 
 	middlewares.AuthMiddleware()(ctx)
+	ctxUserID := ctx.MustGet("userID").(uint)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, userID, ctxUserID)
 }
 
 func TestAuthMiddleware_InvalidToken(t *testing.T) {

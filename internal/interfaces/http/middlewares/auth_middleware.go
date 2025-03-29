@@ -9,23 +9,25 @@ import (
 )
 
 func AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization")
+	return func(ctx *gin.Context) {
+		tokenString := ctx.GetHeader("Authorization")
 
 		if tokenString == "" || !strings.HasPrefix(tokenString, "Bearer ") {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-			c.Abort()
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			ctx.Abort()
 			return
 		}
 
 		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
-		_, err := security.ValidateToken(tokenString)
+		claims, err := security.ParseJWT(tokenString)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			ctx.Abort()
 			return
 		}
 
-		c.Next()
+		ctx.Set("userID", claims.UserID)
+
+		ctx.Next()
 	}
 }
