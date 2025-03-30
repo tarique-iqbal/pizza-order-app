@@ -21,6 +21,8 @@ func getErrorMsg(fe validator.FieldError) string {
 		return "Minimum length required: " + fe.Param()
 	case "uniqueEmail":
 		return "This email is already in use. Please try a different one."
+	case "uniqueRSlug":
+		return "This slug is already in use. Please try a different one."
 	}
 	return "Unknown error"
 }

@@ -14,6 +14,8 @@ import (
 var testDB *gorm.DB
 
 func TestMain(m *testing.M) {
+	gin.SetMode(gin.TestMode)
+
 	testDB = db.SetupTestDB()
 
 	exitCode := m.Run()
