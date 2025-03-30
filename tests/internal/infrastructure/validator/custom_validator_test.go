@@ -1,41 +1,32 @@
 package validator_test
 
 import (
-	"log"
 	"os"
 	"reflect"
 	"testing"
 
+	"pizza-order-api/internal/domain/restaurant"
 	"pizza-order-api/internal/domain/user"
 	"pizza-order-api/internal/infrastructure/persistence"
 	iValidator "pizza-order-api/internal/infrastructure/validator"
+	"pizza-order-api/tests/internal/infrastructure/db"
 
 	"github.com/stretchr/testify/assert"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 var testDB *gorm.DB
-var userRepo user.UserRepository
 var customValidator *iValidator.CustomValidator
 
 func TestMain(m *testing.M) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		log.Fatal("Failed to connect test database:", err)
-	}
+	testDB = db.SetupTestDB()
 
-	err = db.AutoMigrate(&user.User{})
-	if err != nil {
-		log.Fatal("Failed to migrate test database:", err)
-	}
+	userRepo := persistence.NewUserRepository(testDB)
+	restaurantRepo := persistence.NewRestaurantRepository(testDB)
+	customValidator = iValidator.NewCustomValidator(userRepo, restaurantRepo)
 
-	testDB = db
-	userRepo = persistence.NewUserRepository(testDB)
-	customValidator = iValidator.NewCustomValidator(userRepo)
-
-	code := m.Run()
-	os.Exit(code)
+	exitCode := m.Run()
+	os.Exit(exitCode)
 }
 
 func TestUniqueEmail_Valid(t *testing.T) {
@@ -51,6 +42,23 @@ func TestUniqueEmail_Invalid(t *testing.T) {
 
 	field := &mockFieldLevel{value: "existing@example.com"}
 	status := customValidator.UniqueEmail(field)
+
+	assert.False(t, status)
+}
+
+func TestUniqueRestaurantSlug_Valid(t *testing.T) {
+	field := &mockFieldLevel{value: "test-restaurant"}
+	status := customValidator.UniqueRestaurantSlug(field)
+
+	assert.True(t, status)
+}
+
+func TestUniqueRestaurantSlug_Invalid(t *testing.T) {
+	existingRestaurant := restaurant.Restaurant{Slug: "existing-restaurant"}
+	testDB.Create(&existingRestaurant)
+
+	field := &mockFieldLevel{value: "existing-restaurant"}
+	status := customValidator.UniqueRestaurantSlug(field)
 
 	assert.False(t, status)
 }
