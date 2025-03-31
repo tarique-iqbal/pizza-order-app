@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"pizza-order-api/container"
+	"pizza-order-api/internal/interfaces/http/routes"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -20,7 +21,12 @@ func main() {
 	defer iocContainer.Close()
 
 	router := gin.Default()
-	iocContainer.SetupRoutes(router)
+	handlers := &routes.Handlers{
+		UserHandler:       iocContainer.UserHandler,
+		RestaurantHandler: iocContainer.RestaurantHandler,
+	}
+
+	routes.SetupRoutes(router, handlers)
 
 	router.Run(":8080")
 }
