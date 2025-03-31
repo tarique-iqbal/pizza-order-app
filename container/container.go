@@ -2,20 +2,20 @@ package container
 
 import (
 	"log"
+	"pizza-order-api/internal/application/restaurant"
 	"pizza-order-api/internal/application/user"
 	"pizza-order-api/internal/infrastructure/db"
 	"pizza-order-api/internal/infrastructure/persistence"
 	"pizza-order-api/internal/infrastructure/validator"
 	"pizza-order-api/internal/interfaces/http"
-	"pizza-order-api/internal/interfaces/http/routes"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 type Container struct {
-	UserHandler *http.UserHandler
-	DB          *gorm.DB
+	UserHandler       *http.UserHandler
+	RestaurantHandler *http.RestaurantHandler
+	DB                *gorm.DB
 }
 
 func NewContainer() (*Container, error) {
@@ -26,8 +26,9 @@ func NewContainer() (*Container, error) {
 	}
 
 	userRepo := persistence.NewUserRepository(database)
+	restaurantRepo := persistence.NewRestaurantRepository(database)
 
-	customValidator := validator.NewCustomValidator(userRepo)
+	customValidator := validator.NewCustomValidator(userRepo, restaurantRepo)
 
 	createUserUseCase := user.NewCreateUserUseCase(userRepo)
 	signInUserUseCase := user.NewSignInUserUseCase(userRepo)
@@ -39,14 +40,19 @@ func NewContainer() (*Container, error) {
 	}
 	userHandler := http.NewUserHandler(userUseCases)
 
-	return &Container{
-		UserHandler: userHandler,
-		DB:          database,
-	}, nil
-}
+	createRestaurantUseCase := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
 
-func (c *Container) SetupRoutes(router *gin.Engine) {
-	routes.SetupUserRoutes(router, c.UserHandler)
+	restaurantUseCase := &http.RestaurantUseCases{
+		CreateRestaurant: createRestaurantUseCase,
+		CustomValidator:  customValidator,
+	}
+	restaurantHandler := http.NewRestaurantHandler(restaurantUseCase)
+
+	return &Container{
+		UserHandler:       userHandler,
+		RestaurantHandler: restaurantHandler,
+		DB:                database,
+	}, nil
 }
 
 func (c *Container) Close() {
