@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	aUser "pizza-order-api/internal/application/user"
 	dUser "pizza-order-api/internal/domain/user"
 	"pizza-order-api/internal/infrastructure/persistence"
@@ -17,25 +16,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
-var testDB *gorm.DB
-var userHandler *uiHttp.UserHandler
-
-func setupTestDB() *gorm.DB {
-	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	db.AutoMigrate(&dUser.User{})
-
-	return db
-}
+var uHandler *uiHttp.UserHandler
 
 func setupUserHandler() *uiHttp.UserHandler {
 	userRepo := persistence.NewUserRepository(testDB)
 	createUserUseCase := aUser.NewCreateUserUseCase(userRepo)
 	signInUserUseCase := aUser.NewSignInUserUseCase(userRepo)
-	customValidator := iValidator.NewCustomValidator(userRepo)
+	customValidator := iValidator.NewCustomValidator(userRepo, nil)
 	userUseCases := &uiHttp.UserUseCases{
 		CreateUser:      createUserUseCase,
 		SignIn:          signInUserUseCase,
@@ -45,19 +34,10 @@ func setupUserHandler() *uiHttp.UserHandler {
 	return uiHttp.NewUserHandler(userUseCases)
 }
 
-func TestMain(m *testing.M) {
-	gin.SetMode(gin.TestMode)
-
-	testDB = setupTestDB()
-	userHandler = setupUserHandler()
-
-	exitCode := m.Run()
-	os.Exit(exitCode)
-}
-
 func TestUserHandler_CreateUser_Success(t *testing.T) {
+	uHandler = setupUserHandler()
 	router := gin.Default()
-	router.POST("/api/users/signup", userHandler.CreateUser)
+	router.POST("/api/users/signup", uHandler.CreateUser)
 
 	reqBody, _ := json.Marshal(map[string]string{
 		"first_name": "Alice",
@@ -77,6 +57,7 @@ func TestUserHandler_CreateUser_Success(t *testing.T) {
 }
 
 func TestUserHandler_SignIn_Success(t *testing.T) {
+	uHandler = setupUserHandler()
 	repo := persistence.NewUserRepository(testDB)
 	hp, _ := security.HashPassword("password123")
 
@@ -108,7 +89,7 @@ func TestUserHandler_SignIn_Success(t *testing.T) {
 
 	t.Run(tc.name, func(t *testing.T) {
 		router := gin.Default()
-		router.POST("/api/users/signin", userHandler.SignIn)
+		router.POST("/api/users/signin", uHandler.SignIn)
 
 		body, _ := json.Marshal(tc.requestBody)
 		req, _ := http.NewRequest(http.MethodPost, "/api/users/signin", bytes.NewBuffer(body))
@@ -128,6 +109,7 @@ func TestUserHandler_SignIn_Success(t *testing.T) {
 }
 
 func TestUserHandler_SignIn_Failed(t *testing.T) {
+	uHandler = setupUserHandler()
 	repo := persistence.NewUserRepository(testDB)
 	hp, _ := security.HashPassword("password123")
 
@@ -190,7 +172,7 @@ func TestUserHandler_SignIn_Failed(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			router := gin.Default()
-			router.POST("/api/users/signin", userHandler.SignIn)
+			router.POST("/api/users/signin", uHandler.SignIn)
 
 			body, _ := json.Marshal(tc.requestBody)
 			req, _ := http.NewRequest(http.MethodPost, "/api/users/signin", bytes.NewBuffer(body))
