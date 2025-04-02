@@ -1,7 +1,6 @@
 package persistence_test
 
 import (
-	"os"
 	"pizza-order-api/internal/domain/restaurant"
 	"pizza-order-api/internal/infrastructure/persistence"
 	"pizza-order-api/tests/internal/infrastructure/db"
@@ -10,26 +9,23 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
-var testDB *gorm.DB
 var restaurantRepo restaurant.RestaurantRepository
 
-func TestMain(m *testing.M) {
-	testDB = db.SetupTestDB()
+func setupRestaurantRepo() restaurant.RestaurantRepository {
+	testDB := db.SetupTestDB()
 
 	if err := fixtures.LoadRestaurantFixtures(testDB); err != nil {
 		panic(err)
 	}
 
-	restaurantRepo = persistence.NewRestaurantRepository(testDB)
-
-	exitCode := m.Run()
-	os.Exit(exitCode)
+	return persistence.NewRestaurantRepository(testDB)
 }
 
 func TestRestaurantRepository_Create(t *testing.T) {
+	restaurantRepo = setupRestaurantRepo()
+
 	r := restaurant.Restaurant{
 		UserID:    3,
 		Name:      "Test Bistro",
@@ -45,6 +41,8 @@ func TestRestaurantRepository_Create(t *testing.T) {
 }
 
 func TestRestaurantRepository_FindBySlug(t *testing.T) {
+	restaurantRepo = setupRestaurantRepo()
+
 	r, err := restaurantRepo.FindBySlug("pizza-paradise")
 	assert.NoError(t, err)
 	assert.Equal(t, "Pizza Paradise", r.Name)

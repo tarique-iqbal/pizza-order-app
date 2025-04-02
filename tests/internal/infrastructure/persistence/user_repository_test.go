@@ -3,36 +3,49 @@ package persistence_test
 import (
 	"pizza-order-api/internal/domain/user"
 	"pizza-order-api/internal/infrastructure/persistence"
+	"pizza-order-api/tests/internal/infrastructure/db"
+	"pizza-order-api/tests/internal/infrastructure/db/fixtures"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
-func setupTestDB() *gorm.DB {
-	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	db.AutoMigrate(&user.User{})
-	return db
+var userRepo user.UserRepository
+
+func setupUserRepo() user.UserRepository {
+	testDB := db.SetupTestDB()
+
+	if err := fixtures.LoadUserFixtures(testDB); err != nil {
+		panic(err)
+	}
+
+	return persistence.NewUserRepository(testDB)
 }
 
-func TestCreateUser(t *testing.T) {
-	db := setupTestDB()
-	repo := persistence.NewUserRepository(db)
+func TestUserRepository_Create(t *testing.T) {
+	userRepo = setupUserRepo()
 
 	newUser := &user.User{
-		FirstName: "John",
-		LastName:  "Doe",
-		Email:     "john.doe@example.com",
+		FirstName: "Adam",
+		LastName:  "D'Angelo",
+		Email:     "adam.dangelo@example.com",
 		Password:  "hashedpassword",
 		Role:      "user",
 		CreatedAt: time.Now(),
 		UpdatedAt: nil,
 	}
 
-	err := repo.Create(newUser)
+	err := userRepo.Create(newUser)
 
 	assert.Nil(t, err)
 	assert.NotZero(t, newUser.ID)
+}
+
+func TestUserRepository_FindByEmail(t *testing.T) {
+	userRepo = setupUserRepo()
+
+	r, err := userRepo.FindByEmail("john.doe@example.com")
+	assert.NoError(t, err)
+	assert.Equal(t, "John", r.FirstName)
 }
