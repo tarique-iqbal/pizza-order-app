@@ -7,15 +7,15 @@ import (
 )
 
 type SignInUserUseCase struct {
-	userRepo user.UserRepository
+	repo user.UserRepository
 }
 
 func NewSignInUserUseCase(repo user.UserRepository) *SignInUserUseCase {
-	return &SignInUserUseCase{userRepo: repo}
+	return &SignInUserUseCase{repo: repo}
 }
 
 func (uc *SignInUserUseCase) Execute(email string, password string) (string, error) {
-	user, err := uc.userRepo.FindByEmail(email)
+	user, err := uc.repo.FindByEmail(email)
 	if user == nil {
 		return "", errors.New("no record found")
 	}

@@ -13,7 +13,7 @@ type CreateUserUseCase struct {
 }
 
 func NewCreateUserUseCase(repo user.UserRepository) *CreateUserUseCase {
-	return &CreateUserUseCase{repo}
+	return &CreateUserUseCase{repo: repo}
 }
 
 func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, error) {
