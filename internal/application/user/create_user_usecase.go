@@ -1,19 +1,22 @@
 package user
 
 import (
+	"log"
 	"pizza-order-api/internal/domain/user"
 	"pizza-order-api/internal/infrastructure/security"
+	"pizza-order-api/internal/shared/event"
 	"time"
 )
 
 const defaultRole = "user"
 
 type CreateUserUseCase struct {
-	repo user.UserRepository
+	repo      user.UserRepository
+	publisher event.EventPublisher
 }
 
-func NewCreateUserUseCase(repo user.UserRepository) *CreateUserUseCase {
-	return &CreateUserUseCase{repo: repo}
+func NewCreateUserUseCase(repo user.UserRepository, publisher event.EventPublisher) *CreateUserUseCase {
+	return &CreateUserUseCase{repo: repo, publisher: publisher}
 }
 
 func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, error) {
@@ -34,6 +37,18 @@ func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, erro
 
 	if err := uc.repo.Create(&newUser); err != nil {
 		return UserResponseDTO{}, err
+	}
+
+	event := UserCreatedEvent{
+		UserID:    newUser.ID,
+		Email:     newUser.Email,
+		FirstName: newUser.FirstName,
+		LastName:  newUser.LastName,
+		Timestamp: newUser.CreatedAt.Format(time.RFC3339),
+	}
+
+	if err := uc.publisher.Publish(event); err != nil {
+		log.Println("Failed to publish user.created event:", err)
 	}
 
 	response := UserResponseDTO{
