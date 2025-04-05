@@ -1,10 +1,7 @@
 package security_test
 
 import (
-	"log"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -12,20 +9,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
 
-	cmd := exec.Command("go", "env", "GOMOD")
-	output, _ := cmd.Output()
-	moduleRoot := filepath.Dir(string(output))
-
-	if err := godotenv.Load(moduleRoot + "/.env.test"); err != nil {
-		log.Fatalf("Error loading .env.test file: %v", err)
-	}
+	os.Setenv("JWT_SECRET", "@TestSecret!")
 
 	exitCode := m.Run()
 	os.Exit(exitCode)
