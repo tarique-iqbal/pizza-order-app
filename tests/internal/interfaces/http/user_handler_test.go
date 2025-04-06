@@ -3,6 +3,7 @@ package http_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	aUser "pizza-order-api/internal/application/user"
@@ -11,6 +12,7 @@ import (
 	"pizza-order-api/internal/infrastructure/security"
 	iValidator "pizza-order-api/internal/infrastructure/validator"
 	uiHttp "pizza-order-api/internal/interfaces/http"
+	"pizza-order-api/internal/shared/event"
 	"testing"
 	"time"
 
@@ -19,10 +21,26 @@ import (
 )
 
 var uHandler *uiHttp.UserHandler
+var mockPublisher *MockEventPublisher
+
+type MockEventPublisher struct {
+	PublishedEvents []event.Event
+	ShouldFail      bool
+}
+
+func (m *MockEventPublisher) Publish(e event.Event) error {
+	if m.ShouldFail {
+		return errors.New("mock publish failure")
+	}
+	m.PublishedEvents = append(m.PublishedEvents, e)
+	return nil
+}
 
 func setupUserHandler() *uiHttp.UserHandler {
 	userRepo := persistence.NewUserRepository(testDB)
-	createUserUseCase := aUser.NewCreateUserUseCase(userRepo)
+	mockPublisher = &MockEventPublisher{}
+
+	createUserUseCase := aUser.NewCreateUserUseCase(userRepo, mockPublisher)
 	signInUserUseCase := aUser.NewSignInUserUseCase(userRepo)
 	customValidator := iValidator.NewCustomValidator(userRepo, nil)
 	userUseCases := &uiHttp.UserUseCases{
@@ -50,10 +68,11 @@ func TestUserHandler_CreateUser_Success(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/api/users/signup", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, req)
 
-	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Equal(t, http.StatusCreated, recorder.Code)
+	assert.Contains(t, recorder.Body.String(), "alice@example.com")
 }
 
 func TestUserHandler_SignIn_Success(t *testing.T) {
