@@ -55,7 +55,7 @@ func setupUserHandler() *uiHttp.UserHandler {
 func TestUserHandler_CreateUser_Success(t *testing.T) {
 	uHandler = setupUserHandler()
 	router := gin.Default()
-	router.POST("/api/users/signup", uHandler.CreateUser)
+	router.POST("/api/users", uHandler.Create)
 
 	reqBody, _ := json.Marshal(map[string]string{
 		"first_name": "Alice",
@@ -65,7 +65,7 @@ func TestUserHandler_CreateUser_Success(t *testing.T) {
 		"role":       "user",
 	})
 
-	req, _ := http.NewRequest("POST", "/api/users/signup", bytes.NewBuffer(reqBody))
+	req, _ := http.NewRequest("POST", "/api/users", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	recorder := httptest.NewRecorder()

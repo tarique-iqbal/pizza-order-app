@@ -26,7 +26,7 @@ func NewUserHandler(useCases *UserUseCases) *UserHandler {
 	return &UserHandler{useCases: useCases}
 }
 
-func (h *UserHandler) CreateUser(ctx *gin.Context) {
+func (h *UserHandler) Create(ctx *gin.Context) {
 	var input user.UserCreateDTO
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
