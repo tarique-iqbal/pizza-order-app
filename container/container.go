@@ -1,10 +1,11 @@
 package container
 
 import (
-	"log"
+	"os"
 	"pizza-order-api/internal/application/restaurant"
 	"pizza-order-api/internal/application/user"
 	"pizza-order-api/internal/infrastructure/db"
+	"pizza-order-api/internal/infrastructure/messaging"
 	"pizza-order-api/internal/infrastructure/persistence"
 	"pizza-order-api/internal/infrastructure/validator"
 	"pizza-order-api/internal/interfaces/http"
@@ -16,21 +17,21 @@ type Container struct {
 	UserHandler       *http.UserHandler
 	RestaurantHandler *http.RestaurantHandler
 	DB                *gorm.DB
+	Publisher         *messaging.RabbitMQPublisher
 }
 
 func NewContainer() (*Container, error) {
-	database, err := db.InitDB()
-	if err != nil {
-		log.Fatal("Could not connect to database:", err)
-		return nil, err
-	}
+	database, _ := db.InitDB()
+
+	amqpURL := os.Getenv("RABBITMQ_URL")
+	publisher := messaging.NewRabbitMQPublisher(amqpURL)
 
 	userRepo := persistence.NewUserRepository(database)
 	restaurantRepo := persistence.NewRestaurantRepository(database)
 
 	customValidator := validator.NewCustomValidator(userRepo, restaurantRepo)
 
-	createUserUseCase := user.NewCreateUserUseCase(userRepo)
+	createUserUseCase := user.NewCreateUserUseCase(userRepo, publisher)
 	signInUserUseCase := user.NewSignInUserUseCase(userRepo)
 
 	userUseCases := &http.UserUseCases{
@@ -52,10 +53,13 @@ func NewContainer() (*Container, error) {
 		UserHandler:       userHandler,
 		RestaurantHandler: restaurantHandler,
 		DB:                database,
+		Publisher:         publisher,
 	}, nil
 }
 
 func (c *Container) Close() {
 	db, _ := c.DB.DB()
 	db.Close()
+
+	c.Publisher.Close()
 }
