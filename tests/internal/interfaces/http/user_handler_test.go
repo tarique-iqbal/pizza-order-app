@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var uHandler *uiHttp.UserHandler
 var mockPublisher *MockEventPublisher
 
 type MockEventPublisher struct {
@@ -48,7 +47,7 @@ func setupUserHandler() *uiHttp.UserHandler {
 }
 
 func TestUserHandler_CreateUser_Success(t *testing.T) {
-	uHandler = setupUserHandler()
+	uHandler := setupUserHandler()
 	router := gin.Default()
 	router.POST("/api/users", uHandler.Create)
 

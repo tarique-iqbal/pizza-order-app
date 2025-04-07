@@ -17,30 +17,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var handler *uiHttp.RestaurantHandler
-
-func setupTestRouter() *uiHttp.RestaurantHandler {
+func setupRestaurantHandler() *uiHttp.RestaurantHandler {
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
 	createUseCase := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
 	customValidator := iValidator.NewCustomValidator(nil, restaurantRepo)
 
-	useCases := &uiHttp.RestaurantUseCases{
+	restaurantUseCases := &uiHttp.RestaurantUseCases{
 		CreateRestaurant: createUseCase,
 		CustomValidator:  customValidator,
 	}
 
-	return uiHttp.NewRestaurantHandler(useCases)
+	return uiHttp.NewRestaurantHandler(restaurantUseCases)
 }
 
 func TestRestaurantHandler_Create_Success(t *testing.T) {
-	handler = setupTestRouter()
+	rHandler := setupRestaurantHandler()
 
 	router := gin.Default()
 	router.Use(func(c *gin.Context) {
 		c.Set("userID", uint(1))
 	})
 	router.Use(MockAuthMiddleware())
-	router.POST("/api/restaurants", handler.Create)
+	router.POST("/api/restaurants", rHandler.Create)
 
 	reqBody := map[string]string{
 		"name":    "Test Restaurant",
@@ -75,14 +73,14 @@ func TestRestaurantHandler_Create_Success(t *testing.T) {
 }
 
 func TestRestaurantHandler_Create_Failure_ValidationError(t *testing.T) {
-	handler = setupTestRouter()
+	rHandler := setupRestaurantHandler()
 
 	router := gin.Default()
 	router.Use(func(c *gin.Context) {
 		c.Set("userID", uint(1))
 	})
 	router.Use(MockAuthMiddleware())
-	router.POST("/api/restaurants", handler.Create)
+	router.POST("/api/restaurants", rHandler.Create)
 
 	payload := `{"slug": "valid-slug"}`
 
@@ -98,14 +96,14 @@ func TestRestaurantHandler_Create_Failure_ValidationError(t *testing.T) {
 }
 
 func TestRestaurantHandler_Create_Failure_DuplicateSlug(t *testing.T) {
-	handler = setupTestRouter()
+	rHandler := setupRestaurantHandler()
 
 	router := gin.Default()
 	router.Use(func(c *gin.Context) {
 		c.Set("userID", uint(1))
 	})
 	router.Use(MockAuthMiddleware())
-	router.POST("/api/restaurants", handler.Create)
+	router.POST("/api/restaurants", rHandler.Create)
 
 	// First request (success)
 	validPayload := `{"name": "Pizzeria Uno", "slug": "pizzeria-uno", "address": "123 Main St"}`
@@ -129,14 +127,14 @@ func TestRestaurantHandler_Create_Failure_DuplicateSlug(t *testing.T) {
 }
 
 func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
-	handler = setupTestRouter()
+	rHandler := setupRestaurantHandler()
 
 	router := gin.Default()
 	router.Use(func(c *gin.Context) {
 		c.Set("userID", uint(1))
 	})
 	router.Use(MockAuthMiddleware())
-	router.POST("/api/restaurants", handler.Create)
+	router.POST("/api/restaurants", rHandler.Create)
 
 	validPayload := `{"name": "New Restaurant", "slug": "new-restaurant", "address": "456 Elm St"}`
 

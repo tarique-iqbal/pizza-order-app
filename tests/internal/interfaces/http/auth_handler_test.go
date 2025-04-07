@@ -17,8 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var aHandler *uiHttp.AuthHandler
-
 func setupAuthHandler() *uiHttp.AuthHandler {
 	userRepo := persistence.NewUserRepository(testDB)
 
@@ -31,7 +29,7 @@ func setupAuthHandler() *uiHttp.AuthHandler {
 }
 
 func TestAuthHandler_SignIn_Success(t *testing.T) {
-	aHandler = setupAuthHandler()
+	aHandler := setupAuthHandler()
 	repo := persistence.NewUserRepository(testDB)
 	hp, _ := security.HashPassword("password123")
 
@@ -83,7 +81,7 @@ func TestAuthHandler_SignIn_Success(t *testing.T) {
 }
 
 func TestAuthHandler_SignIn_Failed(t *testing.T) {
-	aHandler = setupAuthHandler()
+	aHandler := setupAuthHandler()
 	repo := persistence.NewUserRepository(testDB)
 	hp, _ := security.HashPassword("password123")
 

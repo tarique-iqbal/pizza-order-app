@@ -29,7 +29,7 @@ func (m *MockUserRepository) Create(user *user.User) error {
 	return args.Error(0)
 }
 
-func TestSignInUserUseCase_Success(t *testing.T) {
+func TestSignInUseCase_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	password, _ := security.HashPassword("password")
 
@@ -46,7 +46,7 @@ func TestSignInUserUseCase_Success(t *testing.T) {
 	assert.NotEmpty(t, token)
 }
 
-func TestSignInUserUseCase_InvalidPassword(t *testing.T) {
+func TestSignInUseCase_InvalidPassword(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	password, _ := security.HashPassword("password")
 
@@ -63,7 +63,7 @@ func TestSignInUserUseCase_InvalidPassword(t *testing.T) {
 	assert.Empty(t, token)
 }
 
-func TestSignInUserUseCase_UserNotFound(t *testing.T) {
+func TestSignInUseCase_UserNotFound(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockRepo.On("FindByEmail", "notfound@example.com").Return(nil, errors.New("user not found"))
 
