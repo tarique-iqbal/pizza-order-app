@@ -34,10 +34,8 @@ func NewContainer() (*Container, error) {
 
 	// user
 	createUserUseCase := user.NewCreateUserUseCase(userRepo, publisher)
-	signInUserUseCase := user.NewSignInUserUseCase(userRepo)
 	userUseCases := &http.UserUseCases{
 		CreateUser:      createUserUseCase,
-		SignIn:          signInUserUseCase,
 		CustomValidator: customValidator,
 	}
 	userHandler := http.NewUserHandler(userUseCases)

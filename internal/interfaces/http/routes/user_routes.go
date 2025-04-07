@@ -12,7 +12,6 @@ func SetupUserRoutes(router *gin.Engine, userHandler *http.UserHandler) {
 		users := api.Group("/users")
 		{
 			users.POST("", userHandler.Create)
-			users.POST("/signin", userHandler.SignIn)
 		}
 	}
 }
