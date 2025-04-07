@@ -1,29 +1,31 @@
 package persistence
 
 import (
-	"errors"
 	"pizza-order-api/internal/domain/user"
 
 	"gorm.io/gorm"
 )
 
 type UserRepositoryImplement struct {
-	DB *gorm.DB
+	db *gorm.DB
 }
 
 func NewUserRepository(db *gorm.DB) user.UserRepository {
-	return &UserRepositoryImplement{DB: db}
+	return &UserRepositoryImplement{db: db}
 }
 
 func (repo *UserRepositoryImplement) FindByEmail(email string) (*user.User, error) {
-	var user user.User
-	result := repo.DB.Where("email = ?", email).First(&user)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, nil
+	var u user.User
+	err := repo.db.Where("email = ?", email).First(&u).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
 	}
-	return &user, result.Error
+	return &u, nil
 }
 
 func (repo *UserRepositoryImplement) Create(u *user.User) error {
-	return repo.DB.Create(u).Error
+	return repo.db.Create(u).Error
 }
