@@ -23,6 +23,7 @@ func main() {
 	router := gin.Default()
 	handlers := &routes.Handlers{
 		UserHandler:       iocContainer.UserHandler,
+		AuthHandler:       iocContainer.AuthHandler,
 		RestaurantHandler: iocContainer.RestaurantHandler,
 	}
 

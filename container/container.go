@@ -2,6 +2,7 @@ package container
 
 import (
 	"os"
+	"pizza-order-api/internal/application/auth"
 	"pizza-order-api/internal/application/restaurant"
 	"pizza-order-api/internal/application/user"
 	"pizza-order-api/internal/infrastructure/db"
@@ -15,6 +16,7 @@ import (
 
 type Container struct {
 	UserHandler       *http.UserHandler
+	AuthHandler       *http.AuthHandler
 	RestaurantHandler *http.RestaurantHandler
 	DB                *gorm.DB
 	Publisher         *messaging.RabbitMQPublisher
@@ -28,12 +30,11 @@ func NewContainer() (*Container, error) {
 
 	userRepo := persistence.NewUserRepository(database)
 	restaurantRepo := persistence.NewRestaurantRepository(database)
-
 	customValidator := validator.NewCustomValidator(userRepo, restaurantRepo)
 
+	// user
 	createUserUseCase := user.NewCreateUserUseCase(userRepo, publisher)
 	signInUserUseCase := user.NewSignInUserUseCase(userRepo)
-
 	userUseCases := &http.UserUseCases{
 		CreateUser:      createUserUseCase,
 		SignIn:          signInUserUseCase,
@@ -41,8 +42,15 @@ func NewContainer() (*Container, error) {
 	}
 	userHandler := http.NewUserHandler(userUseCases)
 
-	createRestaurantUseCase := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
+	// auth
+	signInUseCase := auth.NewSignInUseCase(userRepo)
+	authUseCases := &http.AuthUseCases{
+		SignIn: signInUseCase,
+	}
+	authHandler := http.NewAuthHandler(authUseCases)
 
+	// restaurant
+	createRestaurantUseCase := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
 	restaurantUseCase := &http.RestaurantUseCases{
 		CreateRestaurant: createRestaurantUseCase,
 		CustomValidator:  customValidator,
@@ -51,6 +59,7 @@ func NewContainer() (*Container, error) {
 
 	return &Container{
 		UserHandler:       userHandler,
+		AuthHandler:       authHandler,
 		RestaurantHandler: restaurantHandler,
 		DB:                database,
 		Publisher:         publisher,
