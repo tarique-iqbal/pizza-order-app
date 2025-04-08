@@ -9,6 +9,8 @@ import (
 )
 
 const defaultRole = "user"
+const defaultStatus = "Active"
+const defaultVerified = "No"
 
 type CreateUserUseCase struct {
 	repo      user.UserRepository
@@ -31,6 +33,9 @@ func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, erro
 		Email:     input.Email,
 		Password:  hashedPassword,
 		Role:      defaultRole,
+		Status:    defaultStatus,
+		Verified:  defaultVerified,
+		LoggedAt:  nil,
 		CreatedAt: time.Now(),
 		UpdatedAt: nil,
 	}
