@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"pizza-order-api/container"
+	"pizza-order-api/internal/container"
 	"pizza-order-api/internal/interfaces/http/routes"
 
 	"github.com/gin-gonic/gin"
