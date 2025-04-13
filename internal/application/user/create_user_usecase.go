@@ -53,7 +53,7 @@ func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, erro
 	}
 
 	if err := uc.publisher.Publish(event); err != nil {
-		log.Println("Failed to publish user.created event:", err)
+		log.Println("Failed to publish user.registered event:", err)
 	}
 
 	response := UserResponseDTO{

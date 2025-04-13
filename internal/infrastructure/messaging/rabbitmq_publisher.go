@@ -51,7 +51,7 @@ func (p *RabbitMQPublisher) Publish(event event.Event) error {
 
 	err = p.channel.Publish(
 		"email_exchange",     // Exchange name
-		event.GetEventName(), // Routing key (e.g., user.created, order.created)
+		event.GetEventName(), // Routing key (e.g., user.registered, order.created)
 		false,                // Mandatory
 		false,                // Immediate
 		amqp091.Publishing{
