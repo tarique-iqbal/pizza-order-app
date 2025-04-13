@@ -49,12 +49,12 @@ func TestRabbitMQConsumer_Run_DispatchSuccess(t *testing.T) {
 	go consumer.Run(ctx, msgs, dispatcher)
 
 	// Simulate a valid message
-	msgs <- makeDelivery([]byte(`{"email":"test@example.com"}`), "user.created", false)
+	msgs <- makeDelivery([]byte(`{"email":"test@example.com"}`), "user.registered", false)
 
 	time.Sleep(100 * time.Millisecond) // Give goroutine time to process
 
 	assert.True(t, dispatcher.DispatchCalled)
-	assert.Equal(t, "user.created", dispatcher.EventReceived.Name)
+	assert.Equal(t, "user.registered", dispatcher.EventReceived.Name)
 }
 
 func TestRabbitMQConsumer_Run_DispatchFailsOnce(t *testing.T) {
@@ -67,7 +67,7 @@ func TestRabbitMQConsumer_Run_DispatchFailsOnce(t *testing.T) {
 	consumer := &messaging.RabbitMQConsumer{}
 	go consumer.Run(ctx, msgs, dispatcher)
 
-	msgs <- makeDelivery([]byte(`{}`), "user.created", false)
+	msgs <- makeDelivery([]byte(`{}`), "user.registered", false)
 
 	time.Sleep(100 * time.Millisecond)
 
