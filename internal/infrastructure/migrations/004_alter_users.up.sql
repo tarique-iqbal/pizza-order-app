@@ -1,0 +1,4 @@
+ALTER TABLE users
+DROP COLUMN IF EXISTS verified;
+
+DROP TYPE IF EXISTS email_verified_enum CASCADE;
