@@ -12,7 +12,6 @@ type User struct {
 	Password  string     `gorm:"not null"`
 	Role      string     `gorm:"size:16;default:'user'"`
 	Status    string     `gorm:"type:user_status_enum;default:'Active'"`
-	Verified  string     `gorm:"type:email_verified_enum;default:'No'"`
 	LoggedAt  *time.Time `gorm:"column:logged_at;default:null"`
 	CreatedAt time.Time  `gorm:"autoCreateTime"`
 	UpdatedAt *time.Time `gorm:"default:null"`
