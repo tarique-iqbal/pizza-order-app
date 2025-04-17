@@ -1,6 +1,7 @@
 package db
 
 import (
+	"api-service/internal/domain/auth"
 	"api-service/internal/domain/restaurant"
 	"api-service/internal/domain/user"
 	"log"
@@ -22,6 +23,7 @@ func SetupTestDB() *gorm.DB {
 	db := InitTestDB()
 
 	err := db.AutoMigrate(
+		&auth.EmailVerification{},
 		&user.User{},
 		&restaurant.Restaurant{},
 	)
