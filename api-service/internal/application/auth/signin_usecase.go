@@ -1,17 +1,19 @@
 package auth
 
 import (
+	"api-service/internal/domain/auth"
 	"api-service/internal/domain/user"
 	"api-service/internal/infrastructure/security"
 	"errors"
 )
 
 type SignInUseCase struct {
-	repo user.UserRepository
+	repo   user.UserRepository
+	hasher auth.PasswordHasher
 }
 
-func NewSignInUseCase(repo user.UserRepository) *SignInUseCase {
-	return &SignInUseCase{repo: repo}
+func NewSignInUseCase(repo user.UserRepository, hasher auth.PasswordHasher) *SignInUseCase {
+	return &SignInUseCase{repo: repo, hasher: hasher}
 }
 
 func (uc *SignInUseCase) Execute(email string, password string) (string, error) {
@@ -24,7 +26,7 @@ func (uc *SignInUseCase) Execute(email string, password string) (string, error) 
 		return "", errors.New("internal server error")
 	}
 
-	status := security.ComparePassword(user.Password, password)
+	status := uc.hasher.Compare(user.Password, password)
 	if !status {
 		return "", errors.New("invalid credentials")
 	}

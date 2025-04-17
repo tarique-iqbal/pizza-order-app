@@ -7,6 +7,7 @@ import (
 	"api-service/internal/infrastructure/db"
 	"api-service/internal/infrastructure/messaging"
 	"api-service/internal/infrastructure/persistence"
+	"api-service/internal/infrastructure/security"
 	"api-service/internal/infrastructure/validator"
 	"api-service/internal/interfaces/http"
 	"os"
@@ -27,13 +28,14 @@ func NewContainer() (*Container, error) {
 
 	amqpURL := os.Getenv("RABBITMQ_URL")
 	publisher := messaging.NewRabbitMQPublisher(amqpURL)
+	hasher := security.NewPasswordHasher()
 
 	userRepo := persistence.NewUserRepository(database)
 	restaurantRepo := persistence.NewRestaurantRepository(database)
 	customValidator := validator.NewCustomValidator(userRepo, restaurantRepo)
 
 	// user
-	createUserUseCase := user.NewCreateUserUseCase(userRepo, publisher)
+	createUserUseCase := user.NewCreateUserUseCase(userRepo, hasher, publisher)
 	userUseCases := &http.UserUseCases{
 		CreateUser:      createUserUseCase,
 		CustomValidator: customValidator,
@@ -41,7 +43,7 @@ func NewContainer() (*Container, error) {
 	userHandler := http.NewUserHandler(userUseCases)
 
 	// auth
-	signInUseCase := auth.NewSignInUseCase(userRepo)
+	signInUseCase := auth.NewSignInUseCase(userRepo, hasher)
 	authUseCases := &http.AuthUseCases{
 		SignIn: signInUseCase,
 	}

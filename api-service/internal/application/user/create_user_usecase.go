@@ -1,8 +1,8 @@
 package user
 
 import (
+	"api-service/internal/domain/auth"
 	"api-service/internal/domain/user"
-	"api-service/internal/infrastructure/security"
 	"api-service/internal/shared/event"
 	"log"
 	"time"
@@ -13,15 +13,16 @@ const defaultStatus = "Active"
 
 type CreateUserUseCase struct {
 	repo      user.UserRepository
+	hasher    auth.PasswordHasher
 	publisher event.EventPublisher
 }
 
-func NewCreateUserUseCase(repo user.UserRepository, publisher event.EventPublisher) *CreateUserUseCase {
-	return &CreateUserUseCase{repo: repo, publisher: publisher}
+func NewCreateUserUseCase(repo user.UserRepository, hasher auth.PasswordHasher, publisher event.EventPublisher) *CreateUserUseCase {
+	return &CreateUserUseCase{repo: repo, hasher: hasher, publisher: publisher}
 }
 
 func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, error) {
-	hashedPassword, err := security.HashPassword(input.Password)
+	hashedPassword, err := uc.hasher.Hash(input.Password)
 	if err != nil {
 		return UserResponseDTO{}, err
 	}

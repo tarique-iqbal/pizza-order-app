@@ -3,6 +3,7 @@ package user_test
 import (
 	aUser "api-service/internal/application/user"
 	"api-service/internal/infrastructure/persistence"
+	"api-service/internal/infrastructure/security"
 	"api-service/internal/shared/event"
 	"api-service/tests/internal/infrastructure/db"
 	"api-service/tests/internal/infrastructure/db/fixtures"
@@ -31,13 +32,14 @@ func (m *MockEventPublisher) Publish(e event.Event) error {
 func createUserUseCase() *aUser.CreateUserUseCase {
 	testDB := db.SetupTestDB()
 	userRepo := persistence.NewUserRepository(testDB)
+	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
 
 	if err := fixtures.LoadUserFixtures(testDB); err != nil {
 		panic(err)
 	}
 
-	return aUser.NewCreateUserUseCase(userRepo, mockPublisher)
+	return aUser.NewCreateUserUseCase(userRepo, hasher, mockPublisher)
 }
 
 func TestCreateUserUseCase(t *testing.T) {

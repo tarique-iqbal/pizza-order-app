@@ -3,6 +3,7 @@ package http_test
 import (
 	"api-service/internal/application/user"
 	"api-service/internal/infrastructure/persistence"
+	"api-service/internal/infrastructure/security"
 	iValidator "api-service/internal/infrastructure/validator"
 	uiHttp "api-service/internal/interfaces/http"
 	"api-service/internal/shared/event"
@@ -34,9 +35,10 @@ func (m *MockEventPublisher) Publish(e event.Event) error {
 
 func setupUserHandler() *uiHttp.UserHandler {
 	userRepo := persistence.NewUserRepository(testDB)
+	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
 
-	createUserUseCase := user.NewCreateUserUseCase(userRepo, mockPublisher)
+	createUserUseCase := user.NewCreateUserUseCase(userRepo, hasher, mockPublisher)
 	customValidator := iValidator.NewCustomValidator(userRepo, nil)
 	userUseCases := &uiHttp.UserUseCases{
 		CreateUser:      createUserUseCase,
