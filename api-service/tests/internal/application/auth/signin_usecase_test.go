@@ -31,6 +31,7 @@ func (m *MockUserRepository) Create(user *user.User) error {
 func TestSignInUseCase_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	hasher := security.NewPasswordHasher()
+	jwt := security.NewJWTService("TestSecretKey")
 	password, _ := hasher.Hash("password")
 
 	mockRepo.On("FindByEmail", "test@example.com").Return(&user.User{
@@ -39,7 +40,7 @@ func TestSignInUseCase_Success(t *testing.T) {
 		Password: password,
 	}, nil)
 
-	useCase := auth.NewSignInUseCase(mockRepo, hasher)
+	useCase := auth.NewSignInUseCase(mockRepo, hasher, jwt)
 
 	token, err := useCase.Execute("test@example.com", "password")
 	assert.NoError(t, err)
@@ -49,6 +50,7 @@ func TestSignInUseCase_Success(t *testing.T) {
 func TestSignInUseCase_InvalidPassword(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	hasher := security.NewPasswordHasher()
+	jwt := security.NewJWTService("TestSecretKey")
 	password, _ := hasher.Hash("password")
 
 	mockRepo.On("FindByEmail", "test@example.com").Return(&user.User{
@@ -57,7 +59,7 @@ func TestSignInUseCase_InvalidPassword(t *testing.T) {
 		Password: password,
 	}, nil)
 
-	useCase := auth.NewSignInUseCase(mockRepo, hasher)
+	useCase := auth.NewSignInUseCase(mockRepo, hasher, jwt)
 
 	token, err := useCase.Execute("test@example.com", "wrongpassword")
 	assert.Error(t, err)
@@ -67,9 +69,10 @@ func TestSignInUseCase_InvalidPassword(t *testing.T) {
 func TestSignInUseCase_UserNotFound(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	hasher := security.NewPasswordHasher()
+	jwt := security.NewJWTService("TestSecretKey")
 	mockRepo.On("FindByEmail", "notfound@example.com").Return(nil, errors.New("user not found"))
 
-	useCase := auth.NewSignInUseCase(mockRepo, hasher)
+	useCase := auth.NewSignInUseCase(mockRepo, hasher, jwt)
 
 	token, err := useCase.Execute("notfound@example.com", "password")
 	assert.Error(t, err)

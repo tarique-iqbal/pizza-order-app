@@ -1,7 +1,7 @@
 package container
 
 import (
-	"api-service/internal/application/auth"
+	aAuth "api-service/internal/application/auth"
 	"api-service/internal/application/restaurant"
 	"api-service/internal/application/user"
 	"api-service/internal/infrastructure/db"
@@ -10,6 +10,7 @@ import (
 	"api-service/internal/infrastructure/security"
 	"api-service/internal/infrastructure/validator"
 	"api-service/internal/interfaces/http"
+	"api-service/internal/interfaces/http/middlewares"
 	"os"
 
 	"gorm.io/gorm"
@@ -21,15 +22,22 @@ type Container struct {
 	RestaurantHandler *http.RestaurantHandler
 	DB                *gorm.DB
 	Publisher         *messaging.RabbitMQPublisher
+	Middleware        *middlewares.Middleware
 }
 
 func NewContainer() (*Container, error) {
 	database, _ := db.InitDB()
 
 	amqpURL := os.Getenv("RABBITMQ_URL")
+	jwtSecret := os.Getenv("JWT_SECRET")
+
 	publisher := messaging.NewRabbitMQPublisher(amqpURL)
 	hasher := security.NewPasswordHasher()
+	jwtService := security.NewJWTService(jwtSecret)
+	middleware := middlewares.NewMiddleware(jwtService)
+	otp := security.NewSixDigitOTPGenerator()
 
+	emailVerificationRepo := persistence.NewEmailVerificationRepository(database)
 	userRepo := persistence.NewUserRepository(database)
 	restaurantRepo := persistence.NewRestaurantRepository(database)
 	customValidator := validator.NewCustomValidator(userRepo, restaurantRepo)
@@ -43,9 +51,11 @@ func NewContainer() (*Container, error) {
 	userHandler := http.NewUserHandler(userUseCases)
 
 	// auth
-	signInUseCase := auth.NewSignInUseCase(userRepo, hasher)
+	signInUseCase := aAuth.NewSignInUseCase(userRepo, hasher, jwtService)
+	createEmailVerificationUseCase := aAuth.NewCreateEmailVerificationUseCase(emailVerificationRepo, otp, publisher)
 	authUseCases := &http.AuthUseCases{
-		SignIn: signInUseCase,
+		SignIn:                  signInUseCase,
+		CreateEmailVerification: createEmailVerificationUseCase,
 	}
 	authHandler := http.NewAuthHandler(authUseCases)
 
@@ -63,6 +73,7 @@ func NewContainer() (*Container, error) {
 		RestaurantHandler: restaurantHandler,
 		DB:                database,
 		Publisher:         publisher,
+		Middleware:        middleware,
 	}, nil
 }
 

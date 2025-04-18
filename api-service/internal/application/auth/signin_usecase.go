@@ -3,17 +3,17 @@ package auth
 import (
 	"api-service/internal/domain/auth"
 	"api-service/internal/domain/user"
-	"api-service/internal/infrastructure/security"
 	"errors"
 )
 
 type SignInUseCase struct {
 	repo   user.UserRepository
 	hasher auth.PasswordHasher
+	jwt    auth.JWTService
 }
 
-func NewSignInUseCase(repo user.UserRepository, hasher auth.PasswordHasher) *SignInUseCase {
-	return &SignInUseCase{repo: repo, hasher: hasher}
+func NewSignInUseCase(repo user.UserRepository, hasher auth.PasswordHasher, jwt auth.JWTService) *SignInUseCase {
+	return &SignInUseCase{repo: repo, hasher: hasher, jwt: jwt}
 }
 
 func (uc *SignInUseCase) Execute(email string, password string) (string, error) {
@@ -31,7 +31,7 @@ func (uc *SignInUseCase) Execute(email string, password string) (string, error) 
 		return "", errors.New("invalid credentials")
 	}
 
-	token, err := security.GenerateJWT(user.ID)
+	token, err := uc.jwt.GenerateToken(user.ID)
 	if err != nil {
 		return "", err
 	}

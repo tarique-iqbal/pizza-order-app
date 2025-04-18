@@ -7,12 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRestaurantRoutes(router *gin.Engine, rh *http.RestaurantHandler) {
+func SetupRestaurantRoutes(router *gin.Engine, rh *http.RestaurantHandler, m *middlewares.Middleware) {
 	api := router.Group("/api")
 	{
 		restaurants := api.Group("/restaurants")
 		{
-			authRoutes := restaurants.Use(middlewares.AuthMiddleware())
+			authRoutes := restaurants.Use(m.Auth)
 			authRoutes.POST("", rh.Create)
 		}
 	}

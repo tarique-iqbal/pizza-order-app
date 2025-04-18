@@ -20,8 +20,9 @@ import (
 func setupAuthHandler() *uiHttp.AuthHandler {
 	userRepo := persistence.NewUserRepository(testDB)
 	hasher := security.NewPasswordHasher()
+	jwt := security.NewJWTService("TestSecretKey")
 
-	signInUseCase := auth.NewSignInUseCase(userRepo, hasher)
+	signInUseCase := auth.NewSignInUseCase(userRepo, hasher, jwt)
 	authUseCases := &uiHttp.AuthUseCases{
 		SignIn: signInUseCase,
 	}
@@ -33,6 +34,7 @@ func TestAuthHandler_SignIn_Success(t *testing.T) {
 	aHandler := setupAuthHandler()
 	repo := persistence.NewUserRepository(testDB)
 	hasher := security.NewPasswordHasher()
+	jwt := security.NewJWTService("TestSecretKey")
 	hp, _ := hasher.Hash("password123")
 
 	newUser := &user.User{
@@ -75,7 +77,7 @@ func TestAuthHandler_SignIn_Success(t *testing.T) {
 		jsonString := recorder.Body.String()
 		var data map[string]interface{}
 		json.Unmarshal([]byte(jsonString), &data)
-		_, err := security.ValidateToken(data["token"].(string))
+		_, err := jwt.ParseToken(data["token"].(string))
 
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expectedCode, recorder.Code)
