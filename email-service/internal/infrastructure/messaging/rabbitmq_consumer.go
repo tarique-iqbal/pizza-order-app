@@ -41,7 +41,10 @@ func NewRabbitMQConsumer(amqpURL string) *RabbitMQConsumer {
 		log.Fatalf("Failed to declare queue: %v", err)
 	}
 
-	routingKeys := []string{"user.registered", "order.created"}
+	routingKeys := []string{
+		"email.verification_created",
+		"user.registered",
+	}
 	for _, key := range routingKeys {
 		err = ch.QueueBind(
 			q.Name,           // Queue name

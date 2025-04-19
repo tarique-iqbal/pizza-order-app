@@ -26,9 +26,11 @@ func NewContainer() (*Container, error) {
 	template := iEmail.NewHTMLTemplateLoader("internal/infrastructure/email/templates")
 
 	userRegisteredHandler := aEmail.NewUserRegisteredHandler(smtpSender, template)
+	emailVerificationCreatedHandler := aEmail.NewEmailVerificationCreatedHandler(smtpSender, template)
 
 	dispatcher := aEmail.NewEventDispatcher()
 	dispatcher.Register("user.registered", userRegisteredHandler)
+	dispatcher.Register("email.verification_created", emailVerificationCreatedHandler)
 
 	consumer := messaging.NewRabbitMQConsumer(amqpURL)
 
