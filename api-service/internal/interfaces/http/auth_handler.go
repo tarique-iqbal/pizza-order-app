@@ -13,7 +13,8 @@ type AuthHandler struct {
 }
 
 type AuthUseCases struct {
-	SignIn *auth.SignInUseCase
+	SignIn                  *auth.SignInUseCase
+	CreateEmailVerification *auth.CreateEmailVerificationUseCase
 }
 
 func NewAuthHandler(useCases *AuthUseCases) *AuthHandler {
@@ -39,4 +40,22 @@ func (h *AuthHandler) SignIn(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {
+	var dto auth.EmailVerificationRequestDTO
+
+	if err := ctx.ShouldBindJSON(&dto); err != nil {
+		errors := validation.ExtractValidationErrors(err)
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errors})
+		return
+	}
+
+	err := h.useCases.CreateEmailVerification.Execute(dto)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create verification"})
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
 }

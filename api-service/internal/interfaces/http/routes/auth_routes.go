@@ -11,6 +11,7 @@ func SetupAuthRoutes(router *gin.Engine, authHandler *http.AuthHandler) {
 	{
 		users := api.Group("/auth")
 		{
+			users.POST("/email-verification", authHandler.CreateEmailVerification)
 			users.POST("/signin", authHandler.SignIn)
 		}
 	}
