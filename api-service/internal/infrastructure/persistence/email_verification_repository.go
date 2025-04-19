@@ -10,7 +10,7 @@ type EmailVerificationRepositoryImpl struct {
 	db *gorm.DB
 }
 
-func NewEmailVerificationRepositoryImpl(db *gorm.DB) auth.EmailVerificationRepository {
+func NewEmailVerificationRepository(db *gorm.DB) auth.EmailVerificationRepository {
 	return &EmailVerificationRepositoryImpl{db: db}
 }
 

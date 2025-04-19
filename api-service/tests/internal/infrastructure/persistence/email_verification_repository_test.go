@@ -18,7 +18,7 @@ func setupEmailVerificationRepo() auth.EmailVerificationRepository {
 		panic(err)
 	}
 
-	return persistence.NewEmailVerificationRepositoryImpl(testDB)
+	return persistence.NewEmailVerificationRepository(testDB)
 }
 
 func TestEmailVerificationRepository_Create(t *testing.T) {
