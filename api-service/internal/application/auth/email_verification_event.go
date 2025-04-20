@@ -3,7 +3,7 @@ package auth
 type EmailVerificationCreatedEvent struct {
 	Email     string `json:"email"`
 	Code      string `json:"code"`
-	Name      string `json:"name"`
+	EventName string `json:"event_name"`
 	Timestamp string `json:"timestamp"`
 }
 

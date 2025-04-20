@@ -17,7 +17,11 @@ type CreateUserUseCase struct {
 	publisher event.EventPublisher
 }
 
-func NewCreateUserUseCase(repo user.UserRepository, hasher auth.PasswordHasher, publisher event.EventPublisher) *CreateUserUseCase {
+func NewCreateUserUseCase(
+	repo user.UserRepository,
+	hasher auth.PasswordHasher,
+	publisher event.EventPublisher,
+) *CreateUserUseCase {
 	return &CreateUserUseCase{repo: repo, hasher: hasher, publisher: publisher}
 }
 
@@ -44,12 +48,11 @@ func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, erro
 	}
 
 	event := UserCreatedEvent{
-		UserID:    newUser.ID,
 		Email:     newUser.Email,
 		FirstName: newUser.FirstName,
-		LastName:  newUser.LastName,
 		Timestamp: newUser.CreatedAt.Format(time.RFC3339),
 	}
+	event.EventName = event.GetEventName()
 
 	if err := uc.publisher.Publish(event); err != nil {
 		log.Println("Failed to publish user.registered event:", err)

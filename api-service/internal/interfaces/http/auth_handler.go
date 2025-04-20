@@ -22,18 +22,15 @@ func NewAuthHandler(useCases *AuthUseCases) *AuthHandler {
 }
 
 func (h *AuthHandler) SignIn(ctx *gin.Context) {
-	var req struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
-	}
+	var dto auth.SignInRequestDTO
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
+	if err := ctx.ShouldBindJSON(&dto); err != nil {
 		errors := validation.ExtractValidationErrors(err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"errors": errors})
 		return
 	}
 
-	token, err := h.useCases.SignIn.Execute(req.Email, req.Password)
+	token, err := h.useCases.SignIn.Execute(dto.Email, dto.Password)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return

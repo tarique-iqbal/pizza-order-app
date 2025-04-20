@@ -61,7 +61,6 @@ func TestCreateUserUseCase(t *testing.T) {
 	createdEvent, ok := mockPublisher.PublishedEvents[0].(aUser.UserCreatedEvent)
 	assert.True(t, ok)
 	assert.Equal(t, "Adam", createdEvent.FirstName)
-	assert.Equal(t, "D'Angelo", createdEvent.LastName)
 	assert.Equal(t, "adam.dangelo@example.com", createdEvent.Email)
 	assert.Equal(t, "user.registered", createdEvent.GetEventName())
 	assert.Len(t, mockPublisher.PublishedEvents, 1)

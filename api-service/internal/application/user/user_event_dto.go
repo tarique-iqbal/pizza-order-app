@@ -1,10 +1,9 @@
 package user
 
 type UserCreatedEvent struct {
-	UserID    uint   `json:"user_id"`
 	Email     string `json:"email"`
 	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	EventName string `json:"event_name"`
 	Timestamp string `json:"timestamp"`
 }
 

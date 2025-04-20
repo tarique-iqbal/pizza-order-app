@@ -12,7 +12,10 @@ type CustomValidator struct {
 	restaurantRepo restaurant.RestaurantRepository
 }
 
-func NewCustomValidator(userRepo user.UserRepository, restaurantRepo restaurant.RestaurantRepository) *CustomValidator {
+func NewCustomValidator(
+	userRepo user.UserRepository,
+	restaurantRepo restaurant.RestaurantRepository,
+) *CustomValidator {
 	return &CustomValidator{userRepo: userRepo, restaurantRepo: restaurantRepo}
 }
 

@@ -9,14 +9,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
-var testDB *gorm.DB
 var createUseCase *aRestaurant.CreateRestaurantUseCase
 
 func TestMain(m *testing.M) {
-	testDB = db.SetupTestDB()
+	testDB := db.SetupTestDB()
 
 	if err := fixtures.LoadRestaurantFixtures(testDB); err != nil {
 		panic(err)

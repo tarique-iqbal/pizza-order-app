@@ -12,7 +12,11 @@ type SignInUseCase struct {
 	jwt    auth.JWTService
 }
 
-func NewSignInUseCase(repo user.UserRepository, hasher auth.PasswordHasher, jwt auth.JWTService) *SignInUseCase {
+func NewSignInUseCase(
+	repo user.UserRepository,
+	hasher auth.PasswordHasher,
+	jwt auth.JWTService,
+) *SignInUseCase {
 	return &SignInUseCase{repo: repo, hasher: hasher, jwt: jwt}
 }
 

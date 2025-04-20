@@ -62,7 +62,7 @@ func (uc *CreateEmailVerificationUseCase) Execute(input EmailVerificationRequest
 		Code:      code,
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
-	event.Name = event.GetEventName()
+	event.EventName = event.GetEventName()
 
 	return uc.publisher.Publish(event)
 }
