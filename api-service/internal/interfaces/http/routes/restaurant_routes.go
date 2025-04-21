@@ -12,7 +12,7 @@ func SetupRestaurantRoutes(router *gin.Engine, rh *http.RestaurantHandler, m *mi
 	{
 		restaurants := api.Group("/restaurants")
 		{
-			authRoutes := restaurants.Use(m.Auth)
+			authRoutes := restaurants.Use(m.Auth, m.EnsureOwner)
 			authRoutes.POST("", rh.Create)
 		}
 	}
