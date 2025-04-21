@@ -35,7 +35,7 @@ func (uc *SignInUseCase) Execute(email string, password string) (string, error) 
 		return "", errors.New("invalid credentials")
 	}
 
-	token, err := uc.jwt.GenerateToken(user.ID)
+	token, err := uc.jwt.GenerateToken(user.ID, user.Role)
 	if err != nil {
 		return "", err
 	}

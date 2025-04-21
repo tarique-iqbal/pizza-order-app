@@ -24,7 +24,8 @@ func TestJWTService_GenerateToken(t *testing.T) {
 	jwtService := InitJWT()
 
 	userID := uint(1)
-	tokenString, err := jwtService.GenerateToken(userID)
+	role := "User"
+	tokenString, err := jwtService.GenerateToken(userID, role)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, tokenString)
 
@@ -37,7 +38,8 @@ func TestJWTService_ValidToken(t *testing.T) {
 	jwtService := InitJWT()
 
 	userID := uint(1)
-	tokenString, _ := jwtService.GenerateToken(userID)
+	role := "Owner"
+	tokenString, _ := jwtService.GenerateToken(userID, role)
 
 	_, err := jwtService.ParseToken(tokenString)
 	assert.NoError(t, err)
