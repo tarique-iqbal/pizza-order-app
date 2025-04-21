@@ -5,6 +5,7 @@ type UserCreateDTO struct {
 	LastName  string `json:"last_name" binding:"required"`
 	Email     string `json:"email" binding:"required,email,uniqueEmail"`
 	Password  string `json:"password" binding:"required,min=6"`
+	Role      string `json:"role" binding:"required,oneof=User Owner Admin"`
 }
 
 type UserResponseDTO struct {

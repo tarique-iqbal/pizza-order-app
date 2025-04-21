@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-const defaultRole = "user"
 const defaultStatus = "Active"
 
 type CreateUserUseCase struct {
@@ -36,7 +35,7 @@ func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, erro
 		LastName:  input.LastName,
 		Email:     input.Email,
 		Password:  hashedPassword,
-		Role:      defaultRole,
+		Role:      input.Role,
 		Status:    defaultStatus,
 		LoggedAt:  nil,
 		CreatedAt: time.Now(),
@@ -50,6 +49,7 @@ func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, erro
 	event := UserCreatedEvent{
 		Email:     newUser.Email,
 		FirstName: newUser.FirstName,
+		Role:      newUser.Role,
 		Timestamp: newUser.CreatedAt.Format(time.RFC3339),
 	}
 	event.EventName = event.GetEventName()
