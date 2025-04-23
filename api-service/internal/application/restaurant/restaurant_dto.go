@@ -14,5 +14,5 @@ type RestaurantResponseDTO struct {
 	Slug      string  `json:"slug"`
 	Address   string  `json:"address"`
 	CreatedAt string  `json:"created_at"`
-	UpdatedAt *string `json:"updated_at"`
+	UpdatedAt *string `json:"updated_at,omitempty"`
 }

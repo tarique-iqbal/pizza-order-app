@@ -14,5 +14,5 @@ type User struct {
 	Status    string     `gorm:"type:user_status_enum;default:'Active'"`
 	LoggedAt  *time.Time `gorm:"column:logged_at;default:null"`
 	CreatedAt time.Time  `gorm:"autoCreateTime"`
-	UpdatedAt *time.Time `gorm:"default:null"`
+	UpdatedAt *time.Time `gorm:"autoUpdateTime;default:null"`
 }

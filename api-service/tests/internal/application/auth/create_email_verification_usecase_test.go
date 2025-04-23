@@ -48,10 +48,12 @@ func TestCreateEmailVerificationUseCase_Success(t *testing.T) {
 
 	err := createUseCase.Execute(input)
 	emailVerification, _ := repo.FindByEmail(input.Email)
+	diff := emailVerification.ExpiresAt.Sub(emailVerification.CreatedAt)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, emailVerification)
 	assert.Equal(t, "adam.dangelo@example.com", emailVerification.Email)
+	assert.InDelta(t, 15, diff.Minutes(), 0.0001, "Delta threshold exceeded")
 
 	createdEvent, ok := mockPublisher.PublishedEvents[0].(auth.EmailVerificationCreatedEvent)
 	assert.True(t, ok)

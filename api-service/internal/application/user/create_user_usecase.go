@@ -37,9 +37,6 @@ func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, erro
 		Password:  hashedPassword,
 		Role:      input.Role,
 		Status:    defaultStatus,
-		LoggedAt:  nil,
-		CreatedAt: time.Now(),
-		UpdatedAt: nil,
 	}
 
 	if err := uc.repo.Create(&newUser); err != nil {

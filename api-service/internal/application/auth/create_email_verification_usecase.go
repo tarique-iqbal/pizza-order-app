@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const tokenExpiryMinutes = 15
+
 type CreateEmailVerificationUseCase struct {
 	repo      auth.EmailVerificationRepository
 	otp       auth.OTPGenerator
@@ -33,8 +35,7 @@ func (uc *CreateEmailVerificationUseCase) Execute(input EmailVerificationRequest
 		Email:     email,
 		Code:      code,
 		IsUsed:    false,
-		ExpiresAt: time.Now().Add(15 * time.Minute),
-		CreatedAt: time.Now(),
+		ExpiresAt: time.Now().Add(time.Duration(tokenExpiryMinutes) * time.Minute),
 	}
 
 	existing, err := uc.repo.FindByEmail(email)

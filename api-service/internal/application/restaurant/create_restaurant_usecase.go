@@ -15,12 +15,10 @@ func NewCreateRestaurantUseCase(repo restaurant.RestaurantRepository) *CreateRes
 
 func (uc *CreateRestaurantUseCase) Execute(input RestaurantCreateDTO) (RestaurantResponseDTO, error) {
 	newRestaurant := restaurant.Restaurant{
-		UserID:    input.UserID,
-		Name:      input.Name,
-		Slug:      input.Slug,
-		Address:   input.Address,
-		CreatedAt: time.Now(),
-		UpdatedAt: nil,
+		UserID:  input.UserID,
+		Name:    input.Name,
+		Slug:    input.Slug,
+		Address: input.Address,
 	}
 
 	err := uc.repo.Create(&newRestaurant)
@@ -35,7 +33,6 @@ func (uc *CreateRestaurantUseCase) Execute(input RestaurantCreateDTO) (Restauran
 		Slug:      newRestaurant.Slug,
 		Address:   newRestaurant.Address,
 		CreatedAt: newRestaurant.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: nil,
 	}
 
 	return response, nil
