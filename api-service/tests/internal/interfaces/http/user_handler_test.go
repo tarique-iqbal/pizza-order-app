@@ -58,7 +58,7 @@ func TestUserHandler_CreateUser_Success(t *testing.T) {
 		"last_name":  "Doe",
 		"email":      "alice@example.com",
 		"password":   "pass123",
-		"role":       "user",
+		"role":       "User",
 	})
 
 	req, _ := http.NewRequest("POST", "/api/users", bytes.NewBuffer(reqBody))

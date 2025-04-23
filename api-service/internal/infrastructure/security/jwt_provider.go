@@ -46,7 +46,7 @@ func (j *jwtService) ParseToken(tokenString string) (*auth.Claims, error) {
 	}
 
 	if claims, ok := token.Claims.(*jwtClaims); ok && token.Valid {
-		return &auth.Claims{UserID: claims.UserID}, nil
+		return &auth.Claims{UserID: claims.UserID, Role: claims.Role}, nil
 	}
 
 	return nil, errors.New("invalid token")

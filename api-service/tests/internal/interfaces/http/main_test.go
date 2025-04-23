@@ -22,22 +22,23 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func MockAuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
+func MockAuthMiddleware(expectedRole string) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-			c.Abort()
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			ctx.Abort()
 			return
 		}
 
 		if authHeader != "Bearer mock-valid-token" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			ctx.Abort()
 			return
 		}
 
-		c.Set("userID", uint(1))
-		c.Next()
+		ctx.Set("userID", uint(1))
+		ctx.Set("role", expectedRole)
+		ctx.Next()
 	}
 }

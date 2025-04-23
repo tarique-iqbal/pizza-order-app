@@ -32,6 +32,7 @@ func TestJWTService_GenerateToken(t *testing.T) {
 	claims, err := jwtService.ParseToken(tokenString)
 	assert.NoError(t, err)
 	assert.Equal(t, userID, claims.UserID)
+	assert.Equal(t, role, claims.Role)
 }
 
 func TestJWTService_ValidToken(t *testing.T) {

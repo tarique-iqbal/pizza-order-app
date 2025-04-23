@@ -6,6 +6,7 @@ import (
 	"api-service/internal/infrastructure/persistence"
 	iValidator "api-service/internal/infrastructure/validator"
 	uiHttp "api-service/internal/interfaces/http"
+	"api-service/internal/interfaces/http/middlewares"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -36,7 +37,7 @@ func TestRestaurantHandler_Create_Success(t *testing.T) {
 	router.Use(func(c *gin.Context) {
 		c.Set("userID", uint(1))
 	})
-	router.Use(MockAuthMiddleware())
+	router.Use(MockAuthMiddleware("Owner"), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	reqBody := map[string]string{
@@ -50,13 +51,13 @@ func TestRestaurantHandler_Create_Success(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer mock-valid-token")
 
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, req)
 
-	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Equal(t, http.StatusCreated, recorder.Code)
 
 	var response restaurant.RestaurantResponseDTO
-	json.Unmarshal(w.Body.Bytes(), &response)
+	json.Unmarshal(recorder.Body.Bytes(), &response)
 	assert.Equal(t, "Test Restaurant", response.Name)
 	assert.Equal(t, "test-restaurant", response.Slug)
 	assert.Equal(t, "123 Test Street", response.Address)
@@ -78,7 +79,7 @@ func TestRestaurantHandler_Create_Failure_ValidationError(t *testing.T) {
 	router.Use(func(c *gin.Context) {
 		c.Set("userID", uint(1))
 	})
-	router.Use(MockAuthMiddleware())
+	router.Use(MockAuthMiddleware("Owner"), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	payload := `{"slug": "valid-slug"}`
@@ -101,7 +102,7 @@ func TestRestaurantHandler_Create_Failure_DuplicateSlug(t *testing.T) {
 	router.Use(func(c *gin.Context) {
 		c.Set("userID", uint(1))
 	})
-	router.Use(MockAuthMiddleware())
+	router.Use(MockAuthMiddleware("Owner"), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	// First request (success)
@@ -132,7 +133,7 @@ func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
 	router.Use(func(c *gin.Context) {
 		c.Set("userID", uint(1))
 	})
-	router.Use(MockAuthMiddleware())
+	router.Use(MockAuthMiddleware("Owner"), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	validPayload := `{"name": "New Restaurant", "slug": "new-restaurant", "address": "456 Elm St"}`
@@ -146,4 +147,32 @@ func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
 	assert.Contains(t, recorder.Body.String(), "Unauthorized")
+}
+
+func TestRestaurantHandler_Create_Failure_UnauthorizedRole(t *testing.T) {
+	rHandler := setupRestaurantHandler()
+
+	router := gin.Default()
+	router.Use(func(c *gin.Context) {
+		c.Set("userID", uint(1))
+	})
+	router.Use(MockAuthMiddleware("User"), middlewares.RequireRole("Owner"))
+	router.POST("/api/restaurants", rHandler.Create)
+
+	reqBody := map[string]string{
+		"name":    "Test Restaurant",
+		"slug":    "test-restaurant",
+		"address": "123 Test Street",
+	}
+	jsonBody, _ := json.Marshal(reqBody)
+
+	req, _ := http.NewRequest("POST", "/api/restaurants", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer mock-valid-token")
+
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, req)
+
+	assert.Equal(t, http.StatusForbidden, recorder.Code)
+	assert.Contains(t, recorder.Body.String(), "Access denied")
 }
