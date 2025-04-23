@@ -7,12 +7,12 @@ import (
 )
 
 func RequireRole(expectedRole string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		role := c.MustGet("role").(string)
+	return func(ctx *gin.Context) {
+		role := ctx.MustGet("role").(string)
 		if role != expectedRole {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 			return
 		}
-		c.Next()
+		ctx.Next()
 	}
 }
