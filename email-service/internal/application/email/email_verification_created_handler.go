@@ -25,6 +25,8 @@ func (h *EmailVerificationCreatedHandler) Handle(event email.EventPayload) error
 	}
 
 	appName := os.Getenv("APP_NAME")
+	tokenExpiryMinutes := os.Getenv("TOKEN_EXPIRY_MINUTES")
+
 	subject, err := h.template.Render("email_verification_subject.html", map[string]string{
 		"app_name": appName,
 	})
@@ -32,9 +34,10 @@ func (h *EmailVerificationCreatedHandler) Handle(event email.EventPayload) error
 		return err
 	}
 	body, err := h.template.Render("email_verification_body.html", map[string]string{
-		"email":    payload.Email,
-		"code":     payload.Code,
-		"app_name": appName,
+		"email":                payload.Email,
+		"code":                 payload.Code,
+		"app_name":             appName,
+		"token_expiry_minutes": tokenExpiryMinutes,
 	})
 	if err != nil {
 		return err
