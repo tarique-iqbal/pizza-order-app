@@ -4,6 +4,7 @@ import (
 	aAuth "api-service/internal/application/auth"
 	"api-service/internal/application/restaurant"
 	"api-service/internal/application/user"
+	iAuth "api-service/internal/infrastructure/auth"
 	"api-service/internal/infrastructure/db"
 	"api-service/internal/infrastructure/messaging"
 	"api-service/internal/infrastructure/persistence"
@@ -42,8 +43,10 @@ func NewContainer() (*Container, error) {
 	restaurantRepo := persistence.NewRestaurantRepository(database)
 	customValidator := validator.NewCustomValidator(userRepo, restaurantRepo)
 
+	codeVerifier := iAuth.NewCodeVerificationService(emailVerificationRepo)
+
 	// user
-	createUserUseCase := user.NewCreateUserUseCase(userRepo, hasher, publisher)
+	createUserUseCase := user.NewCreateUserUseCase(codeVerifier, userRepo, hasher, publisher)
 	userUseCases := &http.UserUseCases{
 		CreateUser:      createUserUseCase,
 		CustomValidator: customValidator,

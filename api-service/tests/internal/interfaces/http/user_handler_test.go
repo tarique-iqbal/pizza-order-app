@@ -2,11 +2,13 @@ package http_test
 
 import (
 	"api-service/internal/application/user"
+	"api-service/internal/infrastructure/auth"
 	"api-service/internal/infrastructure/persistence"
 	"api-service/internal/infrastructure/security"
 	iValidator "api-service/internal/infrastructure/validator"
 	uiHttp "api-service/internal/interfaces/http"
 	"api-service/internal/shared/event"
+	"api-service/tests/internal/infrastructure/db/fixtures"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -34,15 +36,21 @@ func (m *MockEventPublisher) Publish(e event.Event) error {
 }
 
 func setupUserHandler() *uiHttp.UserHandler {
+	emailVerificationRepo := persistence.NewEmailVerificationRepository(testDB)
+	codeVerifier := auth.NewCodeVerificationService(emailVerificationRepo)
 	userRepo := persistence.NewUserRepository(testDB)
 	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
 
-	createUserUseCase := user.NewCreateUserUseCase(userRepo, hasher, mockPublisher)
+	createUserUseCase := user.NewCreateUserUseCase(codeVerifier, userRepo, hasher, mockPublisher)
 	customValidator := iValidator.NewCustomValidator(userRepo, nil)
 	userUseCases := &uiHttp.UserUseCases{
 		CreateUser:      createUserUseCase,
 		CustomValidator: customValidator,
+	}
+
+	if err := fixtures.LoadEmailVerificationFixtures(testDB); err != nil {
+		panic(err)
 	}
 
 	return uiHttp.NewUserHandler(userUseCases)
@@ -59,6 +67,7 @@ func TestUserHandler_CreateUser_Success(t *testing.T) {
 		"email":      "alice@example.com",
 		"password":   "pass123",
 		"role":       "User",
+		"code":       "347578",
 	})
 
 	req, _ := http.NewRequest("POST", "/api/users", bytes.NewBuffer(reqBody))

@@ -11,20 +11,31 @@ import (
 const defaultStatus = "Active"
 
 type CreateUserUseCase struct {
-	repo      user.UserRepository
-	hasher    auth.PasswordHasher
-	publisher event.EventPublisher
+	codeVerifier auth.CodeVerifier
+	repo         user.UserRepository
+	hasher       auth.PasswordHasher
+	publisher    event.EventPublisher
 }
 
 func NewCreateUserUseCase(
+	codeVerifier auth.CodeVerifier,
 	repo user.UserRepository,
 	hasher auth.PasswordHasher,
 	publisher event.EventPublisher,
 ) *CreateUserUseCase {
-	return &CreateUserUseCase{repo: repo, hasher: hasher, publisher: publisher}
+	return &CreateUserUseCase{
+		codeVerifier: codeVerifier,
+		repo:         repo,
+		hasher:       hasher,
+		publisher:    publisher,
+	}
 }
 
 func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, error) {
+	if err := uc.codeVerifier.Verify(input.Email, input.Code); err != nil {
+		return UserResponseDTO{}, err
+	}
+
 	hashedPassword, err := uc.hasher.Hash(input.Password)
 	if err != nil {
 		return UserResponseDTO{}, err

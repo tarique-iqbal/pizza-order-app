@@ -39,7 +39,7 @@ func (h *UserHandler) Create(ctx *gin.Context) {
 
 	response, err := h.useCases.CreateUser.Execute(input)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

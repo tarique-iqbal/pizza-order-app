@@ -2,6 +2,7 @@ package user_test
 
 import (
 	aUser "api-service/internal/application/user"
+	"api-service/internal/infrastructure/auth"
 	"api-service/internal/infrastructure/persistence"
 	"api-service/internal/infrastructure/security"
 	"api-service/internal/shared/event"
@@ -31,15 +32,21 @@ func (m *MockEventPublisher) Publish(e event.Event) error {
 
 func createUserUseCase() *aUser.CreateUserUseCase {
 	testDB := db.SetupTestDB()
+
+	emailVerificationRepo := persistence.NewEmailVerificationRepository(testDB)
+	codeVerifier := auth.NewCodeVerificationService(emailVerificationRepo)
 	userRepo := persistence.NewUserRepository(testDB)
 	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
 
+	if err := fixtures.LoadEmailVerificationFixtures(testDB); err != nil {
+		panic(err)
+	}
 	if err := fixtures.LoadUserFixtures(testDB); err != nil {
 		panic(err)
 	}
 
-	return aUser.NewCreateUserUseCase(userRepo, hasher, mockPublisher)
+	return aUser.NewCreateUserUseCase(codeVerifier, userRepo, hasher, mockPublisher)
 }
 
 func TestCreateUserUseCase(t *testing.T) {
@@ -50,6 +57,7 @@ func TestCreateUserUseCase(t *testing.T) {
 		LastName:  "D'Angelo",
 		Email:     "adam.dangelo@example.com",
 		Password:  "securepassword",
+		Code:      "476190",
 	}
 
 	user, err := createUseCase.Execute(input)
