@@ -2,6 +2,7 @@ package http
 
 import (
 	"api-service/internal/application/user"
+	"api-service/internal/domain/auth"
 	iValidator "api-service/internal/infrastructure/validator"
 	"api-service/internal/interfaces/http/validation"
 	"net/http"
@@ -39,9 +40,24 @@ func (h *UserHandler) Create(ctx *gin.Context) {
 
 	response, err := h.useCases.CreateUser.Execute(input)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		status := h.getHTTPStatusCode(err)
+		ctx.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
 	ctx.JSON(http.StatusCreated, response)
+}
+
+func (h *UserHandler) getHTTPStatusCode(err error) int {
+	switch err {
+	case auth.ErrCodeInvalid,
+		auth.ErrCodeNotIssued:
+		return http.StatusBadRequest
+	case auth.ErrCodeExpired:
+		return http.StatusGone
+	case auth.ErrCodeUsed:
+		return http.StatusConflict
+	default:
+		return http.StatusInternalServerError
+	}
 }

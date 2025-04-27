@@ -50,3 +50,10 @@ func TestVerify_Expired(t *testing.T) {
 	err := svc.Verify("expired@example.com", "743802")
 	assert.ErrorIs(t, err, dAuth.ErrCodeExpired)
 }
+
+func TestVerify_CodeNotIssued(t *testing.T) {
+	svc := setupCodeVerificationService()
+
+	err := svc.Verify("not.found@example.com", "578578")
+	assert.ErrorIs(t, err, dAuth.ErrCodeNotIssued)
+}

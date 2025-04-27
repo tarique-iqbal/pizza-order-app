@@ -22,6 +22,10 @@ func (s *CodeVerificationService) Verify(email string, code string) error {
 		return auth.ErrCodeInvalid
 	}
 
+	if emailVerification == nil {
+		return auth.ErrCodeNotIssued
+	}
+
 	if emailVerification.IsUsed {
 		return auth.ErrCodeUsed
 	}
