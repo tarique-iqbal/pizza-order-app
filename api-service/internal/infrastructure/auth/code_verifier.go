@@ -38,6 +38,7 @@ func (s *CodeVerificationService) Verify(email string, code string) error {
 		return auth.ErrCodeExpired
 	}
 
+	emailVerification.Code = "..."
 	emailVerification.IsUsed = true
 	if err := s.emailVerificationRepo.Updates(emailVerification); err != nil {
 		return errors.New("failed to mark code as used")

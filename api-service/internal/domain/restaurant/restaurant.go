@@ -11,3 +11,7 @@ type Restaurant struct {
 	CreatedAt time.Time  `gorm:"autoCreateTime"`
 	UpdatedAt *time.Time `gorm:"autoUpdateTime;default:null"`
 }
+
+func (Restaurant) TableName() string {
+	return "restaurants"
+}

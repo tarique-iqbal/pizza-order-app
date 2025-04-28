@@ -16,3 +16,7 @@ type User struct {
 	CreatedAt time.Time  `gorm:"autoCreateTime"`
 	UpdatedAt *time.Time `gorm:"autoUpdateTime;default:null"`
 }
+
+func (User) TableName() string {
+	return "users"
+}
