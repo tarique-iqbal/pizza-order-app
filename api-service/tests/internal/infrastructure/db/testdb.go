@@ -22,10 +22,20 @@ func InitTestDB() *gorm.DB {
 func SetupTestDB() *gorm.DB {
 	db := InitTestDB()
 
+	sqlDB, sqlErr := db.DB()
+	if sqlErr != nil {
+		log.Fatalf("Failed to get *sql.DB from GORM: %v", sqlErr)
+	}
+	sqlDB.SetMaxOpenConns(1)
+	sqlDB.SetMaxIdleConns(1)
+
+	db.Exec("PRAGMA foreign_keys = ON")
+
 	err := db.AutoMigrate(
 		&auth.EmailVerification{},
 		&user.User{},
 		&restaurant.Restaurant{},
+		&restaurant.PizzaSize{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to migrate test database: %v", err)

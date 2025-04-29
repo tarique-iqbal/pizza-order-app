@@ -35,3 +35,23 @@ func LoadRestaurantFixtures(db *gorm.DB) error {
 
 	return nil
 }
+
+func CreateRestaurant(db *gorm.DB) (*restaurant.Restaurant, error) {
+	user, err := CreateUser(db)
+	if err != nil {
+		return nil, err
+	}
+
+	restaurant := restaurant.Restaurant{
+		UserID:    user.ID,
+		Name:      "Pizza Tonio",
+		Slug:      "pizza-tonio",
+		Address:   "123 Main Street, Food City",
+		CreatedAt: time.Now(),
+	}
+	if err := db.Create(&restaurant).Error; err != nil {
+		return nil, err
+	}
+
+	return &restaurant, nil
+}
