@@ -6,6 +6,7 @@ import (
 	"api-service/internal/infrastructure/persistence"
 	"api-service/tests/internal/infrastructure/db"
 	"api-service/tests/internal/infrastructure/db/fixtures"
+	"context"
 	"testing"
 	"time"
 
@@ -59,4 +60,30 @@ func TestRestaurantRepository_FindBySlug(t *testing.T) {
 	r, err := env.RestaurantRepo.FindBySlug("pizza-paradise")
 	assert.NoError(t, err)
 	assert.Equal(t, "Pizza Paradise", r.Name)
+}
+
+func TestRestaurantRepository_IsOwnedBy(t *testing.T) {
+	env := setupRestaurantRepoTestEnv()
+
+	rest := restaurant.Restaurant{
+		UserID:    env.User.ID,
+		Name:      "Test Bistro",
+		Slug:      "test-bistro",
+		Address:   "789 Maple Street, Burger Town",
+		CreatedAt: time.Now(),
+	}
+	err := env.RestaurantRepo.Create(&rest)
+	assert.NoError(t, err)
+
+	isOwner, err := env.RestaurantRepo.IsOwnedBy(context.Background(), rest.ID, rest.UserID)
+	assert.NoError(t, err)
+	assert.True(t, isOwner, "User is expected to be the owner")
+
+	isOwner, err = env.RestaurantRepo.IsOwnedBy(context.Background(), rest.ID, 777)
+	assert.NoError(t, err)
+	assert.False(t, isOwner, "User is not expected to be the owner")
+
+	isOwner, err = env.RestaurantRepo.IsOwnedBy(context.Background(), 888, rest.UserID)
+	assert.NoError(t, err)
+	assert.False(t, isOwner, "Non-existent restaurant is expected to return false")
 }

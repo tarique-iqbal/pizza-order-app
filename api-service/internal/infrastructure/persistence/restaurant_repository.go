@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"api-service/internal/domain/restaurant"
+	"context"
 	"errors"
 
 	"gorm.io/gorm"
@@ -26,4 +27,13 @@ func (repo *RestaurantRepositoryImpl) FindBySlug(slug string) (*restaurant.Resta
 		return nil, nil
 	}
 	return &r, err
+}
+
+func (repo *RestaurantRepositoryImpl) IsOwnedBy(ctx context.Context, restaurantID uint, ownerID uint) (bool, error) {
+	var count int64
+	err := repo.db.WithContext(ctx).
+		Model(&restaurant.Restaurant{}).
+		Where("id = ? AND user_id = ?", restaurantID, ownerID).
+		Count(&count).Error
+	return count > 0, err
 }
