@@ -22,9 +22,9 @@ func setupEmailVerificationRepo() auth.EmailVerificationRepository {
 }
 
 func TestEmailVerificationRepository_Create(t *testing.T) {
-	var repo auth.EmailVerificationRepository = setupEmailVerificationRepo()
+	emVerRepo := setupEmailVerificationRepo()
 
-	emailVerification := &auth.EmailVerification{
+	emailVerification := auth.EmailVerification{
 		Email:     "adam.dangelo@example.com",
 		Code:      "467923",
 		IsUsed:    false,
@@ -32,30 +32,30 @@ func TestEmailVerificationRepository_Create(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 
-	err := repo.Create(emailVerification)
+	err := emVerRepo.Create(&emailVerification)
 
 	assert.Nil(t, err)
 	assert.NotZero(t, emailVerification.ID)
 }
 
 func TestEmailVerificationRepository_Updates(t *testing.T) {
-	var repo auth.EmailVerificationRepository = setupEmailVerificationRepo()
+	emVerRepo := setupEmailVerificationRepo()
 
-	existing, _ := repo.FindByEmail("john.doe@example.com")
+	existing, _ := emVerRepo.FindByEmail("john.doe@example.com")
 	existing.Code = "478326"
 	existing.IsUsed = false
 	existing.ExpiresAt = time.Now().Add(15 * time.Minute)
 
-	err := repo.Updates(existing)
+	err := emVerRepo.Updates(existing)
 
 	assert.Nil(t, err)
 }
 
 func TestEmailVerificationRepository_FindByEmail(t *testing.T) {
-	var repo auth.EmailVerificationRepository = setupEmailVerificationRepo()
+	emVerRepo := setupEmailVerificationRepo()
 
-	r, err := repo.FindByEmail("john.doe@example.com")
+	emVer, err := emVerRepo.FindByEmail("john.doe@example.com")
 
 	assert.NoError(t, err)
-	assert.Equal(t, "john.doe@example.com", r.Email)
+	assert.Equal(t, "john.doe@example.com", emVer.Email)
 }

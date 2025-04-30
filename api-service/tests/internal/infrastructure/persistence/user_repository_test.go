@@ -11,8 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var userRepo user.UserRepository
-
 func setupUserRepo() user.UserRepository {
 	testDB := db.SetupTestDB()
 
@@ -24,28 +22,27 @@ func setupUserRepo() user.UserRepository {
 }
 
 func TestUserRepository_Create(t *testing.T) {
-	userRepo = setupUserRepo()
+	userRepo := setupUserRepo()
 
-	newUser := &user.User{
+	usr := user.User{
 		FirstName: "Adam",
 		LastName:  "D'Angelo",
 		Email:     "adam.dangelo@example.com",
 		Password:  "hashedpassword",
-		Role:      "user",
+		Role:      "User",
 		CreatedAt: time.Now(),
-		UpdatedAt: nil,
 	}
 
-	err := userRepo.Create(newUser)
+	err := userRepo.Create(&usr)
 
 	assert.Nil(t, err)
-	assert.NotZero(t, newUser.ID)
+	assert.NotZero(t, usr.ID)
 }
 
 func TestUserRepository_FindByEmail(t *testing.T) {
-	userRepo = setupUserRepo()
+	userRepo := setupUserRepo()
 
-	r, err := userRepo.FindByEmail("john.doe@example.com")
+	usr, err := userRepo.FindByEmail("john.doe@example.com")
 	assert.NoError(t, err)
-	assert.Equal(t, "John", r.FirstName)
+	assert.Equal(t, "John", usr.FirstName)
 }

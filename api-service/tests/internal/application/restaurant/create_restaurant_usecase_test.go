@@ -2,44 +2,57 @@ package restaurant_test
 
 import (
 	aRestaurant "api-service/internal/application/restaurant"
+	"api-service/internal/domain/user"
 	"api-service/internal/infrastructure/persistence"
 	"api-service/tests/internal/infrastructure/db"
 	"api-service/tests/internal/infrastructure/db/fixtures"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-var createUseCase *aRestaurant.CreateRestaurantUseCase
+type createRestaurantUseCaseTestEnv struct {
+	User               *user.User
+	CreateRestaurantUC *aRestaurant.CreateRestaurantUseCase
+}
 
-func TestMain(m *testing.M) {
+func setupCreateRestaurantUseCase() createRestaurantUseCaseTestEnv {
 	testDB := db.SetupTestDB()
 
-	if err := fixtures.LoadRestaurantFixtures(testDB); err != nil {
+	usr, err := fixtures.CreateUser(testDB, "Owner")
+	if err != nil {
+		panic(err)
+	}
+
+	if err := fixtures.LoadRestaurantFixtures(testDB, usr); err != nil {
 		panic(err)
 	}
 
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
-	createUseCase = aRestaurant.NewCreateRestaurantUseCase(restaurantRepo)
+	createRestaurantUC := aRestaurant.NewCreateRestaurantUseCase(restaurantRepo)
 
-	exitCode := m.Run()
-	os.Exit(exitCode)
+	return createRestaurantUseCaseTestEnv{
+		User:               usr,
+		CreateRestaurantUC: createRestaurantUC,
+	}
 }
 
 func TestRestaurantUseCase_Create(t *testing.T) {
+	env := setupCreateRestaurantUseCase()
+
 	input := aRestaurant.RestaurantCreateDTO{
-		UserID:  1,
+		UserID:  env.User.ID,
 		Name:    "Test Restaurant",
 		Slug:    "test-restaurant",
 		Address: "123 Test Street",
 	}
 
-	createdRestaurant, err := createUseCase.Execute(input)
+	rest, err := env.CreateRestaurantUC.Execute(input)
 
 	assert.NoError(t, err)
-	assert.NotZero(t, createdRestaurant.ID)
-	assert.Equal(t, input.Name, createdRestaurant.Name)
-	assert.Equal(t, input.Slug, createdRestaurant.Slug)
-	assert.Equal(t, input.Address, createdRestaurant.Address)
+	assert.NotZero(t, rest.ID)
+	assert.Equal(t, env.User.ID, rest.UserID)
+	assert.Equal(t, input.Name, rest.Name)
+	assert.Equal(t, input.Slug, rest.Slug)
+	assert.Equal(t, input.Address, rest.Address)
 }

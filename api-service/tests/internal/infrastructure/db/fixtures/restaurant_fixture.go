@@ -2,15 +2,16 @@ package fixtures
 
 import (
 	"api-service/internal/domain/restaurant"
+	"api-service/internal/domain/user"
 	"time"
 
 	"gorm.io/gorm"
 )
 
-func LoadRestaurantFixtures(db *gorm.DB) error {
+func LoadRestaurantFixtures(db *gorm.DB, usr *user.User) error {
 	restaurants := []restaurant.Restaurant{
 		{
-			UserID:    1,
+			UserID:    usr.ID,
 			Name:      "Pizza Paradise",
 			Slug:      "pizza-paradise",
 			Address:   "123 Main Street, Food City",
@@ -18,7 +19,7 @@ func LoadRestaurantFixtures(db *gorm.DB) error {
 			UpdatedAt: nil,
 		},
 		{
-			UserID:    2,
+			UserID:    usr.ID,
 			Name:      "Italiano Express",
 			Slug:      "italiano-express",
 			Address:   "456 Olive Avenue, Pasta Town",
@@ -37,7 +38,7 @@ func LoadRestaurantFixtures(db *gorm.DB) error {
 }
 
 func CreateRestaurant(db *gorm.DB) (*restaurant.Restaurant, error) {
-	user, err := CreateUser(db)
+	user, err := CreateUser(db, "Owner")
 	if err != nil {
 		return nil, err
 	}

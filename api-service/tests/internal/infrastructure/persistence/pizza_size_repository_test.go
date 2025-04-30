@@ -17,7 +17,7 @@ type pizzaSizeRepoTestEnv struct {
 	PizzaSizeRepo restaurant.PizzaSizeRepository
 }
 
-func setupPizzaSizeTestEnv() pizzaSizeRepoTestEnv {
+func setupPizzaSizeRepoTestEnv() pizzaSizeRepoTestEnv {
 	testDB := db.SetupTestDB()
 
 	rest, err := fixtures.CreateRestaurant(testDB)
@@ -38,7 +38,7 @@ func setupPizzaSizeTestEnv() pizzaSizeRepoTestEnv {
 }
 
 func TestPizzaSizeRepository_Create(t *testing.T) {
-	env := setupPizzaSizeTestEnv()
+	env := setupPizzaSizeRepoTestEnv()
 
 	ps := restaurant.PizzaSize{
 		RestaurantID: env.Restaurant.ID,
