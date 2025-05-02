@@ -7,6 +7,7 @@ import (
 	iValidator "api-service/internal/infrastructure/validator"
 	uiHttp "api-service/internal/interfaces/http"
 	"api-service/internal/interfaces/http/middlewares"
+	"api-service/tests/internal/infrastructure/db/fixtures"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -17,7 +18,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupRestaurantHandler() *uiHttp.RestaurantHandler {
+func setupRestaurantHandler(t *testing.T) *uiHttp.RestaurantHandler {
+	resetTables(t)
+
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
 	createUseCase := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
 	customValidator := iValidator.NewCustomValidator(nil, restaurantRepo)
@@ -31,13 +34,11 @@ func setupRestaurantHandler() *uiHttp.RestaurantHandler {
 }
 
 func TestRestaurantHandler_Create_Success(t *testing.T) {
-	rHandler := setupRestaurantHandler()
+	rHandler := setupRestaurantHandler(t)
+	usr, _ := fixtures.CreateUser(testDB, "Owner")
 
 	router := gin.Default()
-	router.Use(func(c *gin.Context) {
-		c.Set("userID", uint(1))
-	})
-	router.Use(MockAuthMiddleware("Owner"), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	reqBody := map[string]string{
@@ -61,25 +62,23 @@ func TestRestaurantHandler_Create_Success(t *testing.T) {
 	assert.Equal(t, "Test Restaurant", response.Name)
 	assert.Equal(t, "test-restaurant", response.Slug)
 	assert.Equal(t, "123 Test Street", response.Address)
-	assert.Equal(t, uint(1), response.UserID)
+	assert.Equal(t, usr.ID, response.UserID)
 
 	var createdRestaurant dRestaurant.Restaurant
-	testDB.First(&createdRestaurant)
+	testDB.Where("slug = ?", "test-restaurant").First(&createdRestaurant)
 
 	assert.Equal(t, "Test Restaurant", createdRestaurant.Name)
 	assert.Equal(t, "test-restaurant", createdRestaurant.Slug)
 	assert.Equal(t, "123 Test Street", createdRestaurant.Address)
-	assert.Equal(t, uint(1), createdRestaurant.UserID)
+	assert.Equal(t, usr.ID, createdRestaurant.UserID)
 }
 
 func TestRestaurantHandler_Create_Failure_ValidationError(t *testing.T) {
-	rHandler := setupRestaurantHandler()
+	rHandler := setupRestaurantHandler(t)
+	usr, _ := fixtures.CreateUser(testDB, "Owner")
 
 	router := gin.Default()
-	router.Use(func(c *gin.Context) {
-		c.Set("userID", uint(1))
-	})
-	router.Use(MockAuthMiddleware("Owner"), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	payload := `{"slug": "valid-slug"}`
@@ -96,13 +95,11 @@ func TestRestaurantHandler_Create_Failure_ValidationError(t *testing.T) {
 }
 
 func TestRestaurantHandler_Create_Failure_DuplicateSlug(t *testing.T) {
-	rHandler := setupRestaurantHandler()
+	rHandler := setupRestaurantHandler(t)
+	usr, _ := fixtures.CreateUser(testDB, "Owner")
 
 	router := gin.Default()
-	router.Use(func(c *gin.Context) {
-		c.Set("userID", uint(1))
-	})
-	router.Use(MockAuthMiddleware("Owner"), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	// First request (success)
@@ -127,13 +124,11 @@ func TestRestaurantHandler_Create_Failure_DuplicateSlug(t *testing.T) {
 }
 
 func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
-	rHandler := setupRestaurantHandler()
+	rHandler := setupRestaurantHandler(t)
+	usr, _ := fixtures.CreateUser(testDB, "Owner")
 
 	router := gin.Default()
-	router.Use(func(c *gin.Context) {
-		c.Set("userID", uint(1))
-	})
-	router.Use(MockAuthMiddleware("Owner"), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	validPayload := `{"name": "New Restaurant", "slug": "new-restaurant", "address": "456 Elm St"}`
@@ -150,13 +145,11 @@ func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
 }
 
 func TestRestaurantHandler_Create_Failure_UnauthorizedRole(t *testing.T) {
-	rHandler := setupRestaurantHandler()
+	rHandler := setupRestaurantHandler(t)
+	usr, _ := fixtures.CreateUser(testDB, "User")
 
 	router := gin.Default()
-	router.Use(func(c *gin.Context) {
-		c.Set("userID", uint(1))
-	})
-	router.Use(MockAuthMiddleware("User"), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	reqBody := map[string]string{

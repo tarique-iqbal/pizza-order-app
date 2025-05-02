@@ -6,8 +6,12 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"api-service/internal/domain/auth"
+	"api-service/internal/domain/restaurant"
+	"api-service/internal/domain/user"
 	"api-service/tests/internal/infrastructure/db"
 )
 
@@ -22,7 +26,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func MockAuthMiddleware(expectedRole string) gin.HandlerFunc {
+func MockAuthMiddleware(userID uint, role string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
@@ -37,8 +41,21 @@ func MockAuthMiddleware(expectedRole string) gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set("userID", uint(1))
-		ctx.Set("role", expectedRole)
+		ctx.Set("userID", userID)
+		ctx.Set("role", role)
 		ctx.Next()
+	}
+}
+
+func resetTables(t *testing.T) {
+	tables := []string{
+		auth.EmailVerification{}.TableName(),
+		user.User{}.TableName(),
+		restaurant.Restaurant{}.TableName(),
+	}
+
+	for _, table := range tables {
+		err := testDB.Exec("DELETE FROM " + table).Error
+		require.NoError(t, err)
 	}
 }
