@@ -6,9 +6,10 @@ type PizzaSizeCreateDTO struct {
 }
 
 type PizzaSizeResponseDTO struct {
-	ID        uint    `json:"id"`
-	Title     string  `json:"title"`
-	Size      int     `json:"size"`
-	CreatedAt string  `json:"created_at"`
-	UpdatedAt *string `json:"updated_at,omitempty"`
+	ID           uint    `json:"id"`
+	RestaurantID uint    `json:"restaurant_id"`
+	Title        string  `json:"title"`
+	Size         int     `json:"size"`
+	CreatedAt    string  `json:"created_at"`
+	UpdatedAt    *string `json:"updated_at,omitempty"`
 }

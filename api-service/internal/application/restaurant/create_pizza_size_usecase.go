@@ -46,10 +46,11 @@ func (uc *CreatePizzaSizeUseCase) Execute(
 	}
 
 	response := PizzaSizeResponseDTO{
-		ID:        newPizzaSize.ID,
-		Title:     newPizzaSize.Title,
-		Size:      newPizzaSize.Size,
-		CreatedAt: newPizzaSize.CreatedAt.Format(time.RFC3339),
+		ID:           newPizzaSize.ID,
+		RestaurantID: newPizzaSize.RestaurantID,
+		Title:        newPizzaSize.Title,
+		Size:         newPizzaSize.Size,
+		CreatedAt:    newPizzaSize.CreatedAt.Format(time.RFC3339),
 	}
 
 	return response, nil

@@ -52,6 +52,7 @@ func resetTables(t *testing.T) {
 		auth.EmailVerification{}.TableName(),
 		user.User{}.TableName(),
 		restaurant.Restaurant{}.TableName(),
+		restaurant.PizzaSize{}.TableName(),
 	}
 
 	for _, table := range tables {
