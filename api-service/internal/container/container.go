@@ -2,7 +2,7 @@ package container
 
 import (
 	aAuth "api-service/internal/application/auth"
-	"api-service/internal/application/restaurant"
+	aRestaurant "api-service/internal/application/restaurant"
 	"api-service/internal/application/user"
 	iAuth "api-service/internal/infrastructure/auth"
 	"api-service/internal/infrastructure/db"
@@ -21,6 +21,7 @@ type Container struct {
 	UserHandler       *http.UserHandler
 	AuthHandler       *http.AuthHandler
 	RestaurantHandler *http.RestaurantHandler
+	PizzaSizeHandler  *http.PizzaSizeHandler
 	DB                *gorm.DB
 	Publisher         *messaging.RabbitMQPublisher
 	Middleware        *middlewares.Middleware
@@ -63,17 +64,23 @@ func NewContainer() (*Container, error) {
 	authHandler := http.NewAuthHandler(authUseCases)
 
 	// restaurant
-	createRestaurantUseCase := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
+	createRestaurantUseCase := aRestaurant.NewCreateRestaurantUseCase(restaurantRepo)
 	restaurantUseCase := &http.RestaurantUseCases{
 		CreateRestaurant: createRestaurantUseCase,
 		CustomValidator:  customValidator,
 	}
 	restaurantHandler := http.NewRestaurantHandler(restaurantUseCase)
 
+	// pizza-sizes
+	pizzaSizeRepo := persistence.NewPizzaSizeRepository(database)
+	createPizzaSizeUC := aRestaurant.NewCreatePizzaSizeUseCase(pizzaSizeRepo, restaurantRepo)
+	pizzaSizeHandler := http.NewPizzaSizeHandler(createPizzaSizeUC)
+
 	return &Container{
 		UserHandler:       userHandler,
 		AuthHandler:       authHandler,
 		RestaurantHandler: restaurantHandler,
+		PizzaSizeHandler:  pizzaSizeHandler,
 		DB:                database,
 		Publisher:         publisher,
 		Middleware:        middleware,

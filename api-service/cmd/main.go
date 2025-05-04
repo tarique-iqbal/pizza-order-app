@@ -25,6 +25,7 @@ func main() {
 		UserHandler:       iocContainer.UserHandler,
 		AuthHandler:       iocContainer.AuthHandler,
 		RestaurantHandler: iocContainer.RestaurantHandler,
+		PizzaSizeHandler:  iocContainer.PizzaSizeHandler,
 	}
 
 	routes.SetupRoutes(router, handlers, iocContainer.Middleware)
