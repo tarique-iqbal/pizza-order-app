@@ -37,3 +37,11 @@ func (repo *RestaurantRepositoryImpl) IsOwnedBy(ctx context.Context, restaurantI
 		Count(&count).Error
 	return count > 0, err
 }
+
+func (repo *RestaurantRepositoryImpl) SlugExists(slug string) (bool, error) {
+	var count int64
+	err := repo.db.Model(&restaurant.Restaurant{}).
+		Where("slug = ?", slug).
+		Count(&count).Error
+	return count > 0, err
+}

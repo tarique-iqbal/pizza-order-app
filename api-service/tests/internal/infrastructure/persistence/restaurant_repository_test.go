@@ -87,3 +87,15 @@ func TestRestaurantRepository_IsOwnedBy(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, isOwner, "Non-existent restaurant is expected to return false")
 }
+
+func TestRestaurantRepository_SlugExists(t *testing.T) {
+	env := setupRestaurantRepoTestEnv()
+
+	exists, err := env.RestaurantRepo.SlugExists("pizza-paradise")
+	assert.NoError(t, err)
+	assert.True(t, exists, "Slug is expected to be exists")
+
+	exists, err = env.RestaurantRepo.SlugExists("pizza-random")
+	assert.NoError(t, err)
+	assert.False(t, exists, "Slug is not expected to be exists")
+}

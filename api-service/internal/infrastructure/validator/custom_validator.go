@@ -37,7 +37,16 @@ func (cv *CustomValidator) UniqueEmail(fl validator.FieldLevel) bool {
 }
 
 func (cv *CustomValidator) UniqueRestaurantSlug(fl validator.FieldLevel) bool {
+	if fl.Field().Kind() != reflect.String {
+		log.Printf("invalid kind: %s", fl.Field().Kind())
+		return false
+	}
+
 	slug := fl.Field().String()
-	existingSlug, _ := cv.restaurantRepo.FindBySlug(slug)
-	return existingSlug == nil
+	exists, err := cv.restaurantRepo.SlugExists(slug)
+	if err != nil {
+		log.Printf("error checking if slug is unique: %v", err)
+		return false
+	}
+	return !exists
 }
