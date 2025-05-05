@@ -3,6 +3,8 @@ package validator
 import (
 	"api-service/internal/domain/restaurant"
 	"api-service/internal/domain/user"
+	"log"
+	"reflect"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -20,9 +22,18 @@ func NewCustomValidator(
 }
 
 func (cv *CustomValidator) UniqueEmail(fl validator.FieldLevel) bool {
+	if fl.Field().Kind() != reflect.String {
+		log.Printf("invalid kind: %s", fl.Field().Kind())
+		return false
+	}
+
 	email := fl.Field().String()
-	existingUser, _ := cv.userRepo.FindByEmail(email)
-	return existingUser == nil
+	exists, err := cv.userRepo.EmailExists(email)
+	if err != nil {
+		log.Printf("error checking if email is unique: %v", err)
+		return false
+	}
+	return !exists
 }
 
 func (cv *CustomValidator) UniqueRestaurantSlug(fl validator.FieldLevel) bool {

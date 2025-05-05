@@ -29,3 +29,11 @@ func (repo *UserRepositoryImpl) FindByEmail(email string) (*user.User, error) {
 func (repo *UserRepositoryImpl) Create(u *user.User) error {
 	return repo.db.Create(u).Error
 }
+
+func (repo *UserRepositoryImpl) EmailExists(email string) (bool, error) {
+	var count int64
+	err := repo.db.Model(&user.User{}).
+		Where("email = ?", email).
+		Count(&count).Error
+	return count > 0, err
+}
