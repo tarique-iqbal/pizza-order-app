@@ -3,6 +3,7 @@ package auth
 import (
 	"api-service/internal/domain/auth"
 	"api-service/internal/domain/user"
+	"context"
 	"errors"
 )
 
@@ -20,8 +21,8 @@ func NewSignInUseCase(
 	return &SignInUseCase{repo: repo, hasher: hasher, jwt: jwt}
 }
 
-func (uc *SignInUseCase) Execute(email string, password string) (string, error) {
-	user, err := uc.repo.FindByEmail(email)
+func (uc *SignInUseCase) Execute(ctx context.Context, email string, password string) (string, error) {
+	user, err := uc.repo.FindByEmail(ctx, email)
 	if user == nil {
 		return "", errors.New("no record found")
 	}

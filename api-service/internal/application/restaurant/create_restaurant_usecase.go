@@ -2,6 +2,7 @@ package restaurant
 
 import (
 	"api-service/internal/domain/restaurant"
+	"context"
 	"time"
 )
 
@@ -13,7 +14,10 @@ func NewCreateRestaurantUseCase(repo restaurant.RestaurantRepository) *CreateRes
 	return &CreateRestaurantUseCase{repo: repo}
 }
 
-func (uc *CreateRestaurantUseCase) Execute(input RestaurantCreateDTO) (RestaurantResponseDTO, error) {
+func (uc *CreateRestaurantUseCase) Execute(
+	ctx context.Context,
+	input RestaurantCreateDTO,
+) (RestaurantResponseDTO, error) {
 	newRestaurant := restaurant.Restaurant{
 		UserID:  input.UserID,
 		Name:    input.Name,
@@ -21,7 +25,7 @@ func (uc *CreateRestaurantUseCase) Execute(input RestaurantCreateDTO) (Restauran
 		Address: input.Address,
 	}
 
-	err := uc.repo.Create(&newRestaurant)
+	err := uc.repo.Create(ctx, &newRestaurant)
 	if err != nil {
 		return RestaurantResponseDTO{}, err
 	}

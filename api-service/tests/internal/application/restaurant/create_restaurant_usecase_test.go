@@ -6,6 +6,7 @@ import (
 	"api-service/internal/infrastructure/persistence"
 	"api-service/tests/internal/infrastructure/db"
 	"api-service/tests/internal/infrastructure/db/fixtures"
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,7 +48,7 @@ func TestRestaurantUseCase_Create(t *testing.T) {
 		Address: "123 Test Street",
 	}
 
-	rest, err := env.CreateRestaurantUC.Execute(input)
+	rest, err := env.CreateRestaurantUC.Execute(context.Background(), input)
 
 	assert.NoError(t, err)
 	assert.NotZero(t, rest.ID)

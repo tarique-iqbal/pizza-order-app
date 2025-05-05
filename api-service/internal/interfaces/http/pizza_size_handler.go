@@ -36,8 +36,9 @@ func (h *PizzaSizeHandler) Create(ctx *gin.Context) {
 		return
 	}
 
+	reqCtx := ctx.Request.Context()
 	ownerID := ctx.MustGet("userID").(uint)
-	res, err := h.createPizzaSizeUseCase.Execute(ctx.Request.Context(), uint(restaurantID), ownerID, dto)
+	res, err := h.createPizzaSizeUseCase.Execute(reqCtx, uint(restaurantID), ownerID, dto)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return

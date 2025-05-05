@@ -4,6 +4,7 @@ import (
 	"api-service/internal/domain/auth"
 	"api-service/internal/domain/user"
 	"api-service/internal/shared/event"
+	"context"
 	"log"
 	"time"
 )
@@ -31,8 +32,8 @@ func NewCreateUserUseCase(
 	}
 }
 
-func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, error) {
-	if err := uc.codeVerifier.Verify(input.Email, input.Code); err != nil {
+func (uc *CreateUserUseCase) Execute(ctx context.Context, input UserCreateDTO) (UserResponseDTO, error) {
+	if err := uc.codeVerifier.Verify(ctx, input.Email, input.Code); err != nil {
 		return UserResponseDTO{}, err
 	}
 
@@ -50,7 +51,7 @@ func (uc *CreateUserUseCase) Execute(input UserCreateDTO) (UserResponseDTO, erro
 		Status:    defaultStatus,
 	}
 
-	if err := uc.repo.Create(&newUser); err != nil {
+	if err := uc.repo.Create(ctx, &newUser); err != nil {
 		return UserResponseDTO{}, err
 	}
 

@@ -16,20 +16,30 @@ func NewRestaurantRepository(db *gorm.DB) restaurant.RestaurantRepository {
 	return &RestaurantRepositoryImpl{db: db}
 }
 
-func (r *RestaurantRepositoryImpl) Create(res *restaurant.Restaurant) error {
-	return r.db.Create(res).Error
+func (repo *RestaurantRepositoryImpl) Create(
+	ctx context.Context,
+	res *restaurant.Restaurant,
+) error {
+	return repo.db.WithContext(ctx).Create(res).Error
 }
 
-func (repo *RestaurantRepositoryImpl) FindBySlug(slug string) (*restaurant.Restaurant, error) {
+func (repo *RestaurantRepositoryImpl) FindBySlug(
+	ctx context.Context,
+	slug string,
+) (*restaurant.Restaurant, error) {
 	var r restaurant.Restaurant
-	err := repo.db.Where("slug = ?", slug).First(&r).Error
+	err := repo.db.WithContext(ctx).Where("slug = ?", slug).First(&r).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
 	return &r, err
 }
 
-func (repo *RestaurantRepositoryImpl) IsOwnedBy(ctx context.Context, restaurantID uint, ownerID uint) (bool, error) {
+func (repo *RestaurantRepositoryImpl) IsOwnedBy(
+	ctx context.Context,
+	restaurantID uint,
+	ownerID uint,
+) (bool, error) {
 	var count int64
 	err := repo.db.WithContext(ctx).
 		Model(&restaurant.Restaurant{}).

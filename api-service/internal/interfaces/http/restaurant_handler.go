@@ -26,6 +26,7 @@ func NewRestaurantHandler(useCases *RestaurantUseCases) *RestaurantHandler {
 
 func (h *RestaurantHandler) Create(ctx *gin.Context) {
 	var dto restaurant.RestaurantCreateDTO
+	reqCtx := ctx.Request.Context()
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("uniqueRSlug", h.useCases.CustomValidator.UniqueRestaurantSlug)
@@ -39,7 +40,7 @@ func (h *RestaurantHandler) Create(ctx *gin.Context) {
 
 	dto.UserID = ctx.MustGet("userID").(uint)
 
-	res, err := h.useCases.CreateRestaurant.Execute(dto)
+	res, err := h.useCases.CreateRestaurant.Execute(reqCtx, dto)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create restaurant"})
 		return

@@ -23,6 +23,7 @@ func NewAuthHandler(useCases *AuthUseCases) *AuthHandler {
 
 func (h *AuthHandler) SignIn(ctx *gin.Context) {
 	var dto auth.SignInRequestDTO
+	reqCtx := ctx.Request.Context()
 
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
 		errors := validation.ExtractValidationErrors(err)
@@ -30,7 +31,7 @@ func (h *AuthHandler) SignIn(ctx *gin.Context) {
 		return
 	}
 
-	token, err := h.useCases.SignIn.Execute(dto.Email, dto.Password)
+	token, err := h.useCases.SignIn.Execute(reqCtx, dto.Email, dto.Password)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -41,6 +42,7 @@ func (h *AuthHandler) SignIn(ctx *gin.Context) {
 
 func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {
 	var dto auth.EmailVerificationRequestDTO
+	reqCtx := ctx.Request.Context()
 
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
 		errors := validation.ExtractValidationErrors(err)
@@ -48,7 +50,7 @@ func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {
 		return
 	}
 
-	err := h.useCases.CreateEmailVerification.Execute(dto)
+	err := h.useCases.CreateEmailVerification.Execute(reqCtx, dto)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create verification"})
 		return

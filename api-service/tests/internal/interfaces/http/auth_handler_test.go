@@ -7,6 +7,7 @@ import (
 	"api-service/internal/infrastructure/security"
 	uiHttp "api-service/internal/interfaces/http"
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -47,7 +48,7 @@ func TestAuthHandler_SignIn_Success(t *testing.T) {
 		UpdatedAt: nil,
 	}
 
-	repo.Create(newUser)
+	repo.Create(context.Background(), newUser)
 
 	tc := struct {
 		name         string
@@ -100,7 +101,7 @@ func TestAuthHandler_SignIn_Failed(t *testing.T) {
 		UpdatedAt: nil,
 	}
 
-	repo.Create(newUser)
+	repo.Create(context.Background(), newUser)
 
 	tests := []struct {
 		name         string

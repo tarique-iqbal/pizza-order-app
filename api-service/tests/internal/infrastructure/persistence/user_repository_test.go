@@ -5,6 +5,7 @@ import (
 	"api-service/internal/infrastructure/persistence"
 	"api-service/tests/internal/infrastructure/db"
 	"api-service/tests/internal/infrastructure/db/fixtures"
+	"context"
 	"testing"
 	"time"
 
@@ -33,7 +34,7 @@ func TestUserRepository_Create(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 
-	err := userRepo.Create(&usr)
+	err := userRepo.Create(context.Background(), &usr)
 
 	assert.Nil(t, err)
 	assert.NotZero(t, usr.ID)
@@ -42,7 +43,7 @@ func TestUserRepository_Create(t *testing.T) {
 func TestUserRepository_FindByEmail(t *testing.T) {
 	userRepo := setupUserRepo()
 
-	usr, err := userRepo.FindByEmail("john.doe@example.com")
+	usr, err := userRepo.FindByEmail(context.Background(), "john.doe@example.com")
 	assert.NoError(t, err)
 	assert.Equal(t, "John", usr.FirstName)
 }

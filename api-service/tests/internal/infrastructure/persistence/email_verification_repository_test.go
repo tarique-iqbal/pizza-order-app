@@ -5,6 +5,7 @@ import (
 	"api-service/internal/infrastructure/persistence"
 	"api-service/tests/internal/infrastructure/db"
 	"api-service/tests/internal/infrastructure/db/fixtures"
+	"context"
 	"testing"
 	"time"
 
@@ -32,7 +33,7 @@ func TestEmailVerificationRepository_Create(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 
-	err := emVerRepo.Create(&emailVerification)
+	err := emVerRepo.Create(context.Background(), &emailVerification)
 
 	assert.Nil(t, err)
 	assert.NotZero(t, emailVerification.ID)
@@ -41,12 +42,12 @@ func TestEmailVerificationRepository_Create(t *testing.T) {
 func TestEmailVerificationRepository_Updates(t *testing.T) {
 	emVerRepo := setupEmailVerificationRepo()
 
-	existing, _ := emVerRepo.FindByEmail("john.doe@example.com")
+	existing, _ := emVerRepo.FindByEmail(context.Background(), "john.doe@example.com")
 	existing.Code = "478326"
 	existing.IsUsed = false
 	existing.ExpiresAt = time.Now().Add(15 * time.Minute)
 
-	err := emVerRepo.Updates(existing)
+	err := emVerRepo.Updates(context.Background(), existing)
 
 	assert.Nil(t, err)
 }
@@ -54,7 +55,7 @@ func TestEmailVerificationRepository_Updates(t *testing.T) {
 func TestEmailVerificationRepository_FindByEmail(t *testing.T) {
 	emVerRepo := setupEmailVerificationRepo()
 
-	emVer, err := emVerRepo.FindByEmail("john.doe@example.com")
+	emVer, err := emVerRepo.FindByEmail(context.Background(), "john.doe@example.com")
 
 	assert.NoError(t, err)
 	assert.Equal(t, "john.doe@example.com", emVer.Email)

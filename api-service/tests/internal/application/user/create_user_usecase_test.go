@@ -8,6 +8,7 @@ import (
 	"api-service/internal/shared/event"
 	"api-service/tests/internal/infrastructure/db"
 	"api-service/tests/internal/infrastructure/db/fixtures"
+	"context"
 	"errors"
 	"testing"
 
@@ -60,7 +61,7 @@ func TestCreateUserUseCase(t *testing.T) {
 		Code:      "476190",
 	}
 
-	user, err := createUseCase.Execute(input)
+	user, err := createUseCase.Execute(context.Background(), input)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, user)

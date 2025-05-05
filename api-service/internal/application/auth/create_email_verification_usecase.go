@@ -3,6 +3,7 @@ package auth
 import (
 	"api-service/internal/domain/auth"
 	"api-service/internal/shared/event"
+	"context"
 	"strings"
 	"time"
 )
@@ -23,7 +24,10 @@ func NewCreateEmailVerificationUseCase(
 	return &CreateEmailVerificationUseCase{repo: repo, otp: otp, publisher: publisher}
 }
 
-func (uc *CreateEmailVerificationUseCase) Execute(input EmailVerificationRequestDTO) error {
+func (uc *CreateEmailVerificationUseCase) Execute(
+	ctx context.Context,
+	input EmailVerificationRequestDTO,
+) error {
 	email := strings.ToLower(input.Email)
 
 	code, err := uc.otp.Generate(true)
@@ -38,13 +42,13 @@ func (uc *CreateEmailVerificationUseCase) Execute(input EmailVerificationRequest
 		ExpiresAt: time.Now().Add(time.Duration(tokenExpiryMinutes) * time.Minute),
 	}
 
-	existing, err := uc.repo.FindByEmail(email)
+	existing, err := uc.repo.FindByEmail(ctx, email)
 	if err != nil {
 		return err
 	}
 
 	if existing == nil {
-		if err := uc.repo.Create(verification); err != nil {
+		if err := uc.repo.Create(ctx, verification); err != nil {
 			return err
 		}
 	} else if existing.IsUsed {
@@ -53,7 +57,7 @@ func (uc *CreateEmailVerificationUseCase) Execute(input EmailVerificationRequest
 		existing.Code = code
 		existing.ExpiresAt = verification.ExpiresAt
 
-		if err := uc.repo.Updates(existing); err != nil {
+		if err := uc.repo.Updates(ctx, existing); err != nil {
 			return err
 		}
 	}

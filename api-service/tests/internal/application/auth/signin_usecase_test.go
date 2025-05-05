@@ -2,79 +2,50 @@ package auth_test
 
 import (
 	"api-service/internal/application/auth"
-	"api-service/internal/domain/user"
+	"api-service/internal/infrastructure/persistence"
 	"api-service/internal/infrastructure/security"
-	"errors"
+	"api-service/tests/internal/infrastructure/db"
+	"api-service/tests/internal/infrastructure/db/fixtures"
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-type MockUserRepository struct {
-	mock.Mock
-}
+func setupSignInUseCase() *auth.SignInUseCase {
+	testDB := db.SetupTestDB()
 
-func (m *MockUserRepository) FindByEmail(email string) (*user.User, error) {
-	args := m.Called(email)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
+	if err := fixtures.LoadUserFixtures(testDB); err != nil {
+		panic(err)
 	}
-	return args.Get(0).(*user.User), args.Error(1)
-}
 
-func (m *MockUserRepository) Create(user *user.User) error {
-	args := m.Called(user)
-	return args.Error(0)
+	repo := persistence.NewUserRepository(testDB)
+	hasher := security.NewPasswordHasher()
+	jwt := security.NewJWTService("TestSecretKey")
+
+	return auth.NewSignInUseCase(repo, hasher, jwt)
 }
 
 func TestSignInUseCase_Success(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	hasher := security.NewPasswordHasher()
-	jwt := security.NewJWTService("TestSecretKey")
-	password, _ := hasher.Hash("password")
+	useCase := setupSignInUseCase()
 
-	mockRepo.On("FindByEmail", "test@example.com").Return(&user.User{
-		ID:       1,
-		Email:    "test@example.com",
-		Password: password,
-	}, nil)
-
-	useCase := auth.NewSignInUseCase(mockRepo, hasher, jwt)
-
-	token, err := useCase.Execute("test@example.com", "password")
+	token, err := useCase.Execute(context.Background(), "john.doe@example.com", "plainPassword")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 }
 
 func TestSignInUseCase_InvalidPassword(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	hasher := security.NewPasswordHasher()
-	jwt := security.NewJWTService("TestSecretKey")
-	password, _ := hasher.Hash("password")
+	useCase := setupSignInUseCase()
 
-	mockRepo.On("FindByEmail", "test@example.com").Return(&user.User{
-		ID:       1,
-		Email:    "test@example.com",
-		Password: password,
-	}, nil)
-
-	useCase := auth.NewSignInUseCase(mockRepo, hasher, jwt)
-
-	token, err := useCase.Execute("test@example.com", "wrongpassword")
+	token, err := useCase.Execute(context.Background(), "john.doe@example.com", "wrongpassword")
 	assert.Error(t, err)
 	assert.Empty(t, token)
 }
 
 func TestSignInUseCase_UserNotFound(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	hasher := security.NewPasswordHasher()
-	jwt := security.NewJWTService("TestSecretKey")
-	mockRepo.On("FindByEmail", "notfound@example.com").Return(nil, errors.New("user not found"))
+	useCase := setupSignInUseCase()
 
-	useCase := auth.NewSignInUseCase(mockRepo, hasher, jwt)
-
-	token, err := useCase.Execute("notfound@example.com", "password")
+	token, err := useCase.Execute(context.Background(), "notfound@example.com", "password")
 	assert.Error(t, err)
 	assert.Empty(t, token)
 }

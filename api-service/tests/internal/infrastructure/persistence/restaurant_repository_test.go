@@ -49,7 +49,7 @@ func TestRestaurantRepository_Create(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 
-	err := env.RestaurantRepo.Create(&r)
+	err := env.RestaurantRepo.Create(context.Background(), &r)
 	assert.NoError(t, err)
 	assert.NotZero(t, r.ID)
 }
@@ -57,7 +57,7 @@ func TestRestaurantRepository_Create(t *testing.T) {
 func TestRestaurantRepository_FindBySlug(t *testing.T) {
 	env := setupRestaurantRepoTestEnv()
 
-	r, err := env.RestaurantRepo.FindBySlug("pizza-paradise")
+	r, err := env.RestaurantRepo.FindBySlug(context.Background(), "pizza-paradise")
 	assert.NoError(t, err)
 	assert.Equal(t, "Pizza Paradise", r.Name)
 }
@@ -72,7 +72,7 @@ func TestRestaurantRepository_IsOwnedBy(t *testing.T) {
 		Address:   "789 Maple Street, Burger Town",
 		CreatedAt: time.Now(),
 	}
-	err := env.RestaurantRepo.Create(&rest)
+	err := env.RestaurantRepo.Create(context.Background(), &rest)
 	assert.NoError(t, err)
 
 	isOwner, err := env.RestaurantRepo.IsOwnedBy(context.Background(), rest.ID, rest.UserID)

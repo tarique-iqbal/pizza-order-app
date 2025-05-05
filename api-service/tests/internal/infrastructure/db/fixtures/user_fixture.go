@@ -2,19 +2,23 @@ package fixtures
 
 import (
 	"api-service/internal/domain/user"
+	"api-service/internal/infrastructure/security"
 	"time"
 
 	"gorm.io/gorm"
 )
 
 func LoadUserFixtures(db *gorm.DB) error {
+	hasher := security.NewPasswordHasher()
+	password, _ := hasher.Hash("plainPassword")
+
 	users := []user.User{
 		{
 			FirstName: "John",
 			LastName:  "Doe",
 			Email:     "john.doe@example.com",
-			Password:  "hashedpassword",
-			Role:      "user",
+			Password:  password,
+			Role:      "User",
 			CreatedAt: time.Now(),
 		},
 	}

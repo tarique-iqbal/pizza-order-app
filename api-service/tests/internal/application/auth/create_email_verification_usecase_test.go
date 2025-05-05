@@ -7,6 +7,7 @@ import (
 	"api-service/internal/infrastructure/security"
 	"api-service/internal/shared/event"
 	"api-service/tests/internal/infrastructure/db"
+	"context"
 	"errors"
 	"testing"
 
@@ -46,8 +47,8 @@ func TestCreateEmailVerificationUseCase_Success(t *testing.T) {
 		Email: "adam.dangelo@example.com",
 	}
 
-	err := createUseCase.Execute(input)
-	emailVerification, _ := repo.FindByEmail(input.Email)
+	err := createUseCase.Execute(context.Background(), input)
+	emailVerification, _ := repo.FindByEmail(context.Background(), input.Email)
 	diff := emailVerification.ExpiresAt.Sub(emailVerification.CreatedAt)
 
 	assert.Nil(t, err)

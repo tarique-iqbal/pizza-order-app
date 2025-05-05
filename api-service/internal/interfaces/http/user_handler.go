@@ -27,6 +27,7 @@ func NewUserHandler(useCases *UserUseCases) *UserHandler {
 
 func (h *UserHandler) Create(ctx *gin.Context) {
 	var input user.UserCreateDTO
+	reqCtx := ctx.Request.Context()
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("uniqueEmail", h.useCases.CustomValidator.UniqueEmail)
@@ -38,7 +39,7 @@ func (h *UserHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	response, err := h.useCases.CreateUser.Execute(input)
+	response, err := h.useCases.CreateUser.Execute(reqCtx, input)
 	if err != nil {
 		status := h.getHTTPStatusCode(err)
 		ctx.JSON(status, gin.H{"error": err.Error()})

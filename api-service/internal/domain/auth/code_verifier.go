@@ -1,5 +1,7 @@
 package auth
 
+import "context"
+
 type CodeVerifier interface {
-	Verify(email string, code string) error
+	Verify(ctx context.Context, email string, code string) error
 }
