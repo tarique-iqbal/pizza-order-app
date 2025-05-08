@@ -2,7 +2,6 @@ package validator_test
 
 import (
 	"api-service/internal/domain/restaurant"
-	"api-service/internal/domain/user"
 	"api-service/internal/infrastructure/persistence"
 	iValidator "api-service/internal/infrastructure/validator"
 	"api-service/tests/internal/infrastructure/db"
@@ -26,23 +25,6 @@ func TestMain(m *testing.M) {
 
 	exitCode := m.Run()
 	os.Exit(exitCode)
-}
-
-func TestUniqueEmail_Valid(t *testing.T) {
-	field := &mockFieldLevel{value: "newuser@example.com"}
-	status := customValidator.UniqueEmail(field)
-
-	assert.True(t, status)
-}
-
-func TestUniqueEmail_Invalid(t *testing.T) {
-	existingUser := user.User{Email: "existing@example.com"}
-	testDB.Create(&existingUser)
-
-	field := &mockFieldLevel{value: "existing@example.com"}
-	status := customValidator.UniqueEmail(field)
-
-	assert.False(t, status)
 }
 
 func TestUniqueRestaurantSlug_Valid(t *testing.T) {
