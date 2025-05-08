@@ -78,3 +78,27 @@ func TestCreatePizzaSizeUseCase_Execute_Forbidden(t *testing.T) {
 
 	assert.ErrorIs(t, err, sErrors.ErrForbidden)
 }
+
+func TestCreatePizzaSizeUseCase_Execute_PizzaSize_Duplicate(t *testing.T) {
+	env := setupCreatePizzaSizeUseCase()
+
+	input := aRestaurant.PizzaSizeCreateDTO{
+		Title: "Large",
+		Size:  12,
+	}
+	_, err := env.CreateRestaurantUC.Execute(
+		context.Background(),
+		env.Restaurant.ID,
+		env.Restaurant.UserID,
+		input,
+	)
+	require.NoError(t, err)
+
+	_, err = env.CreateRestaurantUC.Execute(
+		context.Background(),
+		env.Restaurant.ID,
+		env.Restaurant.UserID,
+		input,
+	)
+	assert.ErrorIs(t, err, restaurant.ErrPizzaSizeAlreadyExists)
+}

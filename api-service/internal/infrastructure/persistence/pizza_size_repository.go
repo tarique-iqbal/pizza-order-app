@@ -19,3 +19,16 @@ func NewPizzaSizeRepository(db *gorm.DB) restaurant.PizzaSizeRepository {
 func (repo *pizzaSizeRepositoryImpl) Create(ctx context.Context, size *restaurant.PizzaSize) error {
 	return repo.db.WithContext(ctx).Create(size).Error
 }
+
+func (repo *pizzaSizeRepositoryImpl) PizzaSizeExists(
+	ctx context.Context,
+	restaurantID uint,
+	size int,
+) (bool, error) {
+	var count int64
+	err := repo.db.WithContext(ctx).
+		Model(&restaurant.PizzaSize{}).
+		Where("restaurant_id = ? AND size = ?", restaurantID, size).
+		Count(&count).Error
+	return count > 0, err
+}

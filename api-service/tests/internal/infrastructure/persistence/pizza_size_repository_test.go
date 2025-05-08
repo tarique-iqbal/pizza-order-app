@@ -52,3 +52,27 @@ func TestPizzaSizeRepository_Create(t *testing.T) {
 	assert.NotZero(t, ps.ID)
 	assert.Equal(t, env.Restaurant.ID, ps.RestaurantID)
 }
+
+func TestPizzaSizeRepository_PizzaSizeExists(t *testing.T) {
+	env := setupPizzaSizeRepoTestEnv()
+
+	ps := restaurant.PizzaSize{
+		RestaurantID: env.Restaurant.ID,
+		Title:        "Large",
+		Size:         38,
+	}
+	err := env.PizzaSizeRepo.Create(context.Background(), &ps)
+	assert.NoError(t, err)
+
+	exists, err := env.PizzaSizeRepo.PizzaSizeExists(context.Background(), env.Restaurant.ID, 38)
+	assert.NoError(t, err)
+	assert.True(t, exists)
+
+	exists, err = env.PizzaSizeRepo.PizzaSizeExists(context.Background(), env.Restaurant.ID, 22)
+	assert.NoError(t, err)
+	assert.False(t, exists)
+
+	exists, err = env.PizzaSizeRepo.PizzaSizeExists(context.Background(), 999, 38)
+	assert.NoError(t, err)
+	assert.False(t, exists)
+}

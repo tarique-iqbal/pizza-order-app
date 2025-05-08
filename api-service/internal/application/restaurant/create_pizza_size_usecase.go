@@ -35,6 +35,14 @@ func (uc *CreatePizzaSizeUseCase) Execute(
 		return PizzaSizeResponseDTO{}, sErrors.ErrForbidden
 	}
 
+	exists, err := uc.pizzaSizeRepo.PizzaSizeExists(ctx, restaurantID, input.Size)
+	if err != nil {
+		return PizzaSizeResponseDTO{}, err
+	}
+	if exists {
+		return PizzaSizeResponseDTO{}, restaurant.ErrPizzaSizeAlreadyExists
+	}
+
 	newPizzaSize := &restaurant.PizzaSize{
 		RestaurantID: restaurantID,
 		Title:        input.Title,
