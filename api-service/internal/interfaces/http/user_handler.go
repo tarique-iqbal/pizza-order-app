@@ -2,7 +2,6 @@ package http
 
 import (
 	"api-service/internal/application/user"
-	iValidator "api-service/internal/infrastructure/validator"
 	"api-service/internal/interfaces/http/mapper"
 	"api-service/internal/interfaces/http/validation"
 	"net/http"
@@ -15,8 +14,7 @@ type UserHandler struct {
 }
 
 type UserUseCases struct {
-	CreateUser      *user.CreateUserUseCase
-	CustomValidator *iValidator.CustomValidator
+	CreateUser *user.CreateUserUseCase
 }
 
 func NewUserHandler(useCases *UserUseCases) *UserHandler {

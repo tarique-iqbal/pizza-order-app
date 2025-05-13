@@ -5,7 +5,6 @@ import (
 	"api-service/internal/infrastructure/auth"
 	"api-service/internal/infrastructure/persistence"
 	"api-service/internal/infrastructure/security"
-	iValidator "api-service/internal/infrastructure/validator"
 	uiHttp "api-service/internal/interfaces/http"
 	"api-service/internal/shared/event"
 	"api-service/tests/internal/infrastructure/db/fixtures"
@@ -43,10 +42,8 @@ func setupUserHandler() *uiHttp.UserHandler {
 	mockPublisher = &MockEventPublisher{}
 
 	createUserUseCase := user.NewCreateUserUseCase(codeVerifier, userRepo, hasher, mockPublisher)
-	customValidator := iValidator.NewCustomValidator(userRepo, nil)
 	userUseCases := &uiHttp.UserUseCases{
-		CreateUser:      createUserUseCase,
-		CustomValidator: customValidator,
+		CreateUser: createUserUseCase,
 	}
 
 	if err := fixtures.LoadEmailVerificationFixtures(testDB); err != nil {

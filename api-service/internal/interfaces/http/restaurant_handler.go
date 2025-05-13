@@ -2,13 +2,10 @@ package http
 
 import (
 	"api-service/internal/application/restaurant"
-	iValidator "api-service/internal/infrastructure/validator"
 	"api-service/internal/interfaces/http/validation"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator/v10"
 )
 
 type RestaurantHandler struct {
@@ -17,7 +14,6 @@ type RestaurantHandler struct {
 
 type RestaurantUseCases struct {
 	CreateRestaurant *restaurant.CreateRestaurantUseCase
-	CustomValidator  *iValidator.CustomValidator
 }
 
 func NewRestaurantHandler(useCases *RestaurantUseCases) *RestaurantHandler {
@@ -27,10 +23,6 @@ func NewRestaurantHandler(useCases *RestaurantUseCases) *RestaurantHandler {
 func (h *RestaurantHandler) Create(ctx *gin.Context) {
 	var dto restaurant.RestaurantCreateDTO
 	reqCtx := ctx.Request.Context()
-
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("uniqueRSlug", h.useCases.CustomValidator.UniqueRestaurantSlug)
-	}
 
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
 		errors := validation.ExtractValidationErrors(err)

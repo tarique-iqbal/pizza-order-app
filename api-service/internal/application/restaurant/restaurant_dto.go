@@ -3,7 +3,7 @@ package restaurant
 type RestaurantCreateDTO struct {
 	UserID  uint   `json:"user_id"`
 	Name    string `json:"name" binding:"required"`
-	Slug    string `json:"slug" binding:"required,uniqueRSlug"`
+	Slug    string `json:"slug" binding:"required"`
 	Address string `json:"address" binding:"required"`
 }
 

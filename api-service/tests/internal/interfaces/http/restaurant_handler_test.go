@@ -4,7 +4,6 @@ import (
 	"api-service/internal/application/restaurant"
 	dRestaurant "api-service/internal/domain/restaurant"
 	"api-service/internal/infrastructure/persistence"
-	iValidator "api-service/internal/infrastructure/validator"
 	uiHttp "api-service/internal/interfaces/http"
 	"api-service/internal/interfaces/http/middlewares"
 	"api-service/tests/internal/infrastructure/db/fixtures"
@@ -23,11 +22,9 @@ func setupRestaurantHandler(t *testing.T) *uiHttp.RestaurantHandler {
 
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
 	createUseCase := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
-	customValidator := iValidator.NewCustomValidator(nil, restaurantRepo)
 
 	restaurantUseCases := &uiHttp.RestaurantUseCases{
 		CreateRestaurant: createUseCase,
-		CustomValidator:  customValidator,
 	}
 
 	return uiHttp.NewRestaurantHandler(restaurantUseCases)
@@ -92,35 +89,6 @@ func TestRestaurantHandler_Create_Failure_ValidationError(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
 	assert.Contains(t, recorder.Body.String(), "errors")
-}
-
-func TestRestaurantHandler_Create_Failure_DuplicateSlug(t *testing.T) {
-	rHandler := setupRestaurantHandler(t)
-	usr, _ := fixtures.CreateUser(testDB, "Owner")
-
-	router := gin.Default()
-	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
-	router.POST("/api/restaurants", rHandler.Create)
-
-	// First request (success)
-	validPayload := `{"name": "Pizzeria Uno", "slug": "pizzeria-uno", "address": "123 Main St"}`
-	req1, _ := http.NewRequest("POST", "/api/restaurants", bytes.NewBufferString(validPayload))
-	req1.Header.Set("Content-Type", "application/json")
-	req1.Header.Set("Authorization", "Bearer mock-valid-token")
-
-	recorder1 := httptest.NewRecorder()
-	router.ServeHTTP(recorder1, req1)
-	assert.Equal(t, http.StatusCreated, recorder1.Code)
-
-	// Second request (duplicate slug)
-	req2, _ := http.NewRequest("POST", "/api/restaurants", bytes.NewBufferString(validPayload))
-	req2.Header.Set("Content-Type", "application/json")
-	req2.Header.Set("Authorization", "Bearer mock-valid-token")
-
-	recorder2 := httptest.NewRecorder()
-	router.ServeHTTP(recorder2, req2)
-	assert.Equal(t, http.StatusUnprocessableEntity, recorder2.Code)
-	assert.Contains(t, recorder2.Body.String(), "slug")
 }
 
 func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
