@@ -10,15 +10,11 @@ import (
 )
 
 type UserHandler struct {
-	useCases *UserUseCases
+	createUserUC *user.CreateUserUseCase
 }
 
-type UserUseCases struct {
-	CreateUser *user.CreateUserUseCase
-}
-
-func NewUserHandler(useCases *UserUseCases) *UserHandler {
-	return &UserHandler{useCases: useCases}
+func NewUserHandler(createUserUC *user.CreateUserUseCase) *UserHandler {
+	return &UserHandler{createUserUC: createUserUC}
 }
 
 func (h *UserHandler) Create(ctx *gin.Context) {
@@ -31,7 +27,7 @@ func (h *UserHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	response, err := h.useCases.CreateUser.Execute(reqCtx, input)
+	response, err := h.createUserUC.Execute(reqCtx, input)
 	if err != nil {
 		status := mapper.MapErrorToHTTPStatus(err)
 		ctx.JSON(status, gin.H{"error": err.Error()})

@@ -9,15 +9,13 @@ import (
 )
 
 type RestaurantHandler struct {
-	useCases *RestaurantUseCases
+	createRestaurantUC *restaurant.CreateRestaurantUseCase
 }
 
-type RestaurantUseCases struct {
-	CreateRestaurant *restaurant.CreateRestaurantUseCase
-}
-
-func NewRestaurantHandler(useCases *RestaurantUseCases) *RestaurantHandler {
-	return &RestaurantHandler{useCases: useCases}
+func NewRestaurantHandler(
+	createRestaurantUC *restaurant.CreateRestaurantUseCase,
+) *RestaurantHandler {
+	return &RestaurantHandler{createRestaurantUC: createRestaurantUC}
 }
 
 func (h *RestaurantHandler) Create(ctx *gin.Context) {
@@ -32,7 +30,7 @@ func (h *RestaurantHandler) Create(ctx *gin.Context) {
 
 	dto.UserID = ctx.MustGet("userID").(uint)
 
-	res, err := h.useCases.CreateRestaurant.Execute(reqCtx, dto)
+	res, err := h.createRestaurantUC.Execute(reqCtx, dto)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create restaurant"})
 		return

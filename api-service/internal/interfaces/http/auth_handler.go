@@ -9,16 +9,15 @@ import (
 )
 
 type AuthHandler struct {
-	useCases *AuthUseCases
+	signInUC                  *auth.SignInUseCase
+	createEmailVerificationUC *auth.CreateEmailVerificationUseCase
 }
 
-type AuthUseCases struct {
-	SignIn                  *auth.SignInUseCase
-	CreateEmailVerification *auth.CreateEmailVerificationUseCase
-}
-
-func NewAuthHandler(useCases *AuthUseCases) *AuthHandler {
-	return &AuthHandler{useCases: useCases}
+func NewAuthHandler(
+	signInUC *auth.SignInUseCase,
+	createEmailVerificationUC *auth.CreateEmailVerificationUseCase,
+) *AuthHandler {
+	return &AuthHandler{signInUC: signInUC, createEmailVerificationUC: createEmailVerificationUC}
 }
 
 func (h *AuthHandler) SignIn(ctx *gin.Context) {
@@ -31,7 +30,7 @@ func (h *AuthHandler) SignIn(ctx *gin.Context) {
 		return
 	}
 
-	token, err := h.useCases.SignIn.Execute(reqCtx, dto.Email, dto.Password)
+	token, err := h.signInUC.Execute(reqCtx, dto.Email, dto.Password)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -50,7 +49,7 @@ func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {
 		return
 	}
 
-	err := h.useCases.CreateEmailVerification.Execute(reqCtx, dto)
+	err := h.createEmailVerificationUC.Execute(reqCtx, dto)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create verification"})
 		return

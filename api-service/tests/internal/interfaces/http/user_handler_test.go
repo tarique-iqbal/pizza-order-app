@@ -41,16 +41,13 @@ func setupUserHandler() *uiHttp.UserHandler {
 	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
 
-	createUserUseCase := user.NewCreateUserUseCase(codeVerifier, userRepo, hasher, mockPublisher)
-	userUseCases := &uiHttp.UserUseCases{
-		CreateUser: createUserUseCase,
-	}
+	createUserUC := user.NewCreateUserUseCase(codeVerifier, userRepo, hasher, mockPublisher)
 
 	if err := fixtures.LoadEmailVerificationFixtures(testDB); err != nil {
 		panic(err)
 	}
 
-	return uiHttp.NewUserHandler(userUseCases)
+	return uiHttp.NewUserHandler(createUserUC)
 }
 
 func TestUserHandler_CreateUser_Success(t *testing.T) {

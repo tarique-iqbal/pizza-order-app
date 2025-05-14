@@ -45,27 +45,17 @@ func NewContainer() (*Container, error) {
 	codeVerifier := iAuth.NewCodeVerificationService(emailVerificationRepo)
 
 	// user
-	createUserUseCase := user.NewCreateUserUseCase(codeVerifier, userRepo, hasher, publisher)
-	userUseCases := &http.UserUseCases{
-		CreateUser: createUserUseCase,
-	}
-	userHandler := http.NewUserHandler(userUseCases)
+	createUserUC := user.NewCreateUserUseCase(codeVerifier, userRepo, hasher, publisher)
+	userHandler := http.NewUserHandler(createUserUC)
 
 	// auth
-	signInUseCase := aAuth.NewSignInUseCase(userRepo, hasher, jwtService)
-	createEmailVerificationUseCase := aAuth.NewCreateEmailVerificationUseCase(emailVerificationRepo, otp, publisher)
-	authUseCases := &http.AuthUseCases{
-		SignIn:                  signInUseCase,
-		CreateEmailVerification: createEmailVerificationUseCase,
-	}
-	authHandler := http.NewAuthHandler(authUseCases)
+	signInUC := aAuth.NewSignInUseCase(userRepo, hasher, jwtService)
+	createEmailVerificationUC := aAuth.NewCreateEmailVerificationUseCase(emailVerificationRepo, otp, publisher)
+	authHandler := http.NewAuthHandler(signInUC, createEmailVerificationUC)
 
 	// restaurant
-	createRestaurantUseCase := aRestaurant.NewCreateRestaurantUseCase(restaurantRepo)
-	restaurantUseCase := &http.RestaurantUseCases{
-		CreateRestaurant: createRestaurantUseCase,
-	}
-	restaurantHandler := http.NewRestaurantHandler(restaurantUseCase)
+	createRestaurantUC := aRestaurant.NewCreateRestaurantUseCase(restaurantRepo)
+	restaurantHandler := http.NewRestaurantHandler(createRestaurantUC)
 
 	// pizza-sizes
 	pizzaSizeRepo := persistence.NewPizzaSizeRepository(database)

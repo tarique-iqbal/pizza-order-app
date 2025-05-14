@@ -23,12 +23,9 @@ func setupAuthHandler() *uiHttp.AuthHandler {
 	hasher := security.NewPasswordHasher()
 	jwt := security.NewJWTService("TestSecretKey")
 
-	signInUseCase := auth.NewSignInUseCase(userRepo, hasher, jwt)
-	authUseCases := &uiHttp.AuthUseCases{
-		SignIn: signInUseCase,
-	}
+	signInUC := auth.NewSignInUseCase(userRepo, hasher, jwt)
 
-	return uiHttp.NewAuthHandler(authUseCases)
+	return uiHttp.NewAuthHandler(signInUC, nil)
 }
 
 func TestAuthHandler_SignIn_Success(t *testing.T) {

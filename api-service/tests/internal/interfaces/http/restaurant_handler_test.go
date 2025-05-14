@@ -21,13 +21,9 @@ func setupRestaurantHandler(t *testing.T) *uiHttp.RestaurantHandler {
 	resetTables(t)
 
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
-	createUseCase := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
+	createRestaurantUC := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
 
-	restaurantUseCases := &uiHttp.RestaurantUseCases{
-		CreateRestaurant: createUseCase,
-	}
-
-	return uiHttp.NewRestaurantHandler(restaurantUseCases)
+	return uiHttp.NewRestaurantHandler(createRestaurantUC)
 }
 
 func TestRestaurantHandler_Create_Success(t *testing.T) {
