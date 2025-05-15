@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var createUseCase *auth.CreateEmailVerificationUseCase
+var createEmailVerificationUC *auth.CreateEmailVerificationUseCase
 var mockPublisher *MockEventPublisher
 var repo dAuth.EmailVerificationRepository
 
@@ -41,13 +41,13 @@ func createEmailVerificationUseCase() *auth.CreateEmailVerificationUseCase {
 }
 
 func TestCreateEmailVerificationUseCase_Success(t *testing.T) {
-	createUseCase = createEmailVerificationUseCase()
+	createEmailVerificationUC = createEmailVerificationUseCase()
 
 	input := auth.EmailVerificationRequestDTO{
 		Email: "adam.dangelo@example.com",
 	}
 
-	err := createUseCase.Execute(context.Background(), input)
+	err := createEmailVerificationUC.Execute(context.Background(), input)
 	emailVerification, _ := repo.FindByEmail(context.Background(), input.Email)
 	diff := emailVerification.ExpiresAt.Sub(emailVerification.CreatedAt)
 

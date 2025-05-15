@@ -22,9 +22,9 @@ func setupPizzaSizeHandler(t *testing.T) *uiHttp.PizzaSizeHandler {
 
 	pizzaSizeRepo := persistence.NewPizzaSizeRepository(testDB)
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
-	createUseCase := restaurant.NewCreatePizzaSizeUseCase(pizzaSizeRepo, restaurantRepo)
+	createPizzaSizeUC := restaurant.NewCreatePizzaSizeUseCase(pizzaSizeRepo, restaurantRepo)
 
-	return uiHttp.NewPizzaSizeHandler(createUseCase)
+	return uiHttp.NewPizzaSizeHandler(createPizzaSizeUC)
 }
 
 func TestPizzaSizeHandler_Create_Success(t *testing.T) {

@@ -12,12 +12,12 @@ import (
 )
 
 type PizzaSizeHandler struct {
-	createPizzaSizeUseCase *restaurant.CreatePizzaSizeUseCase
+	createPizzaSizeUC *restaurant.CreatePizzaSizeUseCase
 }
 
 func NewPizzaSizeHandler(createUC *restaurant.CreatePizzaSizeUseCase) *PizzaSizeHandler {
 	return &PizzaSizeHandler{
-		createPizzaSizeUseCase: createUC,
+		createPizzaSizeUC: createUC,
 	}
 }
 
@@ -38,7 +38,7 @@ func (h *PizzaSizeHandler) Create(ctx *gin.Context) {
 
 	reqCtx := ctx.Request.Context()
 	ownerID := ctx.MustGet("userID").(uint)
-	res, err := h.createPizzaSizeUseCase.Execute(reqCtx, uint(restaurantID), ownerID, dto)
+	res, err := h.createPizzaSizeUC.Execute(reqCtx, uint(restaurantID), ownerID, dto)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return

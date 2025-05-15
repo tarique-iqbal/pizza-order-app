@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var createUseCase *aUser.CreateUserUseCase
 var mockPublisher *MockEventPublisher
 
 type MockEventPublisher struct {
@@ -51,7 +50,7 @@ func createUserUseCase() *aUser.CreateUserUseCase {
 }
 
 func TestCreateUserUseCase(t *testing.T) {
-	createUseCase = createUserUseCase()
+	createUserUC := createUserUseCase()
 
 	input := aUser.UserCreateDTO{
 		FirstName: "Adam",
@@ -61,7 +60,7 @@ func TestCreateUserUseCase(t *testing.T) {
 		Code:      "476190",
 	}
 
-	user, err := createUseCase.Execute(context.Background(), input)
+	user, err := createUserUC.Execute(context.Background(), input)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, user)

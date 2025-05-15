@@ -27,25 +27,25 @@ func setupSignInUseCase() *auth.SignInUseCase {
 }
 
 func TestSignInUseCase_Success(t *testing.T) {
-	useCase := setupSignInUseCase()
+	signInUC := setupSignInUseCase()
 
-	token, err := useCase.Execute(context.Background(), "john.doe@example.com", "plainPassword")
+	token, err := signInUC.Execute(context.Background(), "john.doe@example.com", "plainPassword")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 }
 
 func TestSignInUseCase_InvalidPassword(t *testing.T) {
-	useCase := setupSignInUseCase()
+	signInUC := setupSignInUseCase()
 
-	token, err := useCase.Execute(context.Background(), "john.doe@example.com", "wrongpassword")
+	token, err := signInUC.Execute(context.Background(), "john.doe@example.com", "wrongpassword")
 	assert.Error(t, err)
 	assert.Empty(t, token)
 }
 
 func TestSignInUseCase_UserNotFound(t *testing.T) {
-	useCase := setupSignInUseCase()
+	signInUC := setupSignInUseCase()
 
-	token, err := useCase.Execute(context.Background(), "notfound@example.com", "password")
+	token, err := signInUC.Execute(context.Background(), "notfound@example.com", "password")
 	assert.Error(t, err)
 	assert.Empty(t, token)
 }
