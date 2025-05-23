@@ -25,3 +25,20 @@ func LoadRestaurantAddressFixtures(db *gorm.DB) error {
 
 	return nil
 }
+
+func CreateRestaurantAddress(db *gorm.DB) (*restaurant.RestaurantAddress, error) {
+	restAddr := restaurant.RestaurantAddress{
+		House:      "12",
+		Street:     "Danziger Str.",
+		PostalCode: "10435",
+		City:       "Hamburg",
+		FullText:   "Danziger Str. 12, 10435 Berlin",
+		Lat:        53.594970,
+		Lon:        9.999253,
+	}
+	if err := db.Create(&restAddr).Error; err != nil {
+		return nil, err
+	}
+
+	return &restAddr, nil
+}

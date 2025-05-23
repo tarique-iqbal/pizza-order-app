@@ -16,6 +16,10 @@ func NewRestaurantRepository(db *gorm.DB) restaurant.RestaurantRepository {
 	return &RestaurantRepositoryImpl{db: db}
 }
 
+func (r *RestaurantRepositoryImpl) WithTx(tx *gorm.DB) restaurant.RestaurantRepository {
+	return &RestaurantRepositoryImpl{db: tx}
+}
+
 func (repo *RestaurantRepositoryImpl) Create(
 	ctx context.Context,
 	res *restaurant.Restaurant,
@@ -48,10 +52,26 @@ func (repo *RestaurantRepositoryImpl) IsOwnedBy(
 	return count > 0, err
 }
 
-func (repo *RestaurantRepositoryImpl) SlugExists(slug string) (bool, error) {
+func (repo *RestaurantRepositoryImpl) IsSlugExists(
+	ctx context.Context,
+	slug string,
+) (bool, error) {
 	var count int64
-	err := repo.db.Model(&restaurant.Restaurant{}).
+	err := repo.db.WithContext(ctx).
+		Model(&restaurant.Restaurant{}).
 		Where("slug = ?", slug).
+		Count(&count).Error
+	return count > 0, err
+}
+
+func (repo *RestaurantRepositoryImpl) IsEmailExists(
+	ctx context.Context,
+	email string,
+) (bool, error) {
+	var count int64
+	err := repo.db.WithContext(ctx).
+		Model(&restaurant.Restaurant{}).
+		Where("email = ?", email).
 		Count(&count).Error
 	return count > 0, err
 }

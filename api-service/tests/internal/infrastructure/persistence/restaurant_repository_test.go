@@ -14,8 +14,9 @@ import (
 )
 
 type restaurantRepoTestEnv struct {
-	User           *user.User
-	RestaurantRepo restaurant.RestaurantRepository
+	User              *user.User
+	RestaurantAddress *restaurant.RestaurantAddress
+	RestaurantRepo    restaurant.RestaurantRepository
 }
 
 func setupRestaurantRepoTestEnv() restaurantRepoTestEnv {
@@ -26,52 +27,69 @@ func setupRestaurantRepoTestEnv() restaurantRepoTestEnv {
 		panic(err)
 	}
 
-	if err := fixtures.LoadRestaurantFixtures(testDB, usr); err != nil {
+	restAddr, err := fixtures.CreateRestaurantAddress(testDB)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := fixtures.LoadRestaurantFixtures(testDB, usr, restAddr); err != nil {
 		panic(err)
 	}
 
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
 
 	return restaurantRepoTestEnv{
-		User:           usr,
-		RestaurantRepo: restaurantRepo,
+		User:              usr,
+		RestaurantAddress: restAddr,
+		RestaurantRepo:    restaurantRepo,
 	}
 }
 
 func TestRestaurantRepository_Create(t *testing.T) {
 	env := setupRestaurantRepoTestEnv()
 
-	r := restaurant.Restaurant{
-		UserID:    env.User.ID,
-		Name:      "Test Bistro",
-		Slug:      "test-bistro",
-		Address:   "789 Maple Street, Burger Town",
-		CreatedAt: time.Now(),
+	rest := restaurant.Restaurant{
+		UserID:       env.User.ID,
+		Name:         "Sushi Zen",
+		Slug:         "sushi-zen",
+		Email:        "info@sushizen.de",
+		Phone:        "+49 89 99887766",
+		AddressID:    env.RestaurantAddress.ID,
+		DeliveryType: "third_party",
+		DeliveryKm:   5,
+		Specialties:  "italian",
+		CreatedAt:    time.Now(),
 	}
 
-	err := env.RestaurantRepo.Create(context.Background(), &r)
+	err := env.RestaurantRepo.Create(context.Background(), &rest)
 	assert.NoError(t, err)
-	assert.NotZero(t, r.ID)
+	assert.NotZero(t, rest.ID)
 }
 
 func TestRestaurantRepository_FindBySlug(t *testing.T) {
 	env := setupRestaurantRepoTestEnv()
 
-	r, err := env.RestaurantRepo.FindBySlug(context.Background(), "pizza-paradise")
+	rest, err := env.RestaurantRepo.FindBySlug(context.Background(), "pizza-paradise")
 	assert.NoError(t, err)
-	assert.Equal(t, "Pizza Paradise", r.Name)
+	assert.Equal(t, "pizza-paradise", rest.Slug)
 }
 
 func TestRestaurantRepository_IsOwnedBy(t *testing.T) {
 	env := setupRestaurantRepoTestEnv()
 
 	rest := restaurant.Restaurant{
-		UserID:    env.User.ID,
-		Name:      "Test Bistro",
-		Slug:      "test-bistro",
-		Address:   "789 Maple Street, Burger Town",
-		CreatedAt: time.Now(),
+		UserID:       env.User.ID,
+		Name:         "Burger Meister",
+		Slug:         "burger-meister",
+		Email:        "contact@burgermeister.de",
+		Phone:        "+49 351 22334455",
+		AddressID:    env.RestaurantAddress.ID,
+		DeliveryType: "pick_up",
+		DeliveryKm:   7,
+		Specialties:  "american",
+		CreatedAt:    time.Now(),
 	}
+
 	err := env.RestaurantRepo.Create(context.Background(), &rest)
 	assert.NoError(t, err)
 
@@ -88,14 +106,26 @@ func TestRestaurantRepository_IsOwnedBy(t *testing.T) {
 	assert.False(t, isOwner, "Non-existent restaurant is expected to return false")
 }
 
-func TestRestaurantRepository_SlugExists(t *testing.T) {
+func TestRestaurantRepository_IsSlugExists(t *testing.T) {
 	env := setupRestaurantRepoTestEnv()
 
-	exists, err := env.RestaurantRepo.SlugExists("pizza-paradise")
+	exists, err := env.RestaurantRepo.IsSlugExists(context.Background(), "pizza-paradise")
 	assert.NoError(t, err)
 	assert.True(t, exists, "Slug is expected to be exists")
 
-	exists, err = env.RestaurantRepo.SlugExists("pizza-random")
+	exists, err = env.RestaurantRepo.IsSlugExists(context.Background(), "pizza-random")
 	assert.NoError(t, err)
 	assert.False(t, exists, "Slug is not expected to be exists")
+}
+
+func TestRestaurantRepository_IsEmailExists(t *testing.T) {
+	env := setupRestaurantRepoTestEnv()
+
+	exists, err := env.RestaurantRepo.IsEmailExists(context.Background(), "kontakt@pizzaparadise.de")
+	assert.NoError(t, err)
+	assert.True(t, exists, "Restaurant email is expected to be exists")
+
+	exists, err = env.RestaurantRepo.IsEmailExists(context.Background(), "random@example.de")
+	assert.NoError(t, err)
+	assert.False(t, exists, "Restaurant email is not expected to be exists")
 }
