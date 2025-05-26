@@ -2,6 +2,7 @@ package http
 
 import (
 	"api-service/internal/application/restaurant"
+	"api-service/internal/interfaces/http/response"
 	"api-service/internal/interfaces/http/validation"
 	"net/http"
 
@@ -32,7 +33,7 @@ func (h *RestaurantHandler) Create(ctx *gin.Context) {
 
 	res, err := h.createRestaurantUC.Execute(reqCtx, dto)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create restaurant"})
+		response.HandleError(ctx, err)
 		return
 	}
 

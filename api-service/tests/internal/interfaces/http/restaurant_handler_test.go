@@ -21,7 +21,8 @@ func setupRestaurantHandler(t *testing.T) *uiHttp.RestaurantHandler {
 	resetTables(t)
 
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
-	createRestaurantUC := restaurant.NewCreateRestaurantUseCase(restaurantRepo)
+	restAddrRepo := persistence.NewRestaurantAddressRepository(testDB)
+	createRestaurantUC := restaurant.NewCreateRestaurantUseCase(testDB, restaurantRepo, restAddrRepo)
 
 	return uiHttp.NewRestaurantHandler(createRestaurantUC)
 }
@@ -34,10 +35,17 @@ func TestRestaurantHandler_Create_Success(t *testing.T) {
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
-	reqBody := map[string]string{
-		"name":    "Test Restaurant",
-		"slug":    "test-restaurant",
-		"address": "123 Test Street",
+	reqBody := map[string]interface{}{
+		"name":          "Test Restaurant",
+		"email":         "unique@test.com",
+		"phone":         "+49 89 22334455",
+		"house":         "1",
+		"street":        "Main Str.",
+		"city":          "Cityville",
+		"postal_code":   "12345",
+		"delivery_type": "own_delivery",
+		"delivery_km":   5,
+		"specialties":   []string{"italian", "wood_fired"},
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 
@@ -52,17 +60,15 @@ func TestRestaurantHandler_Create_Success(t *testing.T) {
 
 	var response restaurant.RestaurantResponseDTO
 	json.Unmarshal(recorder.Body.Bytes(), &response)
-	assert.Equal(t, "Test Restaurant", response.Name)
-	assert.Equal(t, "test-restaurant", response.Slug)
-	assert.Equal(t, "123 Test Street", response.Address)
+	assert.Equal(t, "unique@test.com", response.Email)
+	assert.Equal(t, "test-restaurant-cityville", response.Slug)
 	assert.Equal(t, usr.ID, response.UserID)
 
 	var createdRestaurant dRestaurant.Restaurant
-	testDB.Where("slug = ?", "test-restaurant").First(&createdRestaurant)
+	testDB.Where("slug = ?", "test-restaurant-cityville").First(&createdRestaurant)
 
 	assert.Equal(t, "Test Restaurant", createdRestaurant.Name)
-	assert.Equal(t, "test-restaurant", createdRestaurant.Slug)
-	assert.Equal(t, "123 Test Street", createdRestaurant.Address)
+	assert.Equal(t, "unique@test.com", createdRestaurant.Email)
 	assert.Equal(t, usr.ID, createdRestaurant.UserID)
 }
 
@@ -74,7 +80,7 @@ func TestRestaurantHandler_Create_Failure_ValidationError(t *testing.T) {
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
-	payload := `{"slug": "valid-slug"}`
+	payload := `{"name": "Pizza Restaurant"}`
 
 	req, _ := http.NewRequest("POST", "/api/restaurants", bytes.NewBufferString(payload))
 	req.Header.Set("Content-Type", "application/json")
@@ -95,9 +101,21 @@ func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
-	validPayload := `{"name": "New Restaurant", "slug": "new-restaurant", "address": "456 Elm St"}`
+	reqBody := map[string]interface{}{
+		"name":          "Test Restaurant",
+		"email":         "unique@test.com",
+		"phone":         "+49 89 22334455",
+		"house":         "1",
+		"street":        "Main Str.",
+		"city":          "Cityville",
+		"postal_code":   "12345",
+		"delivery_type": "own_delivery",
+		"delivery_km":   5,
+		"specialties":   []string{"italian", "wood_fired"},
+	}
+	jsonBody, _ := json.Marshal(reqBody)
 
-	req, _ := http.NewRequest("POST", "/api/restaurants", bytes.NewBufferString(validPayload))
+	req, _ := http.NewRequest("POST", "/api/restaurants", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	// No Authorization header
 
@@ -116,10 +134,17 @@ func TestRestaurantHandler_Create_Failure_UnauthorizedRole(t *testing.T) {
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
-	reqBody := map[string]string{
-		"name":    "Test Restaurant",
-		"slug":    "test-restaurant",
-		"address": "123 Test Street",
+	reqBody := map[string]interface{}{
+		"name":          "Test Restaurant",
+		"email":         "unique@test.com",
+		"phone":         "+49 89 22334455",
+		"house":         "1",
+		"street":        "Main Str.",
+		"city":          "Cityville",
+		"postal_code":   "12345",
+		"delivery_type": "own_delivery",
+		"delivery_km":   5,
+		"specialties":   []string{"italian", "wood_fired"},
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 
