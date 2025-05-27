@@ -54,7 +54,8 @@ func NewContainer() (*Container, error) {
 	authHandler := http.NewAuthHandler(signInUC, createEmailVerificationUC)
 
 	// restaurant
-	createRestaurantUC := aRestaurant.NewCreateRestaurantUseCase(restaurantRepo)
+	restaurantAddressRepo := persistence.NewRestaurantAddressRepository(database)
+	createRestaurantUC := aRestaurant.NewCreateRestaurantUseCase(database, restaurantRepo, restaurantAddressRepo)
 	restaurantHandler := http.NewRestaurantHandler(createRestaurantUC)
 
 	// pizza-sizes
