@@ -7,7 +7,7 @@ import (
 	"api-service/internal/infrastructure/security"
 	uiHttp "api-service/internal/interfaces/http"
 	"api-service/internal/shared/event"
-	"api-service/tests/internal/infrastructure/db/fixtures"
+	"api-service/tests/infrastructure/db/fixtures"
 	"bytes"
 	"encoding/json"
 	"errors"

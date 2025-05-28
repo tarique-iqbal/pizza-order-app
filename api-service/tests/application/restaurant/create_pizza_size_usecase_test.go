@@ -5,8 +5,8 @@ import (
 	"api-service/internal/domain/restaurant"
 	"api-service/internal/infrastructure/persistence"
 	sErrors "api-service/internal/shared/errors"
-	"api-service/tests/internal/infrastructure/db"
-	"api-service/tests/internal/infrastructure/db/fixtures"
+	"api-service/tests/infrastructure/db"
+	"api-service/tests/infrastructure/db/fixtures"
 	"context"
 	"testing"
 

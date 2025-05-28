@@ -6,7 +6,7 @@ import (
 	"api-service/internal/infrastructure/persistence"
 	"api-service/internal/infrastructure/security"
 	"api-service/internal/shared/event"
-	"api-service/tests/internal/infrastructure/db"
+	"api-service/tests/infrastructure/db"
 	"context"
 	"errors"
 	"testing"

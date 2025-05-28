@@ -4,8 +4,8 @@ import (
 	"api-service/internal/application/auth"
 	"api-service/internal/infrastructure/persistence"
 	"api-service/internal/infrastructure/security"
-	"api-service/tests/internal/infrastructure/db"
-	"api-service/tests/internal/infrastructure/db/fixtures"
+	"api-service/tests/infrastructure/db"
+	"api-service/tests/infrastructure/db/fixtures"
 	"context"
 	"testing"
 

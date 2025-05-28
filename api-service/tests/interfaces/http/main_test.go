@@ -12,7 +12,7 @@ import (
 	"api-service/internal/domain/auth"
 	"api-service/internal/domain/restaurant"
 	"api-service/internal/domain/user"
-	"api-service/tests/internal/infrastructure/db"
+	"api-service/tests/infrastructure/db"
 )
 
 var testDB *gorm.DB

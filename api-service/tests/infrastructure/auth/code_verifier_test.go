@@ -9,8 +9,8 @@ import (
 	dAuth "api-service/internal/domain/auth"
 	iAuth "api-service/internal/infrastructure/auth"
 	"api-service/internal/infrastructure/persistence"
-	"api-service/tests/internal/infrastructure/db"
-	"api-service/tests/internal/infrastructure/db/fixtures"
+	"api-service/tests/infrastructure/db"
+	"api-service/tests/infrastructure/db/fixtures"
 )
 
 func setupCodeVerificationService() dAuth.CodeVerifier {

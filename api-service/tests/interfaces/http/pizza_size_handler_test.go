@@ -5,7 +5,7 @@ import (
 	"api-service/internal/infrastructure/persistence"
 	uiHttp "api-service/internal/interfaces/http"
 	"api-service/internal/interfaces/http/middlewares"
-	"api-service/tests/internal/infrastructure/db/fixtures"
+	"api-service/tests/infrastructure/db/fixtures"
 	"bytes"
 	"encoding/json"
 	"fmt"
