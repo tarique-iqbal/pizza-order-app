@@ -1,8 +1,0 @@
-ALTER TABLE users
-DROP COLUMN IF EXISTS user_status;
-
-ALTER TABLE users
-DROP COLUMN IF EXISTS verified;
-
-ALTER TABLE users
-DROP COLUMN IF EXISTS last_login;
