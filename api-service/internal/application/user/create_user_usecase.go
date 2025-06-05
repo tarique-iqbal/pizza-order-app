@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const defaultStatus = "Active"
+const defaultStatus = "active"
 
 type CreateUserUseCase struct {
 	codeVerifier auth.CodeVerifier
