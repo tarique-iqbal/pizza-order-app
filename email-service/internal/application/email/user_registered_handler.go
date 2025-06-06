@@ -5,7 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
+)
+
+const (
+	RoleUser  = "user"
+	RoleOwner = "owner"
 )
 
 type UserRegisteredHandler struct {
@@ -28,13 +32,13 @@ func (h *UserRegisteredHandler) Handle(event email.EventPayload) error {
 		return err
 	}
 
-	validRoles := map[string]bool{"User": true, "Owner": true}
+	validRoles := map[string]bool{RoleUser: true, RoleOwner: true}
 	if !validRoles[payload.Role] {
 		return fmt.Errorf("invalid role in event payload: %s", payload.Role)
 	}
 
-	subjectTemplate := fmt.Sprintf("%s_welcome_email_subject.html", strings.ToLower(payload.Role))
-	bodyTemplate := fmt.Sprintf("%s_welcome_email_body.html", strings.ToLower(payload.Role))
+	subjectTemplate := fmt.Sprintf("%s_welcome_email_subject.html", payload.Role)
+	bodyTemplate := fmt.Sprintf("%s_welcome_email_body.html", payload.Role)
 
 	appName := os.Getenv("APP_NAME")
 	supportEmail := os.Getenv("SUPPORT_EMAIL")
