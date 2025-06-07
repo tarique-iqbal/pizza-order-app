@@ -62,7 +62,7 @@ func TestUserRegisteredHandler_Handle_Success(t *testing.T) {
 		Data: []byte(`{
 			"email": "test@example.com",
 			"first_name": "Alice",
-			"role": "User",
+			"role": "user",
 			"timestamp": "2024-01-01T00:00:00Z"
 		}`),
 	}
@@ -102,7 +102,7 @@ func TestUserRegisteredHandler_Handle_TemplateRenderFails(t *testing.T) {
 		Data: []byte(`{
 			"email": "test@example.com",
 			"first_name": "Alice",
-			"role": "Owner",
+			"role": "owner",
 			"timestamp": "2024-01-01T00:00:00Z"
 		}`),
 	}
@@ -123,7 +123,7 @@ func TestUserRegisteredHandler_Handle_EmailSendFails(t *testing.T) {
 		Data: []byte(`{
 			"email": "test@example.com",
 			"first_name": "Alice",
-			"role": "User",
+			"role": "user",
 			"timestamp": "2024-01-01T00:00:00Z"
 		}`),
 	}
