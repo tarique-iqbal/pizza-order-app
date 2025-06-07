@@ -9,6 +9,8 @@ import (
 	"email-service/internal/infrastructure/messaging"
 )
 
+const emailTemplatePath = "internal/infrastructure/email/templates"
+
 type Container struct {
 	Dispatcher dEmail.EventDispatcher
 	Consumer   *messaging.RabbitMQConsumer
@@ -23,7 +25,7 @@ func NewContainer() (*Container, error) {
 	senderEmail := os.Getenv("SENDER_EMAIL")
 
 	smtpSender := iEmail.NewSMTPSender(smtpHost, smtpPort, smtpUser, smtpPass, senderEmail)
-	template := iEmail.NewHTMLTemplateLoader("internal/infrastructure/email/templates")
+	template := iEmail.NewHTMLTemplateLoader(emailTemplatePath)
 
 	userRegisteredHandler := aEmail.NewUserRegisteredHandler(smtpSender, template)
 	emailVerificationCreatedHandler := aEmail.NewEmailVerificationCreatedHandler(smtpSender, template)
@@ -32,10 +34,10 @@ func NewContainer() (*Container, error) {
 	dispatcher.Register("user.registered", userRegisteredHandler)
 	dispatcher.Register("email.verification_created", emailVerificationCreatedHandler)
 
-	consumer := messaging.NewRabbitMQConsumer(amqpURL)
+	consumer, err := messaging.NewRabbitMQConsumer(amqpURL)
 
 	return &Container{
 		Dispatcher: dispatcher,
 		Consumer:   consumer,
-	}, nil
+	}, err
 }
