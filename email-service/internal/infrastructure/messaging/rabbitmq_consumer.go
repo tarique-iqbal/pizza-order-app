@@ -2,6 +2,8 @@ package messaging
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -10,117 +12,157 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
-type deliveryChan <-chan amqp091.Delivery
-type dispatcher email.EventDispatcher
+const (
+	ExchangeName     = "email_exchange"
+	QueueName        = "email_queue"
+	DLXName          = "email_dlx"
+	VerificationKey  = "email.verification_created"
+	RegistrationKey  = "user.registered"
+	MaxRetryAttempts = 3
+)
 
 type RabbitMQConsumer struct {
 	conn    *amqp091.Connection
 	channel *amqp091.Channel
+	amqpURL string
 }
 
-func NewRabbitMQConsumer(amqpURL string) *RabbitMQConsumer {
-	conn, err := amqp091.Dial(amqpURL)
+func NewRabbitMQConsumer(amqpURL string) (*RabbitMQConsumer, error) {
+	c := &RabbitMQConsumer{amqpURL: amqpURL}
+	if err := c.connect(); err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func (c *RabbitMQConsumer) connect() error {
+	conn, err := amqp091.Dial(c.amqpURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+		return fmt.Errorf("RabbitMQ connection failed: %w", err)
 	}
 
 	ch, err := conn.Channel()
 	if err != nil {
-		log.Fatalf("Failed to open a channel: %v", err)
+		return fmt.Errorf("channel creation failed: %w", err)
 	}
 
-	q, err := ch.QueueDeclare(
-		"email_queue", // Queue name
-		true,          // Durable
-		false,         // Auto-delete
-		false,         // Exclusive
-		false,         // No-wait
-		nil,           // Arguments
-	)
+	// Declare DLX
+	if err := ch.ExchangeDeclare(DLXName, "topic", true, false, false, false, nil); err != nil {
+		return fmt.Errorf("DLX declaration failed: %w", err)
+	}
+
+	// Declare main exchange
+	if err := ch.ExchangeDeclare(ExchangeName, "topic", true, false, false, false, nil); err != nil {
+		return fmt.Errorf("exchange declaration failed: %w", err)
+	}
+
+	// Queue with DLX
+	args := amqp091.Table{
+		"x-dead-letter-exchange":    DLXName,
+		"x-dead-letter-routing-key": QueueName + ".retry",
+	}
+	q, err := ch.QueueDeclare(QueueName, true, false, false, false, args)
 	if err != nil {
-		log.Fatalf("Failed to declare queue: %v", err)
+		return fmt.Errorf("queue declaration failed: %w", err)
 	}
 
-	routingKeys := []string{
-		"email.verification_created",
-		"user.registered",
-	}
-	for _, key := range routingKeys {
-		err = ch.QueueBind(
-			q.Name,           // Queue name
-			key,              // Routing key
-			"email_exchange", // Exchange name
-			false,
-			nil,
-		)
-		if err != nil {
-			log.Fatalf("Failed to bind queue: %v", err)
+	// Bind routing keys
+	for _, key := range []string{VerificationKey, RegistrationKey} {
+		if err := ch.QueueBind(q.Name, key, ExchangeName, false, nil); err != nil {
+			return fmt.Errorf("queue bind failed for %s: %w", key, err)
 		}
 	}
 
-	err = ch.Qos(1, 0, false)
-	if err != nil {
-		log.Fatalf("Failed to set QoS: %v", err)
+	if err := ch.Qos(1, 0, false); err != nil {
+		return fmt.Errorf("QoS setup failed: %w", err)
 	}
 
-	return &RabbitMQConsumer{conn: conn, channel: ch}
+	c.conn = conn
+	c.channel = ch
+	return nil
 }
 
-func (c *RabbitMQConsumer) GetMessages() deliveryChan {
+func (c *RabbitMQConsumer) GetMessages() (<-chan amqp091.Delivery, error) {
+	if err := c.ensureConnected(); err != nil {
+		return nil, err
+	}
+
 	msgs, err := c.channel.Consume(
-		"email_queue",          // Queue name
-		"email_queue_consumer", // Consumer name
-		false,                  // Auto-Ack Disabled
-		false,                  // Exclusive
-		false,                  // No-local
-		false,                  // No-wait
-		nil,                    // Arguments
+		QueueName,
+		"",    // let RabbitMQ generate consumer tag
+		false, // manual ack
+		false, // no exclusive
+		false, // no local
+		false, // no wait
+		nil,
 	)
 	if err != nil {
-		log.Fatalf("Failed to register consumer: %v", err)
+		return nil, fmt.Errorf("consumer registration failed: %w", err)
 	}
 
-	return msgs
+	return msgs, nil
 }
 
-func (c *RabbitMQConsumer) Run(ctx context.Context, msgs deliveryChan, dispatcher dispatcher) {
+func (c *RabbitMQConsumer) ensureConnected() error {
+	if c.conn.IsClosed() {
+		log.Println("Reconnecting to RabbitMQ...")
+		return c.connect()
+	}
+	return nil
+}
+
+func (c *RabbitMQConsumer) Run(ctx context.Context, dispatcher email.EventDispatcher) error {
+	msgs, err := c.GetMessages()
+	if err != nil {
+		return err
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Consumer stopped gracefully")
-			return
+			return nil
 		case msg, ok := <-msgs:
 			if !ok {
-				log.Println("Message channel closed")
-				return
+				return errors.New("message channel closed")
 			}
 
-			go func(msg amqp091.Delivery) {
-				event := email.EventPayload{
-					Name: msg.RoutingKey,
-					Data: msg.Body,
-				}
-				if err := dispatcher.Dispatch(event); err != nil {
-					log.Println("Error dispatching:", err)
+			event := email.EventPayload{
+				Name: msg.RoutingKey,
+				Data: msg.Body,
+			}
 
-					if msg.Redelivered {
-						log.Println("Message already redelivered, rejecting permanently.")
-						_ = msg.Nack(false, false) // Do not requeue
-					} else {
-						log.Println("Requeueing message for retry...")
-						time.Sleep(2 * time.Second)
-						_ = msg.Nack(false, true) // Requeue the message
-					}
-					return
+			if err := dispatcher.Dispatch(event); err != nil {
+				retryCount := getRetryCount(msg.Headers)
+				if retryCount >= MaxRetryAttempts {
+					log.Printf("Message %s exceeded retry limit", msg.MessageId)
+					_ = msg.Nack(false, false) // discard
+					continue
 				}
 
-				msg.Ack(false)
-			}(msg)
+				time.Sleep(time.Second * time.Duration(retryCount+1))
+				_ = msg.Nack(false, true) // requeue
+				continue
+			}
+
+			_ = msg.Ack(false)
 		}
 	}
 }
 
+func getRetryCount(headers amqp091.Table) int {
+	if val, ok := headers["x-retry-count"]; ok {
+		if count, ok := val.(int32); ok {
+			return int(count)
+		}
+	}
+	return 0
+}
+
 func (c *RabbitMQConsumer) Close() {
-	c.channel.Close()
-	c.conn.Close()
+	if c.channel != nil {
+		_ = c.channel.Close()
+	}
+	if c.conn != nil {
+		_ = c.conn.Close()
+	}
 }
