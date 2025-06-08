@@ -28,7 +28,7 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	go app.Consumer.Run(ctx, app.Consumer.GetMessages(), app.Dispatcher)
+	go app.Consumer.Run(ctx, app.Dispatcher)
 
 	<-sigs
 	log.Println("Exiting...")
