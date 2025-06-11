@@ -1,0 +1,86 @@
+services:
+  # Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: pizza-postgres
+    environment:
+      POSTGRES_USER: pizza_user
+      POSTGRES_PASSWORD: pizza_pass
+      POSTGRES_DB: pizza_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pizza_user -d pizza_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: pizza-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: pizza_user
+      RABBITMQ_DEFAULT_PASS: pizza_pass
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Search Engine
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    container_name: pizza-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # API Service
+  api-service:
+    container_name: pizza-api-service
+    build:
+      context: .
+      dockerfile: .docker/api-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file: api-service/.env
+    environment:
+      APP_ENV: docker
+    ports:
+      - "8080:8080"
+
+  # Email Service
+  email-service:
+    container_name: pizza-email-service
+    build:
+      context: .
+      dockerfile: .docker/email-service/Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    env_file: email-service/.env
+    environment:
+      APP_ENV: docker
+
+volumes:
+  postgres_data:
+  elasticsearch_data:
