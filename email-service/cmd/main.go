@@ -13,8 +13,11 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+	env := os.Getenv("APP_ENV")
+	if env != "docker" {
+		if err := godotenv.Load(); err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
 	app, err := container.NewContainer()
