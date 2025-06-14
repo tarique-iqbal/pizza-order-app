@@ -60,7 +60,7 @@ func TestUserHandler_CreateUser_Success(t *testing.T) {
 		"last_name":  "Doe",
 		"email":      "alice@example.com",
 		"password":   "pass123",
-		"role":       "User",
+		"role":       "user",
 		"code":       "347578",
 	})
 
