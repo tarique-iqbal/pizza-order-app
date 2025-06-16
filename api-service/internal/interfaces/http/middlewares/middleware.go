@@ -14,6 +14,6 @@ type Middleware struct {
 func NewMiddleware(jwt auth.JWTService) *Middleware {
 	return &Middleware{
 		Auth:        AuthMiddleware(jwt),
-		EnsureOwner: RequireRole("Owner"),
+		EnsureOwner: RequireRole("owner"),
 	}
 }
