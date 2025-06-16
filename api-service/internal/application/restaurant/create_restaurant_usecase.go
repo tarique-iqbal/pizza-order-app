@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gosimple/slug"
 	"gorm.io/gorm"
 )
@@ -121,15 +122,16 @@ func (uc *CreateRestaurantUseCase) saveAddressAndRestaurant(
 		newAddress = address
 
 		newRestaurant = restaurant.Restaurant{
-			UserID:       input.UserID,
-			Name:         input.Name,
-			Slug:         slugFinal,
-			Email:        input.Email,
-			Phone:        input.Phone,
-			AddressID:    address.ID,
-			DeliveryType: input.DeliveryType,
-			DeliveryKm:   input.DeliveryKm,
-			Specialties:  strings.Join(input.Specialties, ","),
+			RestaurantUUID: uuid.New(),
+			UserID:         input.UserID,
+			Name:           input.Name,
+			Slug:           slugFinal,
+			Email:          input.Email,
+			Phone:          input.Phone,
+			AddressID:      address.ID,
+			DeliveryType:   input.DeliveryType,
+			DeliveryKm:     input.DeliveryKm,
+			Specialties:    strings.Join(input.Specialties, ","),
 		}
 		if err := uc.repo.WithTx(tx).Create(ctx, &newRestaurant); err != nil {
 			return err
