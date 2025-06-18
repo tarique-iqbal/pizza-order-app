@@ -32,7 +32,7 @@ func TestPizzaSizeHandler_Create_Success(t *testing.T) {
 	rest, _ := fixtures.CreateRestaurant(testDB)
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(rest.UserID, "Owner"), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(rest.UserID, "owner"), middlewares.RequireRole("owner"))
 	router.POST("/api/restaurants/:id/pizza-sizes", psHandler.Create)
 
 	body := map[string]interface{}{
@@ -62,7 +62,7 @@ func TestPizzaSizeHandler_Create_Failure_ValidationError(t *testing.T) {
 	rest, _ := fixtures.CreateRestaurant(testDB)
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(rest.UserID, "Owner"), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(rest.UserID, "owner"), middlewares.RequireRole("owner"))
 	router.POST("/api/restaurants/:id/pizza-sizes", psHandler.Create)
 
 	req, _ := http.NewRequest("POST", fmt.Sprintf("/api/restaurants/%d/pizza-sizes", rest.ID), bytes.NewBufferString(`invalid_json`))
@@ -81,7 +81,7 @@ func TestPizzaSizeHandler_Create_Invalid_Restaurant_Id_Param(t *testing.T) {
 	rest, _ := fixtures.CreateRestaurant(testDB)
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(rest.UserID, "Owner"), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(rest.UserID, "owner"), middlewares.RequireRole("owner"))
 	router.POST("/api/restaurants/:id/pizza-sizes", psHandler.Create)
 
 	req, _ := http.NewRequest("POST", "/api/restaurants/invalid-id/pizza-sizes", bytes.NewBufferString(`{}`))
@@ -101,7 +101,7 @@ func TestPizzaSizeHandler_Create_Forbidden_User(t *testing.T) {
 	rest, _ := fixtures.CreateRestaurant(testDB)
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(notOwnerID, "Owner"), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(notOwnerID, "owner"), middlewares.RequireRole("owner"))
 	router.POST("/api/restaurants/:id/pizza-sizes", psHandler.Create)
 
 	body := map[string]interface{}{

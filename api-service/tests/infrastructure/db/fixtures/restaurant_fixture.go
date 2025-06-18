@@ -49,7 +49,7 @@ func LoadRestaurantFixtures(db *gorm.DB, usr *user.User, restAddr *restaurant.Re
 }
 
 func CreateRestaurant(db *gorm.DB) (*restaurant.Restaurant, error) {
-	user, err := CreateUser(db, "Owner")
+	user, err := CreateUser(db, "owner")
 	if err != nil {
 		return nil, err
 	}

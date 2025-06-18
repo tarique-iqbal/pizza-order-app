@@ -17,8 +17,8 @@ func TestRequireRole(t *testing.T) {
 		role         string
 		expectedCode int
 	}{
-		{"CorrectRole", "Owner", http.StatusOK},
-		{"IncorrectRole", "User", http.StatusForbidden},
+		{"CorrectRole", "owner", http.StatusOK},
+		{"IncorrectRole", "user", http.StatusForbidden},
 	}
 
 	for _, tt := range tests {
@@ -29,7 +29,7 @@ func TestRequireRole(t *testing.T) {
 			r.Use(func(c *gin.Context) {
 				c.Set("role", tt.role)
 			})
-			r.Use(middlewares.RequireRole("Owner"))
+			r.Use(middlewares.RequireRole("owner"))
 
 			r.GET("/api/restaurants/losteria", func(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{"message": "success"})

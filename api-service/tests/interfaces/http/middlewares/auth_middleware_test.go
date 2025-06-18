@@ -21,7 +21,7 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 	jwtService := InitJWT()
 
 	userID := uint(1)
-	role := "User"
+	role := "user"
 	token, _ := jwtService.GenerateToken(userID, role)
 
 	w := httptest.NewRecorder()

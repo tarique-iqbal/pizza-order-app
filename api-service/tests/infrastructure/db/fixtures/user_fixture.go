@@ -18,7 +18,7 @@ func LoadUserFixtures(db *gorm.DB) error {
 			LastName:  "Doe",
 			Email:     "john.doe@example.com",
 			Password:  password,
-			Role:      "User",
+			Role:      "user",
 			CreatedAt: time.Now(),
 		},
 	}

@@ -29,7 +29,7 @@ func setupRestaurantHandler(t *testing.T) *uiHttp.RestaurantHandler {
 
 func TestRestaurantHandler_Create_Success(t *testing.T) {
 	rHandler := setupRestaurantHandler(t)
-	usr, _ := fixtures.CreateUser(testDB, "Owner")
+	usr, _ := fixtures.CreateUser(testDB, "owner")
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
@@ -74,7 +74,7 @@ func TestRestaurantHandler_Create_Success(t *testing.T) {
 
 func TestRestaurantHandler_Create_Failure_ValidationError(t *testing.T) {
 	rHandler := setupRestaurantHandler(t)
-	usr, _ := fixtures.CreateUser(testDB, "Owner")
+	usr, _ := fixtures.CreateUser(testDB, "owner")
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
@@ -95,7 +95,7 @@ func TestRestaurantHandler_Create_Failure_ValidationError(t *testing.T) {
 
 func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
 	rHandler := setupRestaurantHandler(t)
-	usr, _ := fixtures.CreateUser(testDB, "Owner")
+	usr, _ := fixtures.CreateUser(testDB, "owner")
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
@@ -128,7 +128,7 @@ func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
 
 func TestRestaurantHandler_Create_Failure_UnauthorizedRole(t *testing.T) {
 	rHandler := setupRestaurantHandler(t)
-	usr, _ := fixtures.CreateUser(testDB, "User")
+	usr, _ := fixtures.CreateUser(testDB, "user")
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))

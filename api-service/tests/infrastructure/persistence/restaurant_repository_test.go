@@ -22,7 +22,7 @@ type restaurantRepoTestEnv struct {
 func setupRestaurantRepoTestEnv() restaurantRepoTestEnv {
 	testDB := db.SetupTestDB()
 
-	usr, err := fixtures.CreateUser(testDB, "Owner")
+	usr, err := fixtures.CreateUser(testDB, "owner")
 	if err != nil {
 		panic(err)
 	}
