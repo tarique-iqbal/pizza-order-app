@@ -17,12 +17,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type mockGeocoder struct {
+	lat float64
+	lon float64
+	err error
+}
+
+func (m *mockGeocoder) GeocodeAddress(addr dRestaurant.RestaurantAddress) (float64, float64, error) {
+	return m.lat, m.lon, m.err
+}
+
 func setupRestaurantHandler(t *testing.T) *uiHttp.RestaurantHandler {
 	resetTables(t)
 
+	mockGeo := &mockGeocoder{lat: 52.52, lon: 13.405, err: nil}
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
 	restAddrRepo := persistence.NewRestaurantAddressRepository(testDB)
-	createRestaurantUC := restaurant.NewCreateRestaurantUseCase(testDB, restaurantRepo, restAddrRepo)
+	createRestaurantUC := restaurant.NewCreateRestaurantUseCase(testDB, mockGeo, restaurantRepo, restAddrRepo)
 
 	return uiHttp.NewRestaurantHandler(createRestaurantUC)
 }

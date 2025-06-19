@@ -14,17 +14,20 @@ import (
 
 type CreateRestaurantUseCase struct {
 	db           *gorm.DB
+	geocoder     restaurant.GeocoderService
 	repo         restaurant.RestaurantRepository
 	restAddrRepo restaurant.RestaurantAddressRepository
 }
 
 func NewCreateRestaurantUseCase(
 	db *gorm.DB,
+	geocoder restaurant.GeocoderService,
 	repo restaurant.RestaurantRepository,
 	addressRepo restaurant.RestaurantAddressRepository,
 ) *CreateRestaurantUseCase {
 	return &CreateRestaurantUseCase{
 		db:           db,
+		geocoder:     geocoder,
 		repo:         repo,
 		restAddrRepo: addressRepo,
 	}
@@ -41,6 +44,9 @@ func (uc *CreateRestaurantUseCase) Execute(ctx context.Context, input Restaurant
 	}
 
 	address := uc.buildAddress(input)
+	if err := uc.geocodeAddress(&address); err != nil {
+		return RestaurantResponseDTO{}, err
+	}
 
 	newRestaurant, newAddress, err := uc.saveAddressAndRestaurant(ctx, address, input, slugFinal)
 	if err != nil {
@@ -104,6 +110,16 @@ func (uc *CreateRestaurantUseCase) buildAddress(input RestaurantCreateDTO) resta
 			input.City,
 		),
 	}
+}
+
+func (uc *CreateRestaurantUseCase) geocodeAddress(addr *restaurant.RestaurantAddress) error {
+	lat, lon, err := uc.geocoder.GeocodeAddress(*addr)
+	if err != nil {
+		return fmt.Errorf("failed to geocode address: %w", err)
+	}
+	addr.Lat = lat
+	addr.Lon = lon
+	return nil
 }
 
 func (uc *CreateRestaurantUseCase) saveAddressAndRestaurant(

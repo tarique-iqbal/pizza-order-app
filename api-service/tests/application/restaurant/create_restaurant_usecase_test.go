@@ -14,13 +14,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type mockGeocoder struct {
+	lat float64
+	lon float64
+	err error
+}
+
+func (m *mockGeocoder) GeocodeAddress(addr restaurant.RestaurantAddress) (float64, float64, error) {
+	return m.lat, m.lon, m.err
+}
+
 type createRestaurantUseCaseTestEnv struct {
 	User               *user.User
 	RestaurantAddress  *restaurant.RestaurantAddress
 	CreateRestaurantUC *aRestaurant.CreateRestaurantUseCase
 }
 
-func setupCreateRestaurantUseCase() createRestaurantUseCaseTestEnv {
+func setupCreateRestaurantUseCase(lat float64, lon float64, errGeo error) createRestaurantUseCaseTestEnv {
 	testDB := db.SetupTestDB()
 
 	usr, err := fixtures.CreateUser(testDB, "owner")
@@ -37,9 +47,10 @@ func setupCreateRestaurantUseCase() createRestaurantUseCaseTestEnv {
 		panic(err)
 	}
 
+	mockGeo := &mockGeocoder{lat: lat, lon: lon, err: errGeo}
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
 	restAddrRepo := persistence.NewRestaurantAddressRepository(testDB)
-	createRestaurantUC := aRestaurant.NewCreateRestaurantUseCase(testDB, restaurantRepo, restAddrRepo)
+	createRestaurantUC := aRestaurant.NewCreateRestaurantUseCase(testDB, mockGeo, restaurantRepo, restAddrRepo)
 
 	return createRestaurantUseCaseTestEnv{
 		User:               usr,
@@ -49,7 +60,7 @@ func setupCreateRestaurantUseCase() createRestaurantUseCaseTestEnv {
 }
 
 func TestCreateRestaurant_Success(t *testing.T) {
-	env := setupCreateRestaurantUseCase()
+	env := setupCreateRestaurantUseCase(52.52, 13.405, nil)
 
 	input := aRestaurant.RestaurantCreateDTO{
 		UserID:       env.User.ID,
@@ -72,7 +83,7 @@ func TestCreateRestaurant_Success(t *testing.T) {
 }
 
 func TestCreateRestaurant_DuplicateEmail(t *testing.T) {
-	env := setupCreateRestaurantUseCase()
+	env := setupCreateRestaurantUseCase(52.52, 13.405, nil)
 
 	existingEmail := "kontakt@pizzaparadise.de"
 
@@ -86,7 +97,7 @@ func TestCreateRestaurant_DuplicateEmail(t *testing.T) {
 }
 
 func TestCreateRestaurant_DuplicateSlug(t *testing.T) {
-	env := setupCreateRestaurantUseCase()
+	env := setupCreateRestaurantUseCase(52.52, 13.405, nil)
 
 	name := "Pizza Paradise"
 	city := "Hamburg"
