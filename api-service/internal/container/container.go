@@ -6,6 +6,7 @@ import (
 	"api-service/internal/application/user"
 	iAuth "api-service/internal/infrastructure/auth"
 	"api-service/internal/infrastructure/db"
+	"api-service/internal/infrastructure/geocoder"
 	"api-service/internal/infrastructure/messaging"
 	"api-service/internal/infrastructure/persistence"
 	"api-service/internal/infrastructure/security"
@@ -31,6 +32,7 @@ func NewContainer() (*Container, error) {
 
 	amqpURL := os.Getenv("RABBITMQ_URL")
 	jwtSecret := os.Getenv("JWT_SECRET")
+	opencageApiKey := os.Getenv("OPENCAGE_API_KEY")
 
 	publisher := messaging.NewRabbitMQPublisher(amqpURL)
 	hasher := security.NewPasswordHasher()
@@ -54,8 +56,9 @@ func NewContainer() (*Container, error) {
 	authHandler := http.NewAuthHandler(signInUC, createEmailVerificationUC)
 
 	// restaurant
+	geocoderService := geocoder.NewOpenCageService(opencageApiKey)
 	restaurantAddressRepo := persistence.NewRestaurantAddressRepository(database)
-	createRestaurantUC := aRestaurant.NewCreateRestaurantUseCase(database, restaurantRepo, restaurantAddressRepo)
+	createRestaurantUC := aRestaurant.NewCreateRestaurantUseCase(database, geocoderService, restaurantRepo, restaurantAddressRepo)
 	restaurantHandler := http.NewRestaurantHandler(createRestaurantUC)
 
 	// pizza-sizes
