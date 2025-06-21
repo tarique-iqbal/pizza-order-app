@@ -43,7 +43,7 @@ func TestRestaurantHandler_Create_Success(t *testing.T) {
 	usr, _ := fixtures.CreateUser(testDB, "owner")
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	reqBody := map[string]interface{}{
@@ -88,7 +88,7 @@ func TestRestaurantHandler_Create_Failure_ValidationError(t *testing.T) {
 	usr, _ := fixtures.CreateUser(testDB, "owner")
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	payload := `{"name": "Pizza Restaurant"}`
@@ -109,7 +109,7 @@ func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
 	usr, _ := fixtures.CreateUser(testDB, "owner")
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	reqBody := map[string]interface{}{
@@ -142,7 +142,7 @@ func TestRestaurantHandler_Create_Failure_UnauthorizedRole(t *testing.T) {
 	usr, _ := fixtures.CreateUser(testDB, "user")
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("Owner"))
+	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("owner"))
 	router.POST("/api/restaurants", rHandler.Create)
 
 	reqBody := map[string]interface{}{
