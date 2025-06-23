@@ -9,7 +9,7 @@ This repository contains the **Pizza Order App** system, structured using a micr
 
 - Handles customer orders via REST APIs.
 - Publishes order events (e.g., `user.registered`, `order.placed`) to a message broker.
-- Implements Clean/Domain-Driven Design architecture.
+- Implements Domain-Driven Design architecture.
 
 ### `email-service` – Email Sending Service – Message Consumer
 
@@ -29,7 +29,7 @@ This repository contains the **Pizza Order App** system, structured using a micr
 - **Language:** Go (Golang)
 - **Database:** PostgreSQL
 - **Search:** Elasticsearch
-- **Architecture:** Clean Architecture
+- **Architecture:** Domain-Driven Design Architecture
 - **Messaging:** RabbitMQ
 
 
@@ -65,7 +65,7 @@ pizza-order-app/
 ├── web-user/                  # Frontend UI for users (React)
 │
 │── .gitignore                 # .gitignore file
-│── README.md                  # You are here ✨
+│── README.md                  # You are here
 ```
 
 
