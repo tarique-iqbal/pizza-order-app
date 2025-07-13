@@ -1,14 +1,14 @@
 # Pizza Order App – Monorepo
 
-This repository contains the **Pizza Order App** system, structured using a microservices architecture. It includes a main **API Service** for handling pizza orders, an **Email Service** for sending email notifications, and a **Search Service** for searching restaurants and pizzas based on location. The services communicate via asynchronous messaging.
+This repository contains the **Pizza Order App** system, structured using a microservices architecture. It includes an **API Service** for handling signup, an **Email Service** for sending email notifications, a **Search Service** for searching restaurants and pizzas based on location, and an **Order Service** for handling pizza orders. The services communicate via asynchronous messaging.
 
 
 ## Services Overview
 
-### `api-service` – Pizza Ordering API – Message Producer
+### `api-service` – User Signup API – Message Producer
 
-- Handles customer orders via REST APIs.
-- Publishes order events (e.g., `user.registered`, `order.placed`) to a message broker.
+- Handles user signups via REST APIs.
+- Publishes signup events (e.g., `user.registered`) to a message broker.
 - Implements Domain-Driven Design architecture.
 
 ### `email-service` – Email Sending Service – Message Consumer
@@ -23,6 +23,11 @@ This repository contains the **Pizza Order App** system, structured using a micr
 - Exposes search API via Gin and Elasticsearch.
 - Supports location-based and text-based search.
 
+### `order-service` – Pizza Ordering API – Message Producer
+
+- Handles customer orders via REST APIs.
+- Publishes order events (e.g., `order.placed`) to a message broker.
+- Implements Domain-Driven Design architecture.
 
 ## Tech Stack
 
@@ -37,7 +42,7 @@ This repository contains the **Pizza Order App** system, structured using a micr
 
 ```bash
 pizza-order-app/
-│── api-service/               # Main API Service (Producer)
+│── api-service/               # API Service (Producer)
 │   ├── cmd/                   # Entry point
 │   │   ├── main.go            # Starts HTTP API, publishes events
 │   ├── internal/
@@ -61,6 +66,8 @@ pizza-order-app/
 │   │   ├── application/       # Search handling logic
 │   │   ├── domain/            # Search domain models and interfaces
 │   │   ├── infrastructure/    # Elasticsearch adapter, event consumer
+│
+├── order-service/             # Order Service (Producer)
 │
 ├── web-user/                  # Frontend UI for users (React)
 │
