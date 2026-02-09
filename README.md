@@ -1,15 +1,15 @@
 # Pizza Order App – Monorepo
 
-This repository contains the **Pizza Order App** system, structured using a microservices architecture. It includes an **API Service** for handling signup, an **Email Service** for sending email notifications, a **Search Service** for searching restaurants and pizzas based on location, and an **Order Service** for handling pizza orders. The services communicate via asynchronous messaging.
+This repository contains the **Pizza Order App** system, structured using a microservices architecture. It includes an **Identity Service** for handling signup, an **Email Service** for sending email notifications, a **Search Service** for searching restaurants and pizzas based on location, and an **Order Service** for handling pizza orders. The services communicate via asynchronous messaging.
 
 
 ## Services Overview
 
-### `api-service` – User Signup API – Message Producer
+### `identity-service` – User Signup API – Message Producer
 
 - Handles user signups via REST APIs.
 - Publishes signup events (e.g., `user.registered`) to a message broker.
-- Implements Domain-Driven Design architecture.
+- It cares about credentials and permissions.
 
 ### `email-service` – Email Sending Service – Message Consumer
 
@@ -42,7 +42,7 @@ This repository contains the **Pizza Order App** system, structured using a micr
 
 ```bash
 pizza-order-app/
-│── api-service/               # API Service (Producer)
+│── identity-service/          # Identity Service (Producer)
 │   ├── cmd/                   # Entry point
 │   │   ├── main.go            # Starts HTTP API, publishes events
 │   ├── internal/
