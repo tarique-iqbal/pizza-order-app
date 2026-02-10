@@ -8,12 +8,9 @@ import (
 )
 
 func SetupRestaurantRoutes(router *gin.Engine, rh *http.RestaurantHandler, m *middlewares.Middleware) {
-	api := router.Group("/api")
+	restaurants := router.Group("/restaurants")
 	{
-		restaurants := api.Group("/restaurants")
-		{
-			authRoutes := restaurants.Use(m.Auth, m.EnsureOwner)
-			authRoutes.POST("", rh.Create)
-		}
+		authRoutes := restaurants.Use(m.Auth, m.EnsureOwner)
+		authRoutes.POST("", rh.Create)
 	}
 }

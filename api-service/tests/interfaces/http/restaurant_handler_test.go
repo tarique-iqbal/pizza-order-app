@@ -44,7 +44,7 @@ func TestRestaurantHandler_Create_Success(t *testing.T) {
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("owner"))
-	router.POST("/api/restaurants", rHandler.Create)
+	router.POST("/restaurants", rHandler.Create)
 
 	reqBody := map[string]interface{}{
 		"name":          "Test Restaurant",
@@ -60,7 +60,7 @@ func TestRestaurantHandler_Create_Success(t *testing.T) {
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 
-	req, _ := http.NewRequest("POST", "/api/restaurants", bytes.NewBuffer(jsonBody))
+	req, _ := http.NewRequest("POST", "/restaurants", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer mock-valid-token")
 
@@ -89,11 +89,11 @@ func TestRestaurantHandler_Create_Failure_ValidationError(t *testing.T) {
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("owner"))
-	router.POST("/api/restaurants", rHandler.Create)
+	router.POST("/restaurants", rHandler.Create)
 
 	payload := `{"name": "Pizza Restaurant"}`
 
-	req, _ := http.NewRequest("POST", "/api/restaurants", bytes.NewBufferString(payload))
+	req, _ := http.NewRequest("POST", "/restaurants", bytes.NewBufferString(payload))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer mock-valid-token")
 
@@ -110,7 +110,7 @@ func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("owner"))
-	router.POST("/api/restaurants", rHandler.Create)
+	router.POST("/restaurants", rHandler.Create)
 
 	reqBody := map[string]interface{}{
 		"name":          "Test Restaurant",
@@ -126,7 +126,7 @@ func TestRestaurantHandler_Create_Failure_Unauthorized(t *testing.T) {
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 
-	req, _ := http.NewRequest("POST", "/api/restaurants", bytes.NewBuffer(jsonBody))
+	req, _ := http.NewRequest("POST", "/restaurants", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	// No Authorization header
 
@@ -143,7 +143,7 @@ func TestRestaurantHandler_Create_Failure_UnauthorizedRole(t *testing.T) {
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(usr.ID, usr.Role), middlewares.RequireRole("owner"))
-	router.POST("/api/restaurants", rHandler.Create)
+	router.POST("/restaurants", rHandler.Create)
 
 	reqBody := map[string]interface{}{
 		"name":          "Test Restaurant",
@@ -159,7 +159,7 @@ func TestRestaurantHandler_Create_Failure_UnauthorizedRole(t *testing.T) {
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 
-	req, _ := http.NewRequest("POST", "/api/restaurants", bytes.NewBuffer(jsonBody))
+	req, _ := http.NewRequest("POST", "/restaurants", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer mock-valid-token")
 

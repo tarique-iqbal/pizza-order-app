@@ -8,12 +8,9 @@ import (
 )
 
 func SetupPizzaSizeRoutes(router *gin.Engine, psh *http.PizzaSizeHandler, m *middlewares.Middleware) {
-	api := router.Group("/api")
+	restaurants := router.Group("/restaurants")
 	{
-		restaurants := api.Group("/restaurants")
-		{
-			authRoutes := restaurants.Use(m.Auth, m.EnsureOwner)
-			authRoutes.POST("/:id/pizza-sizes", psh.Create)
-		}
+		authRoutes := restaurants.Use(m.Auth, m.EnsureOwner)
+		authRoutes.POST("/:id/pizza-sizes", psh.Create)
 	}
 }

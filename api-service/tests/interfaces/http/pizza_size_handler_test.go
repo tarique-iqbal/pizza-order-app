@@ -33,7 +33,7 @@ func TestPizzaSizeHandler_Create_Success(t *testing.T) {
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(rest.UserID, "owner"), middlewares.RequireRole("owner"))
-	router.POST("/api/restaurants/:id/pizza-sizes", psHandler.Create)
+	router.POST("/restaurants/:id/pizza-sizes", psHandler.Create)
 
 	body := map[string]interface{}{
 		"title": "Large",
@@ -41,7 +41,7 @@ func TestPizzaSizeHandler_Create_Success(t *testing.T) {
 	}
 	jsonBody, _ := json.Marshal(body)
 
-	req, _ := http.NewRequest("POST", fmt.Sprintf("/api/restaurants/%d/pizza-sizes", rest.ID), bytes.NewBuffer(jsonBody))
+	req, _ := http.NewRequest("POST", fmt.Sprintf("/restaurants/%d/pizza-sizes", rest.ID), bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer mock-valid-token")
 
@@ -63,9 +63,9 @@ func TestPizzaSizeHandler_Create_Failure_ValidationError(t *testing.T) {
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(rest.UserID, "owner"), middlewares.RequireRole("owner"))
-	router.POST("/api/restaurants/:id/pizza-sizes", psHandler.Create)
+	router.POST("/restaurants/:id/pizza-sizes", psHandler.Create)
 
-	req, _ := http.NewRequest("POST", fmt.Sprintf("/api/restaurants/%d/pizza-sizes", rest.ID), bytes.NewBufferString(`invalid_json`))
+	req, _ := http.NewRequest("POST", fmt.Sprintf("/restaurants/%d/pizza-sizes", rest.ID), bytes.NewBufferString(`invalid_json`))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer mock-valid-token")
 
@@ -82,9 +82,9 @@ func TestPizzaSizeHandler_Create_Invalid_Restaurant_Id_Param(t *testing.T) {
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(rest.UserID, "owner"), middlewares.RequireRole("owner"))
-	router.POST("/api/restaurants/:id/pizza-sizes", psHandler.Create)
+	router.POST("/restaurants/:id/pizza-sizes", psHandler.Create)
 
-	req, _ := http.NewRequest("POST", "/api/restaurants/invalid-id/pizza-sizes", bytes.NewBufferString(`{}`))
+	req, _ := http.NewRequest("POST", "/restaurants/invalid-id/pizza-sizes", bytes.NewBufferString(`{}`))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer mock-valid-token")
 
@@ -102,7 +102,7 @@ func TestPizzaSizeHandler_Create_Forbidden_User(t *testing.T) {
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(notOwnerID, "owner"), middlewares.RequireRole("owner"))
-	router.POST("/api/restaurants/:id/pizza-sizes", psHandler.Create)
+	router.POST("/restaurants/:id/pizza-sizes", psHandler.Create)
 
 	body := map[string]interface{}{
 		"title": "Unauthorized Pizza",
@@ -110,7 +110,7 @@ func TestPizzaSizeHandler_Create_Forbidden_User(t *testing.T) {
 	}
 	jsonBody, _ := json.Marshal(body)
 
-	req, _ := http.NewRequest("POST", fmt.Sprintf("/api/restaurants/%d/pizza-sizes", rest.ID), bytes.NewBuffer(jsonBody))
+	req, _ := http.NewRequest("POST", fmt.Sprintf("/restaurants/%d/pizza-sizes", rest.ID), bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer mock-valid-token")
 

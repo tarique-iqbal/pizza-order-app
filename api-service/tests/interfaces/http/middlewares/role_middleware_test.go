@@ -31,11 +31,11 @@ func TestRequireRole(t *testing.T) {
 			})
 			r.Use(middlewares.RequireRole("owner"))
 
-			r.GET("/api/restaurants/losteria", func(c *gin.Context) {
+			r.GET("/restaurants/losteria", func(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{"message": "success"})
 			})
 
-			req, _ := http.NewRequest(http.MethodGet, "/api/restaurants/losteria", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/restaurants/losteria", nil)
 			w := httptest.NewRecorder()
 			r.ServeHTTP(w, req)
 

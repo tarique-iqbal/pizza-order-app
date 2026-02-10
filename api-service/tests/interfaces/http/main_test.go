@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"api-service/internal/domain/auth"
 	"api-service/internal/domain/restaurant"
 	"api-service/internal/domain/user"
 	"api-service/tests/infrastructure/db"
@@ -49,7 +48,6 @@ func MockAuthMiddleware(userID uint, role string) gin.HandlerFunc {
 
 func resetTables(t *testing.T) {
 	tables := []string{
-		auth.EmailVerification{}.TableName(),
 		user.User{}.TableName(),
 		restaurant.Restaurant{}.TableName(),
 		restaurant.PizzaSize{}.TableName(),
