@@ -68,18 +68,18 @@ services:
     ports:
       - "8080:8080"
 
-  # API Service
-  api-service:
-    container_name: pizza-api-service
+  # Restaurant Service
+  restaurant-service:
+    container_name: pizza-restaurant-service
     build:
       context: .
-      dockerfile: .docker/api-service/Dockerfile
+      dockerfile: .docker/restaurant-service/Dockerfile
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    env_file: api-service/.env
+    env_file: restaurant-service/.env
     environment:
       APP_ENV: docker
     ports:
