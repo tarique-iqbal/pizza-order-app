@@ -4,12 +4,12 @@ RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate
 
 WORKDIR /app
 
-COPY api-service/go.mod api-service/go.sum ./
+COPY restaurant-service/go.mod restaurant-service/go.sum ./
 RUN go mod download
 
-COPY api-service/ ./api-service/
+COPY restaurant-service/ ./restaurant-service/
 
-WORKDIR /app/api-service/cmd
+WORKDIR /app/restaurant-service/cmd
 RUN CGO_ENABLED=0 GOOS=linux go build -o /pizza-api .
 
 FROM alpine:latest
