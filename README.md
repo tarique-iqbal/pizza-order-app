@@ -1,36 +1,35 @@
 # Pizza Order App – Monorepo
 
-This repository contains the **Pizza Order App** system, structured using a microservices architecture. It includes an **Identity Service** for handling signup, an **Email Service** for sending email notifications, a **Search Service** for searching restaurants and pizzas based on location, and an **Order Service** for handling pizza orders. The services communicate via asynchronous messaging.
-
+This repository contains the **Pizza Order App** system, structured using a microservices architecture. It includes an **Identity Service** for handling user authentication, authorization, and profile data; a **Restaurant Service** for managing restaurants and pizza menus; an **Email Service** for sending email notifications; a **Search Service** for searching restaurants and pizzas based on location; an **Order Service** for managing pizza orders; and a **Payment Service** for processing payments. The services communicate via asynchronous messaging.
 
 ## Services Overview
 
 ### `identity-service` – User Signup API – Message Producer
-
 - Handles user signups via REST APIs.
 - Publishes signup events (e.g., `user.registered`) to a message broker.
 - It cares about credentials and permissions.
 
-### `email-service` – Email Sending Service – Message Consumer
+### `restaurant-service` – Restaurant Management API – Message Producer
+- Handles restaurant management via REST APIs.
+- Publishes restaurant domain events (e.g., `restaurant.created`, `menu.updated`) to a message broker.
+- Validates ownership and permissions.
 
+### `email-service` – Email Sending Service – Message Consumer
 - Listens to order events from the broker.
 - Sends confirmation emails to customers.
 - A lightweight background service.
 
 ### `search-service` – Search API – Message Consumer
-
 - Handles events from the broker (e.g., RabbitMQ) and indexes them.
 - Exposes search API via Gin and Elasticsearch.
 - Supports location-based and text-based search.
 
 ### `order-service` – Pizza Ordering API – Message Producer
-
 - Handles customer orders via REST APIs.
 - Publishes order events (e.g., `order.placed`) to a message broker.
 - Implements Domain-Driven Design architecture.
 
 ## Tech Stack
-
 - **Language:** Go (Golang)
 - **Database:** PostgreSQL
 - **Search:** Elasticsearch
@@ -39,7 +38,6 @@ This repository contains the **Pizza Order App** system, structured using a micr
 
 
 ## Project Structure
-
 ```bash
 pizza-order-app/
 │── identity-service/          # Identity Service (Producer)
@@ -50,6 +48,8 @@ pizza-order-app/
 │   │   ├── domain/            # Domain models and interfaces
 │   │   ├── infrastructure/    # DB, messaging
 │   │   ├── interfaces/        # API controllers
+│
+├── restaurant-service/        # Restaurant Service (Producer)
 │
 │── email-service/             # Email Sending Service (Consumer)
 │   ├── cmd/                   # Entry point
@@ -77,7 +77,6 @@ pizza-order-app/
 
 
 ## Project Status
-
 > **Note:** This project is **under active development**.  
 > Some features may be incomplete or subject to change.  
 > You're welcome to explore or provide feedback!
