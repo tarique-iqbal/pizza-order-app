@@ -57,6 +57,9 @@ services:
     build:
       context: .
       dockerfile: .docker/identity-service/Dockerfile
+      target: dev
+    volumes:
+      - ./identity-service:/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -67,6 +70,8 @@ services:
       APP_ENV: docker
     ports:
       - "8080:8080"
+    command: ["air", "-c", ".air.toml"]
+    user: root
 
   # Restaurant Service
   restaurant-service:
