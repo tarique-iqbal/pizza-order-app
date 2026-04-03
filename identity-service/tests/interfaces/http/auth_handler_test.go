@@ -3,6 +3,7 @@ package http_test
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"identity-service/internal/application/auth"
 	"identity-service/internal/domain/user"
@@ -19,18 +20,24 @@ import (
 )
 
 func setupAuthHandler() *uiHttp.AuthHandler {
-	userRepo := persistence.NewUserRepository(testDB)
+	ts := testStorage()
+	truncateTables(ts.DB)
+
+	userRepo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
 	jwt := security.NewJWTService("TestSecretKey")
+	refreshTokenRepo := persistence.NewRefreshTokenRepository(ts.Redis)
+	refreshTokenService := security.NewRefreshTokenService()
 
-	signInUC := auth.NewSignInUseCase(userRepo, hasher, jwt)
+	signInUC := auth.NewSignInUseCase(userRepo, hasher, jwt, refreshTokenRepo, refreshTokenService)
 
 	return uiHttp.NewAuthHandler(signInUC, nil)
 }
 
 func TestAuthHandler_SignIn_Success(t *testing.T) {
+	ts := testStorage()
 	aHandler := setupAuthHandler()
-	repo := persistence.NewUserRepository(testDB)
+	repo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
 	jwt := security.NewJWTService("TestSecretKey")
 	hp, _ := hasher.Hash("password123")
@@ -72,19 +79,29 @@ func TestAuthHandler_SignIn_Success(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		router.ServeHTTP(recorder, req)
 
-		jsonString := recorder.Body.String()
-		var data map[string]interface{}
-		json.Unmarshal([]byte(jsonString), &data)
-		_, err := jwt.ParseToken(data["token"].(string))
+		type response struct {
+			AccessToken  string `json:"access_token"`
+			RefreshToken string `json:"refresh_token"`
+		}
 
-		assert.NoError(t, err)
 		assert.Equal(t, tc.expectedCode, recorder.Code)
+
+		var res response
+		err := json.Unmarshal(recorder.Body.Bytes(), &res)
+		assert.NoError(t, err)
+
+		_, err = jwt.ParseToken(res.AccessToken)
+		assert.NoError(t, err)
+
+		_, err = hex.DecodeString(res.RefreshToken)
+		assert.NoError(t, err)
 	})
 }
 
 func TestAuthHandler_SignIn_Failed(t *testing.T) {
+	ts := testStorage()
 	aHandler := setupAuthHandler()
-	repo := persistence.NewUserRepository(testDB)
+	repo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
 	hp, _ := hasher.Hash("password123")
 

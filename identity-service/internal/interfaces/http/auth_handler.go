@@ -30,13 +30,13 @@ func (h *AuthHandler) SignIn(ctx *gin.Context) {
 		return
 	}
 
-	token, err := h.signInUC.Execute(reqCtx, dto.Email, dto.Password)
+	accessToken, refreshToken, err := h.signInUC.Execute(reqCtx, dto.Email, dto.Password)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"token": token})
+	ctx.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
 }
 
 func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {

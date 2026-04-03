@@ -6,23 +6,46 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/require"
+	goredis "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	"identity-service/internal/domain/auth"
-	"identity-service/internal/domain/user"
+	"identity-service/internal/infrastructure/redis"
 	"identity-service/tests/infrastructure/db"
 )
 
-var testDB *gorm.DB
+type TestStorage struct {
+	DB    *gorm.DB
+	Redis *goredis.Client
+}
+
+var ts *TestStorage
 
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
 
-	testDB = db.SetupTestDB()
+	cfg := redis.Config{
+		Addr: os.Getenv("REDIS_ADDR"),
+		DB:   1,
+	}
 
-	exitCode := m.Run()
-	os.Exit(exitCode)
+	tdb := db.SetupTestDB()
+	trc, _ := redis.InitRedis(cfg)
+
+	ts = &TestStorage{
+		DB:    tdb,
+		Redis: trc,
+	}
+
+	code := m.Run()
+	os.Exit(code)
+}
+
+func testStorage() *TestStorage {
+	return ts
+}
+
+func truncateTables(tdb *gorm.DB) {
+	tdb.Exec("TRUNCATE TABLE users, email_verifications RESTART IDENTITY CASCADE")
 }
 
 func MockAuthMiddleware(userID uint, role string) gin.HandlerFunc {
@@ -43,17 +66,5 @@ func MockAuthMiddleware(userID uint, role string) gin.HandlerFunc {
 		ctx.Set("userID", userID)
 		ctx.Set("role", role)
 		ctx.Next()
-	}
-}
-
-func resetTables(t *testing.T) {
-	tables := []string{
-		auth.EmailVerification{}.TableName(),
-		user.User{}.TableName(),
-	}
-
-	for _, table := range tables {
-		err := testDB.Exec("DELETE FROM " + table).Error
-		require.NoError(t, err)
 	}
 }
