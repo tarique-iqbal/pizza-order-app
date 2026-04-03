@@ -1,42 +1,50 @@
 package db
 
 import (
-	"identity-service/internal/domain/auth"
-	"identity-service/internal/domain/user"
+	"identity-service/internal/infrastructure/db"
 	"log"
 
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-func InitTestDB() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("Failed to initialize test database: %v", err)
-	}
-
-	return db
-}
-
 func SetupTestDB() *gorm.DB {
-	db := InitTestDB()
-
-	sqlDB, sqlErr := db.DB()
-	if sqlErr != nil {
-		log.Fatalf("Failed to get *sql.DB from GORM: %v", sqlErr)
-	}
-	sqlDB.SetMaxOpenConns(1)
-	sqlDB.SetMaxIdleConns(1)
-
-	db.Exec("PRAGMA foreign_keys = ON")
-
-	err := db.AutoMigrate(
-		&auth.EmailVerification{},
-		&user.User{},
-	)
+	tdb, err := db.InitDB()
 	if err != nil {
-		log.Fatalf("Failed to migrate test database: %v", err)
+		log.Fatalf("DB connection failed: %v", err)
 	}
 
-	return db
+	tdb.Exec(`
+		DROP TABLE IF EXISTS email_verifications CASCADE;
+		DROP TABLE IF EXISTS users CASCADE;
+
+		DROP TYPE IF EXISTS user_status_enum CASCADE;
+		DROP TYPE IF EXISTS user_role_enum CASCADE;
+
+		CREATE TYPE user_status_enum AS ENUM ('active', 'inactive', 'suspended');
+		CREATE TYPE user_role_enum AS ENUM ('user', 'owner', 'admin');
+
+		CREATE TABLE users (
+			id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+			first_name VARCHAR(255) NOT NULL,
+			last_name VARCHAR(255) NOT NULL,
+			email VARCHAR(255) UNIQUE NOT NULL,
+			password VARCHAR(255) NOT NULL,
+			role user_role_enum DEFAULT 'user'::user_role_enum,
+			status user_status_enum DEFAULT 'active'::user_status_enum,
+			logged_at TIMESTAMP,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP
+		);
+
+		CREATE TABLE email_verifications (
+			id SERIAL PRIMARY KEY,
+			email VARCHAR(255) NOT NULL,
+			code CHAR(6) NOT NULL,
+			is_used BOOLEAN DEFAULT FALSE,
+			expires_at TIMESTAMP NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+	`)
+
+	return tdb
 }
