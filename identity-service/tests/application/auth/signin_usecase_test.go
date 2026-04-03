@@ -5,47 +5,62 @@ import (
 	"identity-service/internal/application/auth"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
-	"identity-service/tests/infrastructure/db"
 	"identity-service/tests/infrastructure/db/fixtures"
 	"testing"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func setupSignInUseCase() *auth.SignInUseCase {
-	testDB := db.SetupTestDB()
+var signInUC *auth.SignInUseCase
 
-	if err := fixtures.LoadUserFixtures(testDB); err != nil {
+func setupSignInUseCase(t *testing.T) *auth.SignInUseCase {
+	ts := testStorage()
+	flushRedis(t, ts.Redis)
+	truncateTables(ts.DB)
+
+	if err := fixtures.LoadUserFixtures(ts.DB); err != nil {
 		panic(err)
 	}
 
-	repo := persistence.NewUserRepository(testDB)
+	repo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
 	jwt := security.NewJWTService("TestSecretKey")
+	refreshTokenRepo := persistence.NewRefreshTokenRepository(ts.Redis)
+	refreshTokenService := security.NewRefreshTokenService()
 
-	return auth.NewSignInUseCase(repo, hasher, jwt)
+	return auth.NewSignInUseCase(repo, hasher, jwt, refreshTokenRepo, refreshTokenService)
+}
+
+func flushRedis(t *testing.T, client *redis.Client) {
+	err := client.FlushDB(context.Background()).Err()
+	require.NoError(t, err)
 }
 
 func TestSignInUseCase_Success(t *testing.T) {
-	signInUC := setupSignInUseCase()
+	signInUC := setupSignInUseCase(t)
 
-	token, err := signInUC.Execute(context.Background(), "john.doe@example.com", "plainPassword")
+	accessToken, refreshToken, err := signInUC.Execute(context.Background(), "john.doe@example.com", "plainPassword")
 	assert.NoError(t, err)
-	assert.NotEmpty(t, token)
+	assert.NotEmpty(t, accessToken)
+	assert.NotEmpty(t, refreshToken)
 }
 
 func TestSignInUseCase_InvalidPassword(t *testing.T) {
-	signInUC := setupSignInUseCase()
+	signInUC := setupSignInUseCase(t)
 
-	token, err := signInUC.Execute(context.Background(), "john.doe@example.com", "wrongpassword")
+	accessToken, refreshToken, err := signInUC.Execute(context.Background(), "john.doe@example.com", "wrongpassword")
 	assert.Error(t, err)
-	assert.Empty(t, token)
+	assert.Empty(t, accessToken)
+	assert.Empty(t, refreshToken)
 }
 
 func TestSignInUseCase_UserNotFound(t *testing.T) {
-	signInUC := setupSignInUseCase()
+	signInUC := setupSignInUseCase(t)
 
-	token, err := signInUC.Execute(context.Background(), "notfound@example.com", "password")
+	accessToken, refreshToken, err := signInUC.Execute(context.Background(), "notfound@example.com", "password")
 	assert.Error(t, err)
-	assert.Empty(t, token)
+	assert.Empty(t, accessToken)
+	assert.Empty(t, refreshToken)
 }
