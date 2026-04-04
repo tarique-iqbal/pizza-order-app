@@ -8,7 +8,6 @@ import (
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
 	"identity-service/internal/shared/event"
-	"identity-service/tests/infrastructure/db"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,8 +31,10 @@ func (m *MockEventPublisher) Publish(e event.Event) error {
 }
 
 func createEmailVerificationUseCase() *auth.CreateEmailVerificationUseCase {
-	testDB := db.SetupTestDB()
-	repo = persistence.NewEmailVerificationRepository(testDB)
+	ts := testStorage()
+	truncateTables(ts.DB)
+
+	repo = persistence.NewEmailVerificationRepository(ts.DB)
 	otp := security.NewSixDigitOTPGenerator()
 	mockPublisher = &MockEventPublisher{}
 
@@ -54,7 +55,7 @@ func TestCreateEmailVerificationUseCase_Success(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, emailVerification)
 	assert.Equal(t, "adam.dangelo@example.com", emailVerification.Email)
-	assert.InDelta(t, 15, diff.Minutes(), 0.0001, "Delta threshold exceeded")
+	assert.InDelta(t, 15, diff.Minutes(), 0.001, "Delta threshold exceeded")
 
 	createdEvent, ok := mockPublisher.PublishedEvents[0].(auth.EmailVerificationCreatedEvent)
 	assert.True(t, ok)

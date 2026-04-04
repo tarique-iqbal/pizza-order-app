@@ -35,15 +35,18 @@ func (m *MockEventPublisher) Publish(e event.Event) error {
 }
 
 func setupUserHandler() *uiHttp.UserHandler {
-	emailVerificationRepo := persistence.NewEmailVerificationRepository(testDB)
+	ts := testStorage()
+	truncateTables(ts.DB)
+
+	emailVerificationRepo := persistence.NewEmailVerificationRepository(ts.DB)
 	codeVerifier := auth.NewCodeVerificationService(emailVerificationRepo)
-	userRepo := persistence.NewUserRepository(testDB)
+	userRepo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
 
 	createUserUC := user.NewCreateUserUseCase(codeVerifier, userRepo, hasher, mockPublisher)
 
-	if err := fixtures.LoadEmailVerificationFixtures(testDB); err != nil {
+	if err := fixtures.LoadEmailVerificationFixtures(ts.DB); err != nil {
 		panic(err)
 	}
 

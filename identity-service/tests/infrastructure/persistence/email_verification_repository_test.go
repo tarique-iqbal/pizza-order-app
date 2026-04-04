@@ -4,7 +4,6 @@ import (
 	"context"
 	"identity-service/internal/domain/auth"
 	"identity-service/internal/infrastructure/persistence"
-	"identity-service/tests/infrastructure/db"
 	"identity-service/tests/infrastructure/db/fixtures"
 	"testing"
 	"time"
@@ -13,13 +12,14 @@ import (
 )
 
 func setupEmailVerificationRepo() auth.EmailVerificationRepository {
-	testDB := db.SetupTestDB()
+	ts := testStorage()
+	truncateTables(ts.DB)
 
-	if err := fixtures.LoadEmailVerificationFixtures(testDB); err != nil {
+	if err := fixtures.LoadEmailVerificationFixtures(ts.DB); err != nil {
 		panic(err)
 	}
 
-	return persistence.NewEmailVerificationRepository(testDB)
+	return persistence.NewEmailVerificationRepository(ts.DB)
 }
 
 func TestEmailVerificationRepository_Create(t *testing.T) {

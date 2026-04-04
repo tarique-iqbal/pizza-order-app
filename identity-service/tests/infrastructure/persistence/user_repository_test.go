@@ -4,7 +4,6 @@ import (
 	"context"
 	"identity-service/internal/domain/user"
 	"identity-service/internal/infrastructure/persistence"
-	"identity-service/tests/infrastructure/db"
 	"identity-service/tests/infrastructure/db/fixtures"
 	"testing"
 	"time"
@@ -13,13 +12,14 @@ import (
 )
 
 func setupUserRepo() user.UserRepository {
-	testDB := db.SetupTestDB()
+	ts := testStorage()
+	truncateTables(ts.DB)
 
-	if err := fixtures.LoadUserFixtures(testDB); err != nil {
+	if err := fixtures.LoadUserFixtures(ts.DB); err != nil {
 		panic(err)
 	}
 
-	return persistence.NewUserRepository(testDB)
+	return persistence.NewUserRepository(ts.DB)
 }
 
 func TestUserRepository_Create(t *testing.T) {

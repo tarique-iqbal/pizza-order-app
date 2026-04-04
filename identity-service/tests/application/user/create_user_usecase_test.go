@@ -8,7 +8,6 @@ import (
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
 	"identity-service/internal/shared/event"
-	"identity-service/tests/infrastructure/db"
 	"identity-service/tests/infrastructure/db/fixtures"
 	"testing"
 
@@ -31,18 +30,19 @@ func (m *MockEventPublisher) Publish(e event.Event) error {
 }
 
 func createUserUseCase() *aUser.CreateUserUseCase {
-	testDB := db.SetupTestDB()
+	ts := testStorage()
+	truncateTables(ts.DB)
 
-	emailVerificationRepo := persistence.NewEmailVerificationRepository(testDB)
+	emailVerificationRepo := persistence.NewEmailVerificationRepository(ts.DB)
 	codeVerifier := auth.NewCodeVerificationService(emailVerificationRepo)
-	userRepo := persistence.NewUserRepository(testDB)
+	userRepo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
 
-	if err := fixtures.LoadEmailVerificationFixtures(testDB); err != nil {
+	if err := fixtures.LoadEmailVerificationFixtures(ts.DB); err != nil {
 		panic(err)
 	}
-	if err := fixtures.LoadUserFixtures(testDB); err != nil {
+	if err := fixtures.LoadUserFixtures(ts.DB); err != nil {
 		panic(err)
 	}
 
