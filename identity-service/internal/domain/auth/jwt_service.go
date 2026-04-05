@@ -1,8 +1,8 @@
 package auth
 
 type JWTService interface {
-	GenerateToken(userID uint, role string) (string, error)
-	ParseToken(tokenString string) (*Claims, error)
+	Generate(userID uint, role string) (string, error)
+	Parse(tokenString string) (*Claims, error)
 }
 
 type Claims struct {

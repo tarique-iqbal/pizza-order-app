@@ -22,7 +22,7 @@ type jwtClaims struct {
 	jwt.RegisteredClaims
 }
 
-func (j *jwtService) GenerateToken(userID uint, role string) (string, error) {
+func (j *jwtService) Generate(userID uint, role string) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := jwtClaims{
 		UserID: userID,
@@ -36,7 +36,7 @@ func (j *jwtService) GenerateToken(userID uint, role string) (string, error) {
 	return token.SignedString(j.secret)
 }
 
-func (j *jwtService) ParseToken(tokenString string) (*auth.Claims, error) {
+func (j *jwtService) Parse(tokenString string) (*auth.Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &jwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return j.secret, nil
 	})

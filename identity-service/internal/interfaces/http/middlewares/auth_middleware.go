@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AuthMiddleware(jwt auth.JWTService) gin.HandlerFunc {
+func AuthMiddleware(jwtService auth.JWTService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tokenString := ctx.GetHeader("Authorization")
 
@@ -19,7 +19,7 @@ func AuthMiddleware(jwt auth.JWTService) gin.HandlerFunc {
 		}
 
 		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
-		claims, err := jwt.ParseToken(tokenString)
+		claims, err := jwtService.Parse(tokenString)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			ctx.Abort()

@@ -7,15 +7,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type EmailVerificationRepositoryImpl struct {
+type GormEmailVerificationRepository struct {
 	db *gorm.DB
 }
 
 func NewEmailVerificationRepository(db *gorm.DB) auth.EmailVerificationRepository {
-	return &EmailVerificationRepositoryImpl{db: db}
+	return &GormEmailVerificationRepository{db: db}
 }
 
-func (repo *EmailVerificationRepositoryImpl) FindByEmail(
+func (repo *GormEmailVerificationRepository) FindByEmail(
 	ctx context.Context,
 	email string,
 ) (*auth.EmailVerification, error) {
@@ -30,14 +30,14 @@ func (repo *EmailVerificationRepositoryImpl) FindByEmail(
 	return &ev, nil
 }
 
-func (repo *EmailVerificationRepositoryImpl) Create(
+func (repo *GormEmailVerificationRepository) Create(
 	ctx context.Context,
 	ev *auth.EmailVerification,
 ) error {
 	return repo.db.Create(ev).Error
 }
 
-func (repo *EmailVerificationRepositoryImpl) Updates(
+func (repo *GormEmailVerificationRepository) Updates(
 	ctx context.Context,
 	ev *auth.EmailVerification,
 ) error {

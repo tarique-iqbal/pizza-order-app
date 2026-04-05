@@ -90,7 +90,7 @@ func TestAuthHandler_SignIn_Success(t *testing.T) {
 		err := json.Unmarshal(recorder.Body.Bytes(), &res)
 		assert.NoError(t, err)
 
-		_, err = jwt.ParseToken(res.AccessToken)
+		_, err = jwt.Parse(res.AccessToken)
 		assert.NoError(t, err)
 
 		_, err = hex.DecodeString(res.RefreshToken)

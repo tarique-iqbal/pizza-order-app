@@ -8,26 +8,26 @@ import (
 )
 
 type SignInUseCase struct {
-	repo         user.UserRepository
-	hasher       auth.PasswordHasher
-	jwt          auth.JWTService
-	refreshRepo  auth.RefreshTokenRepository
-	refreshToken auth.RefreshTokenService
+	userRepo            user.UserRepository
+	passwordHasher      auth.PasswordHasher
+	jwtService          auth.JWTService
+	refreshTokenRepo    auth.RefreshTokenRepository
+	refreshTokenService auth.RefreshTokenService
 }
 
 func NewSignInUseCase(
-	repo user.UserRepository,
-	hasher auth.PasswordHasher,
-	jwt auth.JWTService,
-	refreshRepo auth.RefreshTokenRepository,
-	refreshToken auth.RefreshTokenService,
+	userRepo user.UserRepository,
+	passwordHasher auth.PasswordHasher,
+	jwtService auth.JWTService,
+	refreshTokenRepo auth.RefreshTokenRepository,
+	refreshTokenService auth.RefreshTokenService,
 ) *SignInUseCase {
 	return &SignInUseCase{
-		repo:         repo,
-		hasher:       hasher,
-		jwt:          jwt,
-		refreshRepo:  refreshRepo,
-		refreshToken: refreshToken,
+		userRepo:            userRepo,
+		passwordHasher:      passwordHasher,
+		jwtService:          jwtService,
+		refreshTokenRepo:    refreshTokenRepo,
+		refreshTokenService: refreshTokenService,
 	}
 }
 
@@ -36,7 +36,7 @@ func (uc *SignInUseCase) Execute(
 	email string,
 	password string,
 ) (string, string, error) {
-	user, err := uc.repo.FindByEmail(ctx, email)
+	user, err := uc.userRepo.FindByEmail(ctx, email)
 	if user == nil {
 		return "", "", errors.New("no record found")
 	}
@@ -45,25 +45,25 @@ func (uc *SignInUseCase) Execute(
 		return "", "", errors.New("internal server error")
 	}
 
-	status := uc.hasher.Compare(user.Password, password)
+	status := uc.passwordHasher.Compare(user.Password, password)
 	if !status {
 		return "", "", errors.New("invalid credentials")
 	}
 
-	accessToken, err := uc.jwt.GenerateToken(user.ID, user.Role)
+	accessToken, err := uc.jwtService.Generate(user.ID, user.Role)
 	if err != nil {
 		return "", "", err
 	}
 
-	refreshToken, err := uc.refreshToken.Generate()
+	refreshToken, err := uc.refreshTokenService.Generate()
 	if err != nil {
 		return "", "", err
 	}
 
-	hashedToken, _ := uc.refreshToken.Hash(refreshToken)
+	hashedToken, _ := uc.refreshTokenService.Hash(refreshToken)
 
 	const ttlSeconds = int64(7 * 24 * 3600)
-	err = uc.refreshRepo.Save(ctx, hashedToken, int(user.ID), ttlSeconds)
+	err = uc.refreshTokenRepo.Save(ctx, hashedToken, int(user.ID), ttlSeconds)
 	if err != nil {
 		return "", "", err
 	}

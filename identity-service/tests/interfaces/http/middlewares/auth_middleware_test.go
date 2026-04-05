@@ -22,7 +22,7 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 
 	userID := uint(1)
 	role := "user"
-	token, _ := jwtService.GenerateToken(userID, role)
+	token, _ := jwtService.Generate(userID, role)
 
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)

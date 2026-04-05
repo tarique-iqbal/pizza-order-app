@@ -25,11 +25,11 @@ func TestJWTService_GenerateToken(t *testing.T) {
 
 	userID := uint(1)
 	role := "user"
-	tokenString, err := jwtService.GenerateToken(userID, role)
+	tokenString, err := jwtService.Generate(userID, role)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, tokenString)
 
-	claims, err := jwtService.ParseToken(tokenString)
+	claims, err := jwtService.Parse(tokenString)
 	assert.NoError(t, err)
 	assert.Equal(t, userID, claims.UserID)
 	assert.Equal(t, role, claims.Role)
@@ -40,16 +40,16 @@ func TestJWTService_ValidToken(t *testing.T) {
 
 	userID := uint(1)
 	role := "owner"
-	tokenString, _ := jwtService.GenerateToken(userID, role)
+	tokenString, _ := jwtService.Generate(userID, role)
 
-	_, err := jwtService.ParseToken(tokenString)
+	_, err := jwtService.Parse(tokenString)
 	assert.NoError(t, err)
 }
 
 func TestJWTService_InvalidToken(t *testing.T) {
 	jwtService := InitJWT()
 
-	_, err := jwtService.ParseToken("invalid.token.here")
+	_, err := jwtService.Parse("invalid.token.here")
 	assert.Error(t, err)
 }
 
@@ -66,7 +66,7 @@ func TestJWTService_ExpiredToken(t *testing.T) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, expiredClaims)
 	tokenString, _ := token.SignedString([]byte("TestSecretKey"))
 
-	_, err := jwtService.ParseToken(tokenString)
+	_, err := jwtService.Parse(tokenString)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "token is expired")

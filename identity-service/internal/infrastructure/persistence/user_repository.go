@@ -7,15 +7,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRepositoryImpl struct {
+type GormUserRepository struct {
 	db *gorm.DB
 }
 
 func NewUserRepository(db *gorm.DB) user.UserRepository {
-	return &UserRepositoryImpl{db: db}
+	return &GormUserRepository{db: db}
 }
 
-func (repo *UserRepositoryImpl) FindByEmail(ctx context.Context, email string) (*user.User, error) {
+func (repo *GormUserRepository) FindByEmail(ctx context.Context, email string) (*user.User, error) {
 	var u user.User
 	err := repo.db.WithContext(ctx).Where("email = ?", email).First(&u).Error
 	if err != nil {
@@ -27,11 +27,11 @@ func (repo *UserRepositoryImpl) FindByEmail(ctx context.Context, email string) (
 	return &u, nil
 }
 
-func (repo *UserRepositoryImpl) Create(ctx context.Context, u *user.User) error {
+func (repo *GormUserRepository) Create(ctx context.Context, u *user.User) error {
 	return repo.db.WithContext(ctx).Create(u).Error
 }
 
-func (repo *UserRepositoryImpl) EmailExists(email string) (bool, error) {
+func (repo *GormUserRepository) EmailExists(email string) (bool, error) {
 	var count int64
 	err := repo.db.Model(&user.User{}).
 		Where("email = ?", email).
