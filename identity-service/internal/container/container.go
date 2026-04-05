@@ -7,6 +7,7 @@ import (
 	"identity-service/internal/infrastructure/db"
 	"identity-service/internal/infrastructure/messaging"
 	"identity-service/internal/infrastructure/persistence"
+	"identity-service/internal/infrastructure/redis"
 	"identity-service/internal/infrastructure/security"
 	"identity-service/internal/interfaces/http"
 	"identity-service/internal/interfaces/http/middlewares"
@@ -24,17 +25,23 @@ type Container struct {
 }
 
 func NewContainer() (*Container, error) {
-	database, _ := db.InitDB()
-
 	amqpURL := os.Getenv("RABBITMQ_URL")
 	jwtSecret := os.Getenv("JWT_SECRET")
+	cfg := redis.Config{
+		Addr: os.Getenv("REDIS_ADDR"),
+	}
+
+	database, _ := db.InitDB()
+	rc, _ := redis.InitRedis(cfg)
 
 	publisher := messaging.NewRabbitMQPublisher(amqpURL)
 	hasher := security.NewPasswordHasher()
 	jwtService := security.NewJWTService(jwtSecret)
+	refreshTokenService := security.NewRefreshTokenService()
 	middleware := middlewares.NewMiddleware(jwtService)
 	otp := security.NewSixDigitOTPGenerator()
 
+	refreshTokenRepo := persistence.NewRefreshTokenRepository(rc)
 	emailVerificationRepo := persistence.NewEmailVerificationRepository(database)
 	userRepo := persistence.NewUserRepository(database)
 
@@ -45,7 +52,7 @@ func NewContainer() (*Container, error) {
 	userHandler := http.NewUserHandler(createUserUC)
 
 	// auth
-	signInUC := aAuth.NewSignInUseCase(userRepo, hasher, jwtService)
+	signInUC := aAuth.NewSignInUseCase(userRepo, hasher, jwtService, refreshTokenRepo, refreshTokenService)
 	createEmailVerificationUC := aAuth.NewCreateEmailVerificationUseCase(emailVerificationRepo, otp, publisher)
 	authHandler := http.NewAuthHandler(signInUC, createEmailVerificationUC)
 
