@@ -3,6 +3,7 @@ package persistence
 import (
 	"context"
 	"errors"
+	"identity-service/internal/domain/auth"
 	"strconv"
 	"time"
 
@@ -13,7 +14,7 @@ type RedisRefreshTokenRepository struct {
 	client *redis.Client
 }
 
-func NewRefreshTokenRepository(client *redis.Client) *RedisRefreshTokenRepository {
+func NewRefreshTokenRepository(client *redis.Client) auth.RefreshTokenRepository {
 	return &RedisRefreshTokenRepository{client: client}
 }
 

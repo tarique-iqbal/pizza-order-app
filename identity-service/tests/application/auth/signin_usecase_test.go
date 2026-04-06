@@ -41,26 +41,26 @@ func flushRedis(t *testing.T, client *redis.Client) {
 func TestSignInUseCase_Success(t *testing.T) {
 	signInUC := setupSignInUseCase(t)
 
-	accessToken, refreshToken, err := signInUC.Execute(context.Background(), "john.doe@example.com", "plainPassword")
+	response, err := signInUC.Execute(context.Background(), "john.doe@example.com", "plainPassword")
 	assert.NoError(t, err)
-	assert.NotEmpty(t, accessToken)
-	assert.NotEmpty(t, refreshToken)
+	assert.NotEmpty(t, response.AccessToken)
+	assert.NotEmpty(t, response.RefreshToken)
 }
 
 func TestSignInUseCase_InvalidPassword(t *testing.T) {
 	signInUC := setupSignInUseCase(t)
 
-	accessToken, refreshToken, err := signInUC.Execute(context.Background(), "john.doe@example.com", "wrongpassword")
+	response, err := signInUC.Execute(context.Background(), "john.doe@example.com", "wrongpassword")
 	assert.Error(t, err)
-	assert.Empty(t, accessToken)
-	assert.Empty(t, refreshToken)
+	assert.Empty(t, response.AccessToken)
+	assert.Empty(t, response.RefreshToken)
 }
 
 func TestSignInUseCase_UserNotFound(t *testing.T) {
 	signInUC := setupSignInUseCase(t)
 
-	accessToken, refreshToken, err := signInUC.Execute(context.Background(), "notfound@example.com", "password")
+	response, err := signInUC.Execute(context.Background(), "notfound@example.com", "password")
 	assert.Error(t, err)
-	assert.Empty(t, accessToken)
-	assert.Empty(t, refreshToken)
+	assert.Empty(t, response.AccessToken)
+	assert.Empty(t, response.RefreshToken)
 }

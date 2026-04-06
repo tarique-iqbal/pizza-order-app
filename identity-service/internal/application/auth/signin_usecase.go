@@ -35,29 +35,29 @@ func (uc *SignInUseCase) Execute(
 	ctx context.Context,
 	email string,
 	password string,
-) (string, string, error) {
+) (TokenResponseDTO, error) {
 	user, err := uc.userRepo.FindByEmail(ctx, email)
 	if user == nil {
-		return "", "", errors.New("no record found")
+		return TokenResponseDTO{}, errors.New("no record found")
 	}
 
 	if err != nil {
-		return "", "", errors.New("internal server error")
+		return TokenResponseDTO{}, errors.New("internal server error")
 	}
 
 	status := uc.passwordHasher.Compare(user.Password, password)
 	if !status {
-		return "", "", errors.New("invalid credentials")
+		return TokenResponseDTO{}, errors.New("invalid credentials")
 	}
 
 	accessToken, err := uc.jwtService.Generate(user.ID, user.Role)
 	if err != nil {
-		return "", "", err
+		return TokenResponseDTO{}, err
 	}
 
 	refreshToken, err := uc.refreshTokenService.Generate()
 	if err != nil {
-		return "", "", err
+		return TokenResponseDTO{}, err
 	}
 
 	hashedToken, _ := uc.refreshTokenService.Hash(refreshToken)
@@ -65,8 +65,11 @@ func (uc *SignInUseCase) Execute(
 	const ttlSeconds = int64(7 * 24 * 3600)
 	err = uc.refreshTokenRepo.Save(ctx, hashedToken, int(user.ID), ttlSeconds)
 	if err != nil {
-		return "", "", err
+		return TokenResponseDTO{}, err
 	}
 
-	return accessToken, refreshToken, nil
+	return TokenResponseDTO{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
