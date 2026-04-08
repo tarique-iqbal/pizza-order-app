@@ -39,24 +39,24 @@ func setupUserHandler() *uiHttp.UserHandler {
 	truncateTables(ts.DB)
 
 	emailVerificationRepo := persistence.NewEmailVerificationRepository(ts.DB)
-	codeVerifier := auth.NewCodeVerificationService(emailVerificationRepo)
+	codeVerifier := auth.NewEmailVerifier(emailVerificationRepo)
 	userRepo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
 
-	createUserUC := user.NewCreateUserUseCase(codeVerifier, userRepo, hasher, mockPublisher)
+	register := user.NewRegister(codeVerifier, userRepo, hasher, mockPublisher)
 
 	if err := fixtures.LoadEmailVerificationFixtures(ts.DB); err != nil {
 		panic(err)
 	}
 
-	return uiHttp.NewUserHandler(createUserUC)
+	return uiHttp.NewUserHandler(register)
 }
 
-func TestUserHandler_CreateUser_Success(t *testing.T) {
+func TestUserHandler_Register_Success(t *testing.T) {
 	uHandler := setupUserHandler()
 	router := gin.Default()
-	router.POST("/users", uHandler.Create)
+	router.POST("/users", uHandler.Register)
 
 	reqBody, _ := json.Marshal(map[string]string{
 		"first_name": "Alice",

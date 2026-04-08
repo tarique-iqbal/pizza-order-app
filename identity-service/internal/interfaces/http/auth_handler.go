@@ -9,19 +9,19 @@ import (
 )
 
 type AuthHandler struct {
-	signInUC                  *auth.SignInUseCase
-	createEmailVerificationUC *auth.CreateEmailVerificationUseCase
+	login    *auth.Login
+	emailOTP *auth.RequestEmailOTP
 }
 
 func NewAuthHandler(
-	signInUC *auth.SignInUseCase,
-	createEmailVerificationUC *auth.CreateEmailVerificationUseCase,
+	login *auth.Login,
+	emailOTP *auth.RequestEmailOTP,
 ) *AuthHandler {
-	return &AuthHandler{signInUC: signInUC, createEmailVerificationUC: createEmailVerificationUC}
+	return &AuthHandler{login: login, emailOTP: emailOTP}
 }
 
-func (h *AuthHandler) SignIn(ctx *gin.Context) {
-	var dto auth.SignInRequestDTO
+func (h *AuthHandler) Login(ctx *gin.Context) {
+	var dto auth.LoginRequest
 	reqCtx := ctx.Request.Context()
 
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
@@ -30,7 +30,7 @@ func (h *AuthHandler) SignIn(ctx *gin.Context) {
 		return
 	}
 
-	response, err := h.signInUC.Execute(reqCtx, dto.Email, dto.Password)
+	response, err := h.login.Execute(reqCtx, dto.Email, dto.Password)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -40,7 +40,7 @@ func (h *AuthHandler) SignIn(ctx *gin.Context) {
 }
 
 func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {
-	var dto auth.EmailVerificationRequestDTO
+	var dto auth.EmailVerificationRequest
 	reqCtx := ctx.Request.Context()
 
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
@@ -49,7 +49,7 @@ func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {
 		return
 	}
 
-	err := h.createEmailVerificationUC.Execute(reqCtx, dto)
+	err := h.emailOTP.Execute(reqCtx, dto)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create verification"})
 		return

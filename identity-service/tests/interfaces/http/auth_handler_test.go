@@ -25,21 +25,21 @@ func setupAuthHandler() *uiHttp.AuthHandler {
 
 	userRepo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
-	jwt := security.NewJWTService("TestSecretKey")
+	jwt := security.NewJWTManager("TestSecretKey")
 	refreshTokenRepo := persistence.NewRefreshTokenRepository(ts.Redis)
-	refreshTokenService := security.NewRefreshTokenService()
+	refreshTokenManager := security.NewRefreshTokenManager()
 
-	signInUC := auth.NewSignInUseCase(userRepo, hasher, jwt, refreshTokenRepo, refreshTokenService)
+	login := auth.NewLogin(userRepo, hasher, jwt, refreshTokenRepo, refreshTokenManager)
 
-	return uiHttp.NewAuthHandler(signInUC, nil)
+	return uiHttp.NewAuthHandler(login, nil)
 }
 
-func TestAuthHandler_SignIn_Success(t *testing.T) {
+func TestAuthHandler_Login_Success(t *testing.T) {
 	ts := testStorage()
 	aHandler := setupAuthHandler()
 	repo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
-	jwt := security.NewJWTService("TestSecretKey")
+	jwt := security.NewJWTManager("TestSecretKey")
 	hp, _ := hasher.Hash("password123")
 
 	newUser := &user.User{
@@ -70,18 +70,18 @@ func TestAuthHandler_SignIn_Success(t *testing.T) {
 
 	t.Run(tc.name, func(t *testing.T) {
 		router := gin.Default()
-		router.POST("/auth/signin", aHandler.SignIn)
+		router.POST("/auth/login", aHandler.Login)
 
 		body, _ := json.Marshal(tc.requestBody)
-		req, _ := http.NewRequest(http.MethodPost, "/auth/signin", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPost, "/auth/login", bytes.NewBuffer(body))
 		req.Header.Set("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
 		router.ServeHTTP(recorder, req)
 
 		type response struct {
-			AccessToken  string `json:"access_token"`
-			RefreshToken string `json:"refresh_token"`
+			AccessToken  string `json:"accessToken"`
+			RefreshToken string `json:"refreshToken"`
 		}
 
 		assert.Equal(t, tc.expectedCode, recorder.Code)
@@ -98,7 +98,7 @@ func TestAuthHandler_SignIn_Success(t *testing.T) {
 	})
 }
 
-func TestAuthHandler_SignIn_Failed(t *testing.T) {
+func TestAuthHandler_Login_Failed(t *testing.T) {
 	ts := testStorage()
 	aHandler := setupAuthHandler()
 	repo := persistence.NewUserRepository(ts.DB)
@@ -164,10 +164,10 @@ func TestAuthHandler_SignIn_Failed(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			router := gin.Default()
-			router.POST("/auth/signin", aHandler.SignIn)
+			router.POST("/auth/login", aHandler.Login)
 
 			body, _ := json.Marshal(tc.requestBody)
-			req, _ := http.NewRequest(http.MethodPost, "/auth/signin", bytes.NewBuffer(body))
+			req, _ := http.NewRequest(http.MethodPost, "/auth/login", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 
 			recorder := httptest.NewRecorder()

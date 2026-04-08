@@ -11,35 +11,35 @@ import (
 
 const defaultStatus = "active"
 
-type CreateUserUseCase struct {
-	codeVerifier auth.CodeVerifier
-	repo         user.UserRepository
-	hasher       auth.PasswordHasher
-	publisher    event.EventPublisher
+type Register struct {
+	emailVerifier auth.EmailVerifier
+	repo          user.UserRepository
+	hasher        auth.PasswordHasher
+	publisher     event.EventPublisher
 }
 
-func NewCreateUserUseCase(
-	codeVerifier auth.CodeVerifier,
+func NewRegister(
+	emailVerifier auth.EmailVerifier,
 	repo user.UserRepository,
 	hasher auth.PasswordHasher,
 	publisher event.EventPublisher,
-) *CreateUserUseCase {
-	return &CreateUserUseCase{
-		codeVerifier: codeVerifier,
-		repo:         repo,
-		hasher:       hasher,
-		publisher:    publisher,
+) *Register {
+	return &Register{
+		emailVerifier: emailVerifier,
+		repo:          repo,
+		hasher:        hasher,
+		publisher:     publisher,
 	}
 }
 
-func (uc *CreateUserUseCase) Execute(ctx context.Context, input UserCreateDTO) (UserResponseDTO, error) {
-	if err := uc.codeVerifier.Verify(ctx, input.Email, input.Code); err != nil {
-		return UserResponseDTO{}, err
+func (uc *Register) Execute(ctx context.Context, input RegisterRequest) (Response, error) {
+	if err := uc.emailVerifier.Verify(ctx, input.Email, input.Code); err != nil {
+		return Response{}, err
 	}
 
 	hashedPassword, err := uc.hasher.Hash(input.Password)
 	if err != nil {
-		return UserResponseDTO{}, err
+		return Response{}, err
 	}
 
 	newUser := user.User{
@@ -52,10 +52,10 @@ func (uc *CreateUserUseCase) Execute(ctx context.Context, input UserCreateDTO) (
 	}
 
 	if err := uc.repo.Create(ctx, &newUser); err != nil {
-		return UserResponseDTO{}, err
+		return Response{}, err
 	}
 
-	event := UserCreatedEvent{
+	event := UserRegistered{
 		Email:     newUser.Email,
 		FirstName: newUser.FirstName,
 		Role:      newUser.Role,
@@ -67,7 +67,7 @@ func (uc *CreateUserUseCase) Execute(ctx context.Context, input UserCreateDTO) (
 		log.Println("Failed to publish user.registered event:", err)
 	}
 
-	response := UserResponseDTO{
+	response := Response{
 		ID:        newUser.ID,
 		FirstName: newUser.FirstName,
 		LastName:  newUser.LastName,

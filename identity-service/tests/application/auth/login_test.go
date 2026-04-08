@@ -13,9 +13,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var signInUC *auth.SignInUseCase
+var login *auth.Login
 
-func setupSignInUseCase(t *testing.T) *auth.SignInUseCase {
+func setupLogin(t *testing.T) *auth.Login {
 	ts := testStorage()
 	flushRedis(t, ts.Redis)
 	truncateTables(ts.DB)
@@ -26,11 +26,11 @@ func setupSignInUseCase(t *testing.T) *auth.SignInUseCase {
 
 	repo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
-	jwt := security.NewJWTService("TestSecretKey")
+	jwt := security.NewJWTManager("TestSecretKey")
 	refreshTokenRepo := persistence.NewRefreshTokenRepository(ts.Redis)
-	refreshTokenService := security.NewRefreshTokenService()
+	refreshTokenManager := security.NewRefreshTokenManager()
 
-	return auth.NewSignInUseCase(repo, hasher, jwt, refreshTokenRepo, refreshTokenService)
+	return auth.NewLogin(repo, hasher, jwt, refreshTokenRepo, refreshTokenManager)
 }
 
 func flushRedis(t *testing.T, client *redis.Client) {
@@ -38,28 +38,28 @@ func flushRedis(t *testing.T, client *redis.Client) {
 	require.NoError(t, err)
 }
 
-func TestSignInUseCase_Success(t *testing.T) {
-	signInUC := setupSignInUseCase(t)
+func TestLogin_Success(t *testing.T) {
+	login := setupLogin(t)
 
-	response, err := signInUC.Execute(context.Background(), "john.doe@example.com", "plainPassword")
+	response, err := login.Execute(context.Background(), "john.doe@example.com", "plainPassword")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, response.AccessToken)
 	assert.NotEmpty(t, response.RefreshToken)
 }
 
-func TestSignInUseCase_InvalidPassword(t *testing.T) {
-	signInUC := setupSignInUseCase(t)
+func TestLogin_InvalidPassword(t *testing.T) {
+	login := setupLogin(t)
 
-	response, err := signInUC.Execute(context.Background(), "john.doe@example.com", "wrongpassword")
+	response, err := login.Execute(context.Background(), "john.doe@example.com", "wrongpassword")
 	assert.Error(t, err)
 	assert.Empty(t, response.AccessToken)
 	assert.Empty(t, response.RefreshToken)
 }
 
-func TestSignInUseCase_UserNotFound(t *testing.T) {
-	signInUC := setupSignInUseCase(t)
+func TestLogin_UserNotFound(t *testing.T) {
+	login := setupLogin(t)
 
-	response, err := signInUC.Execute(context.Background(), "notfound@example.com", "password")
+	response, err := login.Execute(context.Background(), "notfound@example.com", "password")
 	assert.Error(t, err)
 	assert.Empty(t, response.AccessToken)
 	assert.Empty(t, response.RefreshToken)

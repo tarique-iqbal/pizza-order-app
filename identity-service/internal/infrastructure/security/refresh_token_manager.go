@@ -4,16 +4,17 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"identity-service/internal/domain/auth"
 )
 
-type RefreshTokenService struct {
+type RefreshTokenManager struct {
 }
 
-func NewRefreshTokenService() *RefreshTokenService {
-	return &RefreshTokenService{}
+func NewRefreshTokenManager() auth.RefreshTokenManager {
+	return &RefreshTokenManager{}
 }
 
-func (s *RefreshTokenService) Generate() (string, error) {
+func (s *RefreshTokenManager) Generate() (string, error) {
 	bytes := make([]byte, 32)
 	_, err := rand.Read(bytes)
 	if err != nil {
@@ -22,7 +23,7 @@ func (s *RefreshTokenService) Generate() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func (s *RefreshTokenService) Hash(token string) (string, error) {
+func (s *RefreshTokenManager) Hash(token string) (string, error) {
 	hash := sha256.Sum256([]byte(token))
 	return hex.EncodeToString(hash[:]), nil
 }

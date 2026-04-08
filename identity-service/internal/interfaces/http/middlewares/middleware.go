@@ -11,7 +11,7 @@ type Middleware struct {
 	EnsureOwner gin.HandlerFunc
 }
 
-func NewMiddleware(jwt auth.JWTService) *Middleware {
+func NewMiddleware(jwt auth.JWTManager) *Middleware {
 	return &Middleware{
 		Auth: AuthMiddleware(jwt),
 	}

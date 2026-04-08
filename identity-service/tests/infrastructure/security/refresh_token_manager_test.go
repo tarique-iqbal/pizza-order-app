@@ -11,9 +11,9 @@ import (
 )
 
 func TestGenerate_ReturnsValidToken(t *testing.T) {
-	service := security.NewRefreshTokenService()
+	manager := security.NewRefreshTokenManager()
 
-	token, err := service.Generate()
+	token, err := manager.Generate()
 
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
@@ -25,10 +25,10 @@ func TestGenerate_ReturnsValidToken(t *testing.T) {
 }
 
 func TestGenerate_UniqueTokens(t *testing.T) {
-	service := security.NewRefreshTokenService()
+	manager := security.NewRefreshTokenManager()
 
-	token1, err1 := service.Generate()
-	token2, err2 := service.Generate()
+	token1, err1 := manager.Generate()
+	token2, err2 := manager.Generate()
 
 	require.NoError(t, err1)
 	require.NoError(t, err2)
@@ -37,12 +37,12 @@ func TestGenerate_UniqueTokens(t *testing.T) {
 }
 
 func TestHash_Deterministic(t *testing.T) {
-	service := security.NewRefreshTokenService()
+	manager := security.NewRefreshTokenManager()
 
 	input := "my-refresh-token"
 
-	hash1, err1 := service.Hash(input)
-	hash2, err2 := service.Hash(input)
+	hash1, err1 := manager.Hash(input)
+	hash2, err2 := manager.Hash(input)
 
 	require.NoError(t, err1)
 	require.NoError(t, err2)
@@ -51,10 +51,10 @@ func TestHash_Deterministic(t *testing.T) {
 }
 
 func TestHash_DifferentInputs(t *testing.T) {
-	service := security.NewRefreshTokenService()
+	manager := security.NewRefreshTokenManager()
 
-	hash1, err1 := service.Hash("token-1")
-	hash2, err2 := service.Hash("token-2")
+	hash1, err1 := manager.Hash("token-1")
+	hash2, err2 := manager.Hash("token-2")
 
 	require.NoError(t, err1)
 	require.NoError(t, err2)
@@ -63,9 +63,9 @@ func TestHash_DifferentInputs(t *testing.T) {
 }
 
 func TestHash_OutputLength(t *testing.T) {
-	service := security.NewRefreshTokenService()
+	manager := security.NewRefreshTokenManager()
 
-	hash, err := service.Hash("some-token")
+	hash, err := manager.Hash("some-token")
 
 	require.NoError(t, err)
 

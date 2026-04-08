@@ -7,14 +7,16 @@ import (
 	mrand "math/rand"
 )
 
-type SixDigitOTPGenerator struct {
+const digit = 6
+
+type OTPGenerator struct {
 }
 
-func NewSixDigitOTPGenerator() auth.OTPGenerator {
-	return &SixDigitOTPGenerator{}
+func NewOTPGenerator() auth.OTPGenerator {
+	return &OTPGenerator{}
 }
 
-func (g SixDigitOTPGenerator) Generate(secure bool) (string, error) {
+func (g OTPGenerator) Generate(secure bool) (string, error) {
 	if secure {
 		return generateSecureCode()
 	}
@@ -44,5 +46,5 @@ func generateSecureCode() (string, error) {
 		}
 	}
 
-	return fmt.Sprintf("%06d", n), nil
+	return fmt.Sprintf("%0*d", digit, n), nil
 }

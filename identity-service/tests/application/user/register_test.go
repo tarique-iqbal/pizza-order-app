@@ -3,7 +3,7 @@ package user_test
 import (
 	"context"
 	"errors"
-	aUser "identity-service/internal/application/user"
+	"identity-service/internal/application/user"
 	"identity-service/internal/infrastructure/auth"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
@@ -29,12 +29,12 @@ func (m *MockEventPublisher) Publish(e event.Event) error {
 	return nil
 }
 
-func createUserUseCase() *aUser.CreateUserUseCase {
+func setupRegister() *user.Register {
 	ts := testStorage()
 	truncateTables(ts.DB)
 
 	emailVerificationRepo := persistence.NewEmailVerificationRepository(ts.DB)
-	codeVerifier := auth.NewCodeVerificationService(emailVerificationRepo)
+	codeVerifier := auth.NewEmailVerifier(emailVerificationRepo)
 	userRepo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
@@ -46,13 +46,13 @@ func createUserUseCase() *aUser.CreateUserUseCase {
 		panic(err)
 	}
 
-	return aUser.NewCreateUserUseCase(codeVerifier, userRepo, hasher, mockPublisher)
+	return user.NewRegister(codeVerifier, userRepo, hasher, mockPublisher)
 }
 
-func TestCreateUserUseCase(t *testing.T) {
-	createUserUC := createUserUseCase()
+func TestRegister(t *testing.T) {
+	register := setupRegister()
 
-	input := aUser.UserCreateDTO{
+	input := user.RegisterRequest{
 		FirstName: "Adam",
 		LastName:  "D'Angelo",
 		Email:     "adam.dangelo@example.com",
@@ -60,13 +60,13 @@ func TestCreateUserUseCase(t *testing.T) {
 		Code:      "476190",
 	}
 
-	user, err := createUserUC.Execute(context.Background(), input)
+	newUser, err := register.Execute(context.Background(), input)
 
 	assert.Nil(t, err)
-	assert.NotNil(t, user)
-	assert.Equal(t, "Adam", user.FirstName)
+	assert.NotNil(t, newUser)
+	assert.Equal(t, "Adam", newUser.FirstName)
 
-	createdEvent, ok := mockPublisher.PublishedEvents[0].(aUser.UserCreatedEvent)
+	createdEvent, ok := mockPublisher.PublishedEvents[0].(user.UserRegistered)
 	assert.True(t, ok)
 	assert.Equal(t, "Adam", createdEvent.FirstName)
 	assert.Equal(t, "adam.dangelo@example.com", createdEvent.Email)

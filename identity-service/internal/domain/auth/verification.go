@@ -1,6 +1,9 @@
 package auth
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 var (
 	ErrCodeInvalid   = errors.New("invalid verification code")
@@ -8,3 +11,7 @@ var (
 	ErrCodeUsed      = errors.New("verification code already used")
 	ErrCodeNotIssued = errors.New("verification code not issued")
 )
+
+type EmailVerifier interface {
+	Verify(ctx context.Context, email string, code string) error
+}

@@ -1,6 +1,6 @@
 package user
 
-type UserCreatedEvent struct {
+type UserRegistered struct {
 	Email     string `json:"email"`
 	FirstName string `json:"first_name"`
 	Role      string `json:"role"`
@@ -8,6 +8,6 @@ type UserCreatedEvent struct {
 	Timestamp string `json:"timestamp"`
 }
 
-func (e UserCreatedEvent) GetEventName() string {
+func (e UserRegistered) GetEventName() string {
 	return "user.registered"
 }

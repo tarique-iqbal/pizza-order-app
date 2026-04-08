@@ -8,7 +8,7 @@ import (
 )
 
 func TestGenerate6DigitCode_Fast(t *testing.T) {
-	otp := security.NewSixDigitOTPGenerator()
+	otp := security.NewOTPGenerator()
 	for range 10 {
 		code, err := otp.Generate(false)
 
@@ -19,7 +19,7 @@ func TestGenerate6DigitCode_Fast(t *testing.T) {
 }
 
 func TestGenerate6DigitCode_Secure(t *testing.T) {
-	otp := security.NewSixDigitOTPGenerator()
+	otp := security.NewOTPGenerator()
 	for i := 0; i < 10; i++ {
 		code, err := otp.Generate(true)
 

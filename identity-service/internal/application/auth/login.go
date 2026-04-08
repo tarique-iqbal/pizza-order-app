@@ -7,68 +7,70 @@ import (
 	"identity-service/internal/domain/user"
 )
 
-type SignInUseCase struct {
+const refreshTokenExpiry = 7
+
+type Login struct {
 	userRepo            user.UserRepository
 	passwordHasher      auth.PasswordHasher
-	jwtService          auth.JWTService
+	jwtManager          auth.JWTManager
 	refreshTokenRepo    auth.RefreshTokenRepository
-	refreshTokenService auth.RefreshTokenService
+	refreshTokenManager auth.RefreshTokenManager
 }
 
-func NewSignInUseCase(
+func NewLogin(
 	userRepo user.UserRepository,
 	passwordHasher auth.PasswordHasher,
-	jwtService auth.JWTService,
+	jwtManager auth.JWTManager,
 	refreshTokenRepo auth.RefreshTokenRepository,
-	refreshTokenService auth.RefreshTokenService,
-) *SignInUseCase {
-	return &SignInUseCase{
+	refreshTokenManager auth.RefreshTokenManager,
+) *Login {
+	return &Login{
 		userRepo:            userRepo,
 		passwordHasher:      passwordHasher,
-		jwtService:          jwtService,
+		jwtManager:          jwtManager,
 		refreshTokenRepo:    refreshTokenRepo,
-		refreshTokenService: refreshTokenService,
+		refreshTokenManager: refreshTokenManager,
 	}
 }
 
-func (uc *SignInUseCase) Execute(
+func (uc *Login) Execute(
 	ctx context.Context,
 	email string,
 	password string,
-) (TokenResponseDTO, error) {
+) (TokenResponse, error) {
 	user, err := uc.userRepo.FindByEmail(ctx, email)
 	if user == nil {
-		return TokenResponseDTO{}, errors.New("no record found")
+		return TokenResponse{}, errors.New("no record found")
 	}
 
 	if err != nil {
-		return TokenResponseDTO{}, errors.New("internal server error")
+		return TokenResponse{}, errors.New("internal server error")
 	}
 
 	status := uc.passwordHasher.Compare(user.Password, password)
 	if !status {
-		return TokenResponseDTO{}, errors.New("invalid credentials")
+		return TokenResponse{}, errors.New("invalid credentials")
 	}
 
-	accessToken, err := uc.jwtService.Generate(user.ID, user.Role)
+	accessToken, err := uc.jwtManager.Generate(user.ID, user.Role)
 	if err != nil {
-		return TokenResponseDTO{}, err
+		return TokenResponse{}, err
 	}
 
-	refreshToken, err := uc.refreshTokenService.Generate()
+	refreshToken, err := uc.refreshTokenManager.Generate()
 	if err != nil {
-		return TokenResponseDTO{}, err
+		return TokenResponse{}, err
 	}
 
-	hashedToken, _ := uc.refreshTokenService.Hash(refreshToken)
+	hashedToken, _ := uc.refreshTokenManager.Hash(refreshToken)
 
-	const ttlSeconds = int64(7 * 24 * 3600)
+	const ttlSeconds = int64(refreshTokenExpiry * 24 * 3600)
 	err = uc.refreshTokenRepo.Save(ctx, hashedToken, int(user.ID), ttlSeconds)
 	if err != nil {
-		return TokenResponseDTO{}, err
+		return TokenResponse{}, err
 	}
 
-	return TokenResponseDTO{
+	return TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil

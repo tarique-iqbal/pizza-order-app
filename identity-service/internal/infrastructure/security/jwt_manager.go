@@ -8,12 +8,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type jwtService struct {
+type jwtManager struct {
 	secret []byte
 }
 
-func NewJWTService(secret string) auth.JWTService {
-	return &jwtService{secret: []byte(secret)}
+func NewJWTManager(secret string) auth.JWTManager {
+	return &jwtManager{secret: []byte(secret)}
 }
 
 type jwtClaims struct {
@@ -22,7 +22,7 @@ type jwtClaims struct {
 	jwt.RegisteredClaims
 }
 
-func (j *jwtService) Generate(userID uint, role string) (string, error) {
+func (j *jwtManager) Generate(userID uint, role string) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := jwtClaims{
 		UserID: userID,
@@ -36,7 +36,7 @@ func (j *jwtService) Generate(userID uint, role string) (string, error) {
 	return token.SignedString(j.secret)
 }
 
-func (j *jwtService) Parse(tokenString string) (*auth.Claims, error) {
+func (j *jwtManager) Parse(tokenString string) (*auth.Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &jwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return j.secret, nil
 	})

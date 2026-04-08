@@ -16,45 +16,45 @@ type jwtClaims struct {
 	jwt.RegisteredClaims
 }
 
-func InitJWT() auth.JWTService {
-	return security.NewJWTService("TestSecretKey")
+func InitJWT() auth.JWTManager {
+	return security.NewJWTManager("TestSecretKey")
 }
 
-func TestJWTService_GenerateToken(t *testing.T) {
-	jwtService := InitJWT()
+func TestJWTManager_GenerateToken(t *testing.T) {
+	jwtManager := InitJWT()
 
 	userID := uint(1)
 	role := "user"
-	tokenString, err := jwtService.Generate(userID, role)
+	tokenString, err := jwtManager.Generate(userID, role)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, tokenString)
 
-	claims, err := jwtService.Parse(tokenString)
+	claims, err := jwtManager.Parse(tokenString)
 	assert.NoError(t, err)
 	assert.Equal(t, userID, claims.UserID)
 	assert.Equal(t, role, claims.Role)
 }
 
-func TestJWTService_ValidToken(t *testing.T) {
-	jwtService := InitJWT()
+func TestJWTManager_ValidToken(t *testing.T) {
+	jwtManager := InitJWT()
 
 	userID := uint(1)
 	role := "owner"
-	tokenString, _ := jwtService.Generate(userID, role)
+	tokenString, _ := jwtManager.Generate(userID, role)
 
-	_, err := jwtService.Parse(tokenString)
+	_, err := jwtManager.Parse(tokenString)
 	assert.NoError(t, err)
 }
 
-func TestJWTService_InvalidToken(t *testing.T) {
-	jwtService := InitJWT()
+func TestJWTManager_InvalidToken(t *testing.T) {
+	jwtManager := InitJWT()
 
-	_, err := jwtService.Parse("invalid.token.here")
+	_, err := jwtManager.Parse("invalid.token.here")
 	assert.Error(t, err)
 }
 
-func TestJWTService_ExpiredToken(t *testing.T) {
-	jwtService := InitJWT()
+func TestJWTManager_ExpiredToken(t *testing.T) {
+	jwtManager := InitJWT()
 
 	expiredClaims := jwtClaims{
 		UserID: 123,
@@ -66,7 +66,7 @@ func TestJWTService_ExpiredToken(t *testing.T) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, expiredClaims)
 	tokenString, _ := token.SignedString([]byte("TestSecretKey"))
 
-	_, err := jwtService.Parse(tokenString)
+	_, err := jwtManager.Parse(tokenString)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "token is expired")

@@ -8,25 +8,25 @@ import (
 	"time"
 )
 
-const tokenExpiryMinutes = 15
+const accessTokenExpiry = 15
 
-type CreateEmailVerificationUseCase struct {
+type RequestEmailOTP struct {
 	repo      auth.EmailVerificationRepository
 	otp       auth.OTPGenerator
 	publisher event.EventPublisher
 }
 
-func NewCreateEmailVerificationUseCase(
+func NewRequestEmailOTP(
 	repo auth.EmailVerificationRepository,
 	otp auth.OTPGenerator,
 	publisher event.EventPublisher,
-) *CreateEmailVerificationUseCase {
-	return &CreateEmailVerificationUseCase{repo: repo, otp: otp, publisher: publisher}
+) *RequestEmailOTP {
+	return &RequestEmailOTP{repo: repo, otp: otp, publisher: publisher}
 }
 
-func (uc *CreateEmailVerificationUseCase) Execute(
+func (uc *RequestEmailOTP) Execute(
 	ctx context.Context,
-	input EmailVerificationRequestDTO,
+	input EmailVerificationRequest,
 ) error {
 	email := strings.ToLower(input.Email)
 
@@ -39,7 +39,7 @@ func (uc *CreateEmailVerificationUseCase) Execute(
 		Email:     email,
 		Code:      code,
 		IsUsed:    false,
-		ExpiresAt: time.Now().Add(time.Duration(tokenExpiryMinutes) * time.Minute),
+		ExpiresAt: time.Now().Add(time.Duration(accessTokenExpiry) * time.Minute),
 	}
 
 	existing, err := uc.repo.FindByEmail(ctx, email)
@@ -62,7 +62,7 @@ func (uc *CreateEmailVerificationUseCase) Execute(
 		}
 	}
 
-	event := EmailVerificationCreatedEvent{
+	event := EmailVerificationCreated{
 		Email:     email,
 		Code:      code,
 		Timestamp: time.Now().Format(time.RFC3339),

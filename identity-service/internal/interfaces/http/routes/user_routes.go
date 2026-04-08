@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupUserRoutes(router *gin.Engine, userHandler *http.UserHandler) {
+func SetupUserRoutes(router *gin.Engine, handler *http.UserHandler) {
 	users := router.Group("/users")
 	{
-		users.POST("", userHandler.Create)
+		users.POST("", handler.Register)
 	}
 }

@@ -1,6 +1,6 @@
 package user
 
-type UserCreateDTO struct {
+type RegisterRequest struct {
 	FirstName string `json:"first_name" binding:"required"`
 	LastName  string `json:"last_name" binding:"required"`
 	Email     string `json:"email" binding:"required,email"`
@@ -9,7 +9,7 @@ type UserCreateDTO struct {
 	Code      string `json:"code" binding:"required,min=6"`
 }
 
-type UserResponseDTO struct {
+type Response struct {
 	ID        uint   `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`

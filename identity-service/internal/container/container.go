@@ -36,25 +36,25 @@ func NewContainer() (*Container, error) {
 
 	publisher := messaging.NewRabbitMQPublisher(amqpURL)
 	hasher := security.NewPasswordHasher()
-	jwtService := security.NewJWTService(jwtSecret)
-	refreshTokenService := security.NewRefreshTokenService()
-	middleware := middlewares.NewMiddleware(jwtService)
-	otp := security.NewSixDigitOTPGenerator()
+	jwtManager := security.NewJWTManager(jwtSecret)
+	refreshTokenManager := security.NewRefreshTokenManager()
+	middleware := middlewares.NewMiddleware(jwtManager)
+	otp := security.NewOTPGenerator()
 
 	refreshTokenRepo := persistence.NewRefreshTokenRepository(rc)
 	emailVerificationRepo := persistence.NewEmailVerificationRepository(database)
 	userRepo := persistence.NewUserRepository(database)
 
-	codeVerifier := iAuth.NewCodeVerificationService(emailVerificationRepo)
+	codeVerifier := iAuth.NewEmailVerifier(emailVerificationRepo)
 
 	// user
-	createUserUC := user.NewCreateUserUseCase(codeVerifier, userRepo, hasher, publisher)
-	userHandler := http.NewUserHandler(createUserUC)
+	register := user.NewRegister(codeVerifier, userRepo, hasher, publisher)
+	userHandler := http.NewUserHandler(register)
 
 	// auth
-	signInUC := aAuth.NewSignInUseCase(userRepo, hasher, jwtService, refreshTokenRepo, refreshTokenService)
-	createEmailVerificationUC := aAuth.NewCreateEmailVerificationUseCase(emailVerificationRepo, otp, publisher)
-	authHandler := http.NewAuthHandler(signInUC, createEmailVerificationUC)
+	login := aAuth.NewLogin(userRepo, hasher, jwtManager, refreshTokenRepo, refreshTokenManager)
+	emailOTP := aAuth.NewRequestEmailOTP(emailVerificationRepo, otp, publisher)
+	authHandler := http.NewAuthHandler(login, emailOTP)
 
 	return &Container{
 		UserHandler: userHandler,

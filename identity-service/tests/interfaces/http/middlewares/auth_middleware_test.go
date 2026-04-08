@@ -12,17 +12,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func InitJWT() auth.JWTService {
+func InitJWT() auth.JWTManager {
 	gin.SetMode(gin.TestMode)
-	return security.NewJWTService("TestSecretKey")
+	return security.NewJWTManager("TestSecretKey")
 }
 
 func TestAuthMiddleware_ValidToken(t *testing.T) {
-	jwtService := InitJWT()
+	jwtManager := InitJWT()
 
 	userID := uint(1)
 	role := "user"
-	token, _ := jwtService.Generate(userID, role)
+	token, _ := jwtManager.Generate(userID, role)
 
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)
@@ -31,7 +31,7 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+token)
 	ctx.Request = req
 
-	middlewares.AuthMiddleware(jwtService)(ctx)
+	middlewares.AuthMiddleware(jwtManager)(ctx)
 	ctxUserID := ctx.MustGet("userID").(uint)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -39,7 +39,7 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 }
 
 func TestAuthMiddleware_InvalidToken(t *testing.T) {
-	jwtService := InitJWT()
+	jwtManager := InitJWT()
 
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)
@@ -48,13 +48,13 @@ func TestAuthMiddleware_InvalidToken(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer invalid_token")
 	ctx.Request = req
 
-	middlewares.AuthMiddleware(jwtService)(ctx)
+	middlewares.AuthMiddleware(jwtManager)(ctx)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestAuthMiddleware_NoToken(t *testing.T) {
-	jwtService := InitJWT()
+	jwtManager := InitJWT()
 
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)
@@ -62,7 +62,7 @@ func TestAuthMiddleware_NoToken(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	ctx.Request = req
 
-	middlewares.AuthMiddleware(jwtService)(ctx)
+	middlewares.AuthMiddleware(jwtManager)(ctx)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }

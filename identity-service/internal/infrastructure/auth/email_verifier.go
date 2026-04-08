@@ -7,18 +7,18 @@ import (
 	"time"
 )
 
-type CodeVerificationService struct {
-	emailVerificationRepo auth.EmailVerificationRepository
+type emailVerifier struct {
+	repo auth.EmailVerificationRepository
 }
 
-func NewCodeVerificationService(
-	emailVerificationRepo auth.EmailVerificationRepository,
-) auth.CodeVerifier {
-	return &CodeVerificationService{emailVerificationRepo: emailVerificationRepo}
+func NewEmailVerifier(
+	repo auth.EmailVerificationRepository,
+) auth.EmailVerifier {
+	return &emailVerifier{repo: repo}
 }
 
-func (s *CodeVerificationService) Verify(ctx context.Context, email string, code string) error {
-	emailVerification, err := s.emailVerificationRepo.FindByEmail(ctx, email)
+func (s *emailVerifier) Verify(ctx context.Context, email string, code string) error {
+	emailVerification, err := s.repo.FindByEmail(ctx, email)
 	if err != nil {
 		return auth.ErrCodeInvalid
 	}
@@ -41,7 +41,7 @@ func (s *CodeVerificationService) Verify(ctx context.Context, email string, code
 
 	emailVerification.Code = "..."
 	emailVerification.IsUsed = true
-	if err := s.emailVerificationRepo.Updates(ctx, emailVerification); err != nil {
+	if err := s.repo.Updates(ctx, emailVerification); err != nil {
 		return errors.New("failed to mark code as used")
 	}
 

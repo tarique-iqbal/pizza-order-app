@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var createEmailVerificationUC *auth.CreateEmailVerificationUseCase
+var emailOTP *auth.RequestEmailOTP
 var mockPublisher *MockEventPublisher
 var repo dAuth.EmailVerificationRepository
 
@@ -30,25 +30,25 @@ func (m *MockEventPublisher) Publish(e event.Event) error {
 	return nil
 }
 
-func createEmailVerificationUseCase() *auth.CreateEmailVerificationUseCase {
+func requestEmailOTP() *auth.RequestEmailOTP {
 	ts := testStorage()
 	truncateTables(ts.DB)
 
 	repo = persistence.NewEmailVerificationRepository(ts.DB)
-	otp := security.NewSixDigitOTPGenerator()
+	otp := security.NewOTPGenerator()
 	mockPublisher = &MockEventPublisher{}
 
-	return auth.NewCreateEmailVerificationUseCase(repo, otp, mockPublisher)
+	return auth.NewRequestEmailOTP(repo, otp, mockPublisher)
 }
 
 func TestCreateEmailVerificationUseCase_Success(t *testing.T) {
-	createEmailVerificationUC = createEmailVerificationUseCase()
+	emailOTP = requestEmailOTP()
 
-	input := auth.EmailVerificationRequestDTO{
+	input := auth.EmailVerificationRequest{
 		Email: "adam.dangelo@example.com",
 	}
 
-	err := createEmailVerificationUC.Execute(context.Background(), input)
+	err := emailOTP.Execute(context.Background(), input)
 	emailVerification, _ := repo.FindByEmail(context.Background(), input.Email)
 	diff := emailVerification.ExpiresAt.Sub(emailVerification.CreatedAt)
 
@@ -57,7 +57,7 @@ func TestCreateEmailVerificationUseCase_Success(t *testing.T) {
 	assert.Equal(t, "adam.dangelo@example.com", emailVerification.Email)
 	assert.InDelta(t, 15, diff.Minutes(), 0.001, "Delta threshold exceeded")
 
-	createdEvent, ok := mockPublisher.PublishedEvents[0].(auth.EmailVerificationCreatedEvent)
+	createdEvent, ok := mockPublisher.PublishedEvents[0].(auth.EmailVerificationCreated)
 	assert.True(t, ok)
 	assert.Equal(t, "adam.dangelo@example.com", createdEvent.Email)
 	assert.Equal(t, emailVerification.Code, createdEvent.Code)

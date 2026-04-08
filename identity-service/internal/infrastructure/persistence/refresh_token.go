@@ -10,15 +10,15 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type RedisRefreshTokenRepository struct {
+type refreshTokenRepo struct {
 	client *redis.Client
 }
 
 func NewRefreshTokenRepository(client *redis.Client) auth.RefreshTokenRepository {
-	return &RedisRefreshTokenRepository{client: client}
+	return &refreshTokenRepo{client: client}
 }
 
-func (r *RedisRefreshTokenRepository) Save(
+func (r *refreshTokenRepo) Save(
 	ctx context.Context,
 	hashedToken string,
 	userID int,
@@ -30,7 +30,7 @@ func (r *RedisRefreshTokenRepository) Save(
 	return r.client.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
 }
 
-func (r *RedisRefreshTokenRepository) Find(
+func (r *refreshTokenRepo) Find(
 	ctx context.Context,
 	hashedToken string,
 ) (int, error) {
@@ -49,7 +49,7 @@ func (r *RedisRefreshTokenRepository) Find(
 	return userID, nil
 }
 
-func (r *RedisRefreshTokenRepository) Delete(
+func (r *refreshTokenRepo) Delete(
 	ctx context.Context,
 	hashedToken string,
 ) error {
