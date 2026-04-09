@@ -20,7 +20,7 @@ func InitJWT() auth.JWTManager {
 func TestAuthMiddleware_ValidToken(t *testing.T) {
 	jwtManager := InitJWT()
 
-	userID := uint(1)
+	userID := 1
 	role := "user"
 	token, _ := jwtManager.Generate(userID, role)
 
@@ -32,7 +32,7 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 	ctx.Request = req
 
 	middlewares.AuthMiddleware(jwtManager)(ctx)
-	ctxUserID := ctx.MustGet("userID").(uint)
+	ctxUserID := ctx.MustGet("userID").(int)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, userID, ctxUserID)

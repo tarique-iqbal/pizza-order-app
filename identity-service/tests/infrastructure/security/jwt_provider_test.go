@@ -12,7 +12,7 @@ import (
 )
 
 type jwtClaims struct {
-	UserID uint `json:"user_id"`
+	UserID int `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
@@ -23,7 +23,7 @@ func InitJWT() auth.JWTManager {
 func TestJWTManager_GenerateToken(t *testing.T) {
 	jwtManager := InitJWT()
 
-	userID := uint(1)
+	userID := 1
 	role := "user"
 	tokenString, err := jwtManager.Generate(userID, role)
 	assert.NoError(t, err)
@@ -38,7 +38,7 @@ func TestJWTManager_GenerateToken(t *testing.T) {
 func TestJWTManager_ValidToken(t *testing.T) {
 	jwtManager := InitJWT()
 
-	userID := uint(1)
+	userID := 1
 	role := "owner"
 	tokenString, _ := jwtManager.Generate(userID, role)
 

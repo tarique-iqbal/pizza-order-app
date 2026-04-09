@@ -1,7 +1,7 @@
 package auth
 
 type JWTManager interface {
-	Generate(userID uint, role string) (string, error)
+	Generate(userID int, role string) (string, error)
 	Parse(tokenString string) (*Claims, error)
 }
 
@@ -11,6 +11,6 @@ type RefreshTokenManager interface {
 }
 
 type Claims struct {
-	UserID uint   `json:"user_id"`
+	UserID int    `json:"user_id"`
 	Role   string `json:"role"`
 }
