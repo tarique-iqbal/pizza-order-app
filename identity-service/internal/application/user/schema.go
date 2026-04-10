@@ -1,5 +1,7 @@
 package user
 
+import "time"
+
 type RegisterRequest struct {
 	FirstName string `json:"first_name" binding:"required"`
 	LastName  string `json:"last_name" binding:"required"`
@@ -10,9 +12,21 @@ type RegisterRequest struct {
 }
 
 type Response struct {
-	ID        uint   `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-	Role      string `json:"role"`
+	ID       int          `json:"id"`
+	Name     UserName     `json:"name"`
+	Email    string       `json:"email"`
+	Role     string       `json:"role"`
+	Status   string       `json:"status"`
+	Metadata UserMetadata `json:"metadata"`
+}
+
+type UserName struct {
+	First string `json:"first"`
+	Last  string `json:"last"`
+}
+
+type UserMetadata struct {
+	LastLogin   *time.Time `json:"lastLogin"`
+	MemberSince time.Time  `json:"memberSince"`
+	LastUpdate  *time.Time `json:"lastUpdate"`
 }

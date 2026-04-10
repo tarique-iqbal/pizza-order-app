@@ -64,7 +64,7 @@ func TestRegister(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.NotNil(t, newUser)
-	assert.Equal(t, "Adam", newUser.FirstName)
+	assert.Equal(t, "Adam", newUser.Name.First)
 
 	createdEvent, ok := mockPublisher.PublishedEvents[0].(user.UserRegistered)
 	assert.True(t, ok)
