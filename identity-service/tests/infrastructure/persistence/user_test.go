@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func setupUserRepo() user.UserRepository {
@@ -58,4 +59,43 @@ func TestUserRepository_EmailExists(t *testing.T) {
 	exists, err = userRepo.EmailExists("random@example.com")
 	assert.NoError(t, err)
 	assert.False(t, exists, "Email is not expected to be exists")
+}
+
+func TestUserRepository_FindByID_Success(t *testing.T) {
+	ctx := context.Background()
+	userRepo := setupUserRepo()
+
+	u := &user.User{
+		FirstName: "Tony",
+		LastName:  "Soprano",
+		Email:     "tony@satrialis.com",
+		Role:      "owner",
+		Status:    "active",
+		CreatedAt: time.Now(),
+	}
+
+	err := userRepo.Create(ctx, u)
+	require.NoError(t, err)
+
+	res, err := userRepo.FindByID(ctx, 2)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	assert.Equal(t, u.ID, res.ID)
+	assert.Equal(t, u.Email, res.Email)
+	assert.Equal(t, u.FirstName, res.FirstName)
+	assert.Equal(t, u.LastName, res.LastName)
+	assert.Equal(t, u.Role, res.Role)
+	assert.Equal(t, u.Status, res.Status)
+}
+
+func TestUserRepository_FindByID_NotFound(t *testing.T) {
+	ctx := context.Background()
+	repo := setupUserRepo()
+
+	res, err := repo.FindByID(ctx, 343)
+
+	require.NoError(t, err)
+	assert.Nil(t, res)
 }

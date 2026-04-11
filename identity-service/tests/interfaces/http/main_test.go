@@ -48,7 +48,7 @@ func truncateTables(tdb *gorm.DB) {
 	tdb.Exec("TRUNCATE TABLE users, email_verifications RESTART IDENTITY CASCADE")
 }
 
-func MockAuthMiddleware(userID uint, role string) gin.HandlerFunc {
+func MockAuthMiddleware(userID int, role string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {

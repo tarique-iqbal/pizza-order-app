@@ -7,8 +7,7 @@ import (
 )
 
 type Middleware struct {
-	Auth        gin.HandlerFunc
-	EnsureOwner gin.HandlerFunc
+	Auth gin.HandlerFunc
 }
 
 func NewMiddleware(jwt auth.JWTManager) *Middleware {

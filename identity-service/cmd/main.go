@@ -30,7 +30,7 @@ func main() {
 		AuthHandler: iocContainer.AuthHandler,
 	}
 
-	routes.SetupRoutes(router, handlers)
+	routes.SetupRoutes(router, handlers, iocContainer.Middleware)
 
 	router.Run(":8080")
 }
