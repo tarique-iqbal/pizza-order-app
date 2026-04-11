@@ -49,7 +49,8 @@ func NewContainer() (*Container, error) {
 
 	// user
 	register := user.NewRegister(codeVerifier, userRepo, hasher, publisher)
-	userHandler := http.NewUserHandler(register)
+	findByID := user.NewFindByID(userRepo)
+	userHandler := http.NewUserHandler(register, findByID)
 
 	// auth
 	login := aAuth.NewLogin(userRepo, hasher, jwtManager, refreshTokenRepo, refreshTokenManager)

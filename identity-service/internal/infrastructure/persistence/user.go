@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"errors"
 	"identity-service/internal/domain/user"
 
 	"gorm.io/gorm"
@@ -37,4 +38,21 @@ func (repo *userRepo) EmailExists(email string) (bool, error) {
 		Where("email = ?", email).
 		Count(&count).Error
 	return count > 0, err
+}
+
+func (r *userRepo) FindByID(ctx context.Context, id int) (*user.User, error) {
+	var u user.User
+
+	err := r.db.WithContext(ctx).
+		Where("id = ?", id).
+		Take(&u).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &u, nil
 }

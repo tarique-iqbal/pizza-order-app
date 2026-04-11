@@ -5,16 +5,18 @@ import (
 	"identity-service/internal/interfaces/http/mapper"
 	"identity-service/internal/interfaces/http/validation"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
 	register *user.Register
+	findByID *user.FindByID
 }
 
-func NewUserHandler(reg *user.Register) *UserHandler {
-	return &UserHandler{register: reg}
+func NewUserHandler(reg *user.Register, findByID *user.FindByID) *UserHandler {
+	return &UserHandler{register: reg, findByID: findByID}
 }
 
 func (h *UserHandler) Register(ctx *gin.Context) {
@@ -35,4 +37,27 @@ func (h *UserHandler) Register(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, response)
+}
+
+func (h *UserHandler) FindByID(c *gin.Context) {
+	idParam := c.Param("id")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	res, err := h.findByID.Execute(c, id)
+	if err != nil {
+		if err.Error() == "user not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
 }

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"identity-service/internal/interfaces/http"
+	"identity-service/internal/interfaces/http/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +12,7 @@ type Handlers struct {
 	AuthHandler *http.AuthHandler
 }
 
-func SetupRoutes(router *gin.Engine, h *Handlers) {
-	SetupUserRoutes(router, h.UserHandler)
+func SetupRoutes(router *gin.Engine, h *Handlers, m *middlewares.Middleware) {
+	SetupUserRoutes(router, h.UserHandler, m)
 	SetupAuthRoutes(router, h.AuthHandler)
 }
