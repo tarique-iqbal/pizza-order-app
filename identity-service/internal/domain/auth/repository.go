@@ -9,7 +9,7 @@ type EmailVerificationRepository interface {
 }
 
 type RefreshTokenRepository interface {
-	Save(ctx context.Context, hashedToken string, userID int, ttlSeconds int64) error
-	Find(ctx context.Context, hashedToken string) (int, error)
+	Save(ctx context.Context, hashedToken string, claims UserClaims, ttlSeconds int64) error
+	Find(ctx context.Context, hashedToken string) (UserClaims, error)
 	Delete(ctx context.Context, hashedToken string) error
 }
