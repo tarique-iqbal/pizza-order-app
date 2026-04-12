@@ -2,9 +2,9 @@ package persistence
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"identity-service/internal/domain/auth"
-	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -21,32 +21,36 @@ func NewRefreshTokenRepository(client *redis.Client) auth.RefreshTokenRepository
 func (r *refreshTokenRepo) Save(
 	ctx context.Context,
 	hashedToken string,
-	userID int,
+	claims auth.UserClaims,
 	ttlSeconds int64,
 ) error {
 	key := "refresh:" + hashedToken
-	value := strconv.Itoa(userID)
+	bytes, err := json.Marshal(claims)
+	if err != nil {
+		return err
+	}
 
-	return r.client.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
+	return r.client.Set(ctx, key, bytes, time.Duration(ttlSeconds)*time.Second).Err()
 }
 
 func (r *refreshTokenRepo) Find(
 	ctx context.Context,
 	hashedToken string,
-) (int, error) {
+) (auth.UserClaims, error) {
 	key := "refresh:" + hashedToken
 
 	val, err := r.client.Get(ctx, key).Result()
 	if err != nil {
-		return 0, errors.New("refresh token not found")
+		return auth.UserClaims{}, errors.New("refresh token not found")
 	}
 
-	userID, err := strconv.Atoi(val)
-	if err != nil {
-		return 0, errors.New("invalid stored value")
+	var claims auth.UserClaims
+
+	if err := json.Unmarshal([]byte(val), &claims); err != nil {
+		return auth.UserClaims{}, errors.New("invalid token data")
 	}
 
-	return userID, nil
+	return claims, nil
 }
 
 func (r *refreshTokenRepo) Delete(

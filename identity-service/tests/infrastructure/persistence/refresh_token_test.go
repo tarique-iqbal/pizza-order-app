@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"identity-service/internal/domain/auth"
 	"identity-service/internal/infrastructure/persistence"
 )
 
@@ -32,15 +33,18 @@ func TestRefreshTokenRepository_SaveAndFind(t *testing.T) {
 	repo := persistence.NewRefreshTokenRepository(ts.Redis)
 
 	hashedToken := "test-token"
-	userID := 42
+	claims := auth.UserClaims{
+		UserID: 42,
+		Role:   "owner",
+	}
 
-	err := repo.Save(ctx, hashedToken, userID, 60)
+	err := repo.Save(ctx, hashedToken, claims, 60)
 	require.NoError(t, err)
 
-	foundUserID, err := repo.Find(ctx, hashedToken)
+	foundClaims, err := repo.Find(ctx, hashedToken)
 	require.NoError(t, err)
 
-	assert.Equal(t, userID, foundUserID)
+	assert.Equal(t, claims, foundClaims)
 }
 
 func TestRefreshTokenRepository_Find_NotFound(t *testing.T) {
@@ -66,9 +70,12 @@ func TestRefreshTokenRepository_Delete(t *testing.T) {
 	repo := persistence.NewRefreshTokenRepository(ts.Redis)
 
 	hashedToken := "delete-token"
-	userID := 99
+	claims := auth.UserClaims{
+		UserID: 99,
+		Role:   "owner",
+	}
 
-	err := repo.Save(ctx, hashedToken, userID, 60)
+	err := repo.Save(ctx, hashedToken, claims, 60)
 	require.NoError(t, err)
 
 	err = repo.Delete(ctx, hashedToken)
@@ -87,9 +94,12 @@ func TestRefreshTokenRepository_TTLExpiry(t *testing.T) {
 	repo := persistence.NewRefreshTokenRepository(ts.Redis)
 
 	hashedToken := "ttl-token"
-	userID := 7
+	claims := auth.UserClaims{
+		UserID: 7,
+		Role:   "owner",
+	}
 
-	err := repo.Save(ctx, hashedToken, userID, 1)
+	err := repo.Save(ctx, hashedToken, claims, 1)
 	require.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
