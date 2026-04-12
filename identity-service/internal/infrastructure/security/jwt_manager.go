@@ -36,7 +36,7 @@ func (j *jwtManager) Generate(userID int, role string) (string, error) {
 	return token.SignedString(j.secret)
 }
 
-func (j *jwtManager) Parse(tokenString string) (*auth.Claims, error) {
+func (j *jwtManager) Parse(tokenString string) (*auth.UserClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &jwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return j.secret, nil
 	})
@@ -46,7 +46,7 @@ func (j *jwtManager) Parse(tokenString string) (*auth.Claims, error) {
 	}
 
 	if claims, ok := token.Claims.(*jwtClaims); ok && token.Valid {
-		return &auth.Claims{UserID: claims.UserID, Role: claims.Role}, nil
+		return &auth.UserClaims{UserID: claims.UserID, Role: claims.Role}, nil
 	}
 
 	return nil, errors.New("invalid token")

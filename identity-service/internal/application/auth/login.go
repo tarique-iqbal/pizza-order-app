@@ -62,10 +62,16 @@ func (uc *Login) Execute(
 		return TokenResponse{}, err
 	}
 
-	hashedToken, _ := uc.refreshTokenManager.Hash(refreshToken)
+	hashedToken := uc.refreshTokenManager.Hash(refreshToken)
 
-	const ttlSeconds = int64(refreshTokenExpiry * 24 * 3600)
-	err = uc.refreshTokenRepo.Save(ctx, hashedToken, user.ID, ttlSeconds)
+	claims := auth.UserClaims{
+		UserID: user.ID,
+		Role:   user.Role,
+	}
+
+	ttlSeconds := int64(refreshTokenExpiry) * 24 * 3600
+
+	err = uc.refreshTokenRepo.Save(ctx, hashedToken, claims, ttlSeconds)
 	if err != nil {
 		return TokenResponse{}, err
 	}
