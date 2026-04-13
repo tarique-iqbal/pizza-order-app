@@ -8,9 +8,7 @@ import (
 	"identity-service/tests/infrastructure/db/fixtures"
 	"testing"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var login *auth.Login
@@ -31,11 +29,6 @@ func setupLogin(t *testing.T) *auth.Login {
 	refreshTokenManager := security.NewRefreshTokenManager()
 
 	return auth.NewLogin(repo, hasher, jwt, refreshTokenRepo, refreshTokenManager)
-}
-
-func flushRedis(t *testing.T, client *redis.Client) {
-	err := client.FlushDB(context.Background()).Err()
-	require.NoError(t, err)
 }
 
 func TestLogin_Success(t *testing.T) {
