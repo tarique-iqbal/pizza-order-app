@@ -9,15 +9,21 @@ import (
 )
 
 type AuthHandler struct {
-	login    *auth.Login
-	emailOTP *auth.RequestEmailOTP
+	login        *auth.Login
+	emailOTP     *auth.RequestEmailOTP
+	refreshToken *auth.RefreshToken
 }
 
 func NewAuthHandler(
 	login *auth.Login,
 	emailOTP *auth.RequestEmailOTP,
+	refreshToken *auth.RefreshToken,
 ) *AuthHandler {
-	return &AuthHandler{login: login, emailOTP: emailOTP}
+	return &AuthHandler{
+		login:        login,
+		emailOTP:     emailOTP,
+		refreshToken: refreshToken,
+	}
 }
 
 func (h *AuthHandler) Login(ctx *gin.Context) {
@@ -56,4 +62,21 @@ func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {
 	}
 
 	ctx.Status(http.StatusNoContent)
+}
+
+func (h *AuthHandler) Refresh(ctx *gin.Context) {
+	var input auth.RefreshRequest
+
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	response, err := h.refreshToken.Execute(ctx, input)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
 }

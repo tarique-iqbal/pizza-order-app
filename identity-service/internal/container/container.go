@@ -1,9 +1,9 @@
 package container
 
 import (
-	aAuth "identity-service/internal/application/auth"
+	authapp "identity-service/internal/application/auth"
 	"identity-service/internal/application/user"
-	iAuth "identity-service/internal/infrastructure/auth"
+	authinfra "identity-service/internal/infrastructure/auth"
 	"identity-service/internal/infrastructure/db"
 	"identity-service/internal/infrastructure/messaging"
 	"identity-service/internal/infrastructure/persistence"
@@ -45,7 +45,7 @@ func NewContainer() (*Container, error) {
 	emailVerificationRepo := persistence.NewEmailVerificationRepository(database)
 	userRepo := persistence.NewUserRepository(database)
 
-	codeVerifier := iAuth.NewEmailVerifier(emailVerificationRepo)
+	codeVerifier := authinfra.NewEmailVerifier(emailVerificationRepo)
 
 	// user
 	register := user.NewRegister(codeVerifier, userRepo, hasher, publisher)
@@ -53,9 +53,10 @@ func NewContainer() (*Container, error) {
 	userHandler := http.NewUserHandler(register, findByID)
 
 	// auth
-	login := aAuth.NewLogin(userRepo, hasher, jwtManager, refreshTokenRepo, refreshTokenManager)
-	emailOTP := aAuth.NewRequestEmailOTP(emailVerificationRepo, otp, publisher)
-	authHandler := http.NewAuthHandler(login, emailOTP)
+	login := authapp.NewLogin(userRepo, hasher, jwtManager, refreshTokenRepo, refreshTokenManager)
+	emailOTP := authapp.NewRequestEmailOTP(emailVerificationRepo, otp, publisher)
+	refreshToken := authapp.NewRefreshToken(jwtManager, refreshTokenRepo, refreshTokenManager)
+	authHandler := http.NewAuthHandler(login, emailOTP, refreshToken)
 
 	return &Container{
 		UserHandler: userHandler,

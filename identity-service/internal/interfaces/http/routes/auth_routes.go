@@ -11,5 +11,6 @@ func SetupAuthRoutes(router *gin.Engine, handler *http.AuthHandler) {
 	{
 		users.POST("/email-verification", handler.CreateEmailVerification)
 		users.POST("/login", handler.Login)
+		users.POST("/refresh", handler.Refresh)
 	}
 }

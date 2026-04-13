@@ -30,8 +30,9 @@ func setupAuthHandler() *uiHttp.AuthHandler {
 	refreshTokenManager := security.NewRefreshTokenManager()
 
 	login := auth.NewLogin(userRepo, hasher, jwt, refreshTokenRepo, refreshTokenManager)
+	refreshToken := auth.NewRefreshToken(jwt, refreshTokenRepo, refreshTokenManager)
 
-	return uiHttp.NewAuthHandler(login, nil)
+	return uiHttp.NewAuthHandler(login, nil, refreshToken)
 }
 
 func TestAuthHandler_Login_Success(t *testing.T) {
