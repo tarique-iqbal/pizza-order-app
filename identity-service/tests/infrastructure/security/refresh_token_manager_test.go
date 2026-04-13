@@ -41,11 +41,8 @@ func TestHash_Deterministic(t *testing.T) {
 
 	input := "my-refresh-token"
 
-	hash1, err1 := manager.Hash(input)
-	hash2, err2 := manager.Hash(input)
-
-	require.NoError(t, err1)
-	require.NoError(t, err2)
+	hash1 := manager.Hash(input)
+	hash2 := manager.Hash(input)
 
 	assert.Equal(t, hash1, hash2)
 }
@@ -53,11 +50,8 @@ func TestHash_Deterministic(t *testing.T) {
 func TestHash_DifferentInputs(t *testing.T) {
 	manager := security.NewRefreshTokenManager()
 
-	hash1, err1 := manager.Hash("token-1")
-	hash2, err2 := manager.Hash("token-2")
-
-	require.NoError(t, err1)
-	require.NoError(t, err2)
+	hash1 := manager.Hash("token-1")
+	hash2 := manager.Hash("token-2")
 
 	assert.NotEqual(t, hash1, hash2)
 }
@@ -65,9 +59,7 @@ func TestHash_DifferentInputs(t *testing.T) {
 func TestHash_OutputLength(t *testing.T) {
 	manager := security.NewRefreshTokenManager()
 
-	hash, err := manager.Hash("some-token")
-
-	require.NoError(t, err)
+	hash := manager.Hash("some-token")
 
 	assert.Len(t, hash, 64)
 }

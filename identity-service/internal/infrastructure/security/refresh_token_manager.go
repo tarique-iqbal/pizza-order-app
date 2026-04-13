@@ -23,7 +23,7 @@ func (s *RefreshTokenManager) Generate() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func (s *RefreshTokenManager) Hash(token string) (string, error) {
+func (s *RefreshTokenManager) Hash(token string) string {
 	hash := sha256.Sum256([]byte(token))
-	return hex.EncodeToString(hash[:]), nil
+	return hex.EncodeToString(hash[:])
 }
