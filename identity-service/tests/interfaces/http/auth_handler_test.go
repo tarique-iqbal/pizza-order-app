@@ -84,18 +84,18 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodPost, "/auth/login", bytes.NewBuffer(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		recorder := httptest.NewRecorder()
-		router.ServeHTTP(recorder, req)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
 		type response struct {
 			AccessToken  string `json:"accessToken"`
 			RefreshToken string `json:"refreshToken"`
 		}
 
-		assert.Equal(t, tc.expectedCode, recorder.Code)
+		assert.Equal(t, tc.expectedCode, w.Code)
 
 		var res response
-		err := json.Unmarshal(recorder.Body.Bytes(), &res)
+		err := json.Unmarshal(w.Body.Bytes(), &res)
 		assert.NoError(t, err)
 
 		_, err = jwt.Parse(res.AccessToken)
@@ -185,15 +185,15 @@ func TestAuthHandler_Login_Failed(t *testing.T) {
 }
 
 func TestAuthHandler_Refresh_Success(t *testing.T) {
-	handler, _, _, _, refreshTokenRepo, refreshTokenManager := setupAuthHandler()
+	handler, _, _, _, repo, manager := setupAuthHandler()
 
 	router := gin.Default()
 	router.POST("/auth/refresh", handler.Refresh)
 
-	rawToken, err := refreshTokenManager.Generate()
+	rawToken, err := manager.Generate()
 	require.NoError(t, err)
 
-	hashed := refreshTokenManager.Hash(rawToken)
+	hashed := manager.Hash(rawToken)
 	require.NoError(t, err)
 
 	claims := auth.UserClaims{
@@ -202,7 +202,7 @@ func TestAuthHandler_Refresh_Success(t *testing.T) {
 	}
 
 	ttl := int64(7) * 24 * 3600
-	err = refreshTokenRepo.Save(context.Background(), hashed, claims, ttl)
+	err = repo.Save(context.Background(), hashed, claims, ttl)
 	require.NoError(t, err)
 
 	body, _ := json.Marshal(authapp.RefreshRequest{
@@ -277,20 +277,21 @@ func TestAuthHandler_Refresh_InvalidRequest(t *testing.T) {
 }
 
 func TestAuthHandler_Refresh_Rotation(t *testing.T) {
-	handler, _, _, _, refreshTokenRepo, refreshTokenManager := setupAuthHandler()
+	handler, _, _, _, repo, manager := setupAuthHandler()
 
 	router := gin.Default()
 	router.POST("/auth/refresh", handler.Refresh)
 
-	rawToken, _ := refreshTokenManager.Generate()
-	hashed := refreshTokenManager.Hash(rawToken)
+	rawToken, _ := manager.Generate()
+	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
 		UserID: 232,
 		Role:   "owner",
 	}
 
-	_ = refreshTokenRepo.Save(context.Background(), hashed, claims, int64(7*24*3600))
+	ttl := int64(7) * 24 * 3600
+	_ = repo.Save(context.Background(), hashed, claims, ttl)
 
 	body, _ := json.Marshal(authapp.RefreshRequest{
 		RefreshToken: rawToken,

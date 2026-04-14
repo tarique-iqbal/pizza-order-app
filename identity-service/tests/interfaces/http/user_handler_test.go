@@ -57,9 +57,10 @@ func setupUserHandler() *httpui.UserHandler {
 }
 
 func TestUserHandler_Register_Success(t *testing.T) {
-	uHandler := setupUserHandler()
+	handler := setupUserHandler()
+
 	router := gin.Default()
-	router.POST("/users", uHandler.Register)
+	router.POST("/users", handler.Register)
 
 	reqBody, _ := json.Marshal(map[string]string{
 		"first_name": "Alice",
@@ -73,11 +74,11 @@ func TestUserHandler_Register_Success(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/users", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
-	recorder := httptest.NewRecorder()
-	router.ServeHTTP(recorder, req)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusCreated, recorder.Code)
-	assert.Contains(t, recorder.Body.String(), "alice@example.com")
+	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Contains(t, w.Body.String(), "alice@example.com")
 }
 
 func TestUserHandler_FindByID_Success(t *testing.T) {
