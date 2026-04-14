@@ -6,14 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	dAuth "identity-service/internal/domain/auth"
-	iAuth "identity-service/internal/infrastructure/auth"
+	"identity-service/internal/domain/auth"
+	authinfra "identity-service/internal/infrastructure/auth"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/tests/infrastructure/db"
 	"identity-service/tests/infrastructure/db/fixtures"
 )
 
-func setupCodeVerification() dAuth.EmailVerifier {
+func setupCodeVerification() auth.EmailVerifier {
 	testDB := db.SetupTestDB()
 	repo := persistence.NewEmailVerificationRepository(testDB)
 
@@ -21,7 +21,7 @@ func setupCodeVerification() dAuth.EmailVerifier {
 		panic(err)
 	}
 
-	return iAuth.NewEmailVerifier(repo)
+	return authinfra.NewEmailVerifier(repo)
 }
 
 func TestVerify_Success(t *testing.T) {
@@ -35,26 +35,26 @@ func TestVerify_CodeMismatch(t *testing.T) {
 	svc := setupCodeVerification()
 
 	err := svc.Verify(context.Background(), "alice@example.com", "010101")
-	assert.ErrorIs(t, err, dAuth.ErrCodeInvalid)
+	assert.ErrorIs(t, err, auth.ErrCodeInvalid)
 }
 
 func TestVerify_AlreadyUsed(t *testing.T) {
 	svc := setupCodeVerification()
 
 	err := svc.Verify(context.Background(), "already.used@example.com", "137468")
-	assert.ErrorIs(t, err, dAuth.ErrCodeUsed)
+	assert.ErrorIs(t, err, auth.ErrCodeUsed)
 }
 
 func TestVerify_Expired(t *testing.T) {
 	svc := setupCodeVerification()
 
 	err := svc.Verify(context.Background(), "expired@example.com", "743802")
-	assert.ErrorIs(t, err, dAuth.ErrCodeExpired)
+	assert.ErrorIs(t, err, auth.ErrCodeExpired)
 }
 
 func TestVerify_CodeNotIssued(t *testing.T) {
 	svc := setupCodeVerification()
 
 	err := svc.Verify(context.Background(), "not.found@example.com", "578578")
-	assert.ErrorIs(t, err, dAuth.ErrCodeNotIssued)
+	assert.ErrorIs(t, err, auth.ErrCodeNotIssued)
 }

@@ -34,7 +34,12 @@ func setupLogin(t *testing.T) *auth.Login {
 func TestLogin_Success(t *testing.T) {
 	login := setupLogin(t)
 
-	response, err := login.Execute(context.Background(), "john.doe@example.com", "plainPassword")
+	input := auth.LoginRequest{
+		Email:    "john.doe@example.com",
+		Password: "plainPassword",
+	}
+
+	response, err := login.Execute(context.Background(), input)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, response.AccessToken)
 	assert.NotEmpty(t, response.RefreshToken)
@@ -43,7 +48,12 @@ func TestLogin_Success(t *testing.T) {
 func TestLogin_InvalidPassword(t *testing.T) {
 	login := setupLogin(t)
 
-	response, err := login.Execute(context.Background(), "john.doe@example.com", "wrongpassword")
+	input := auth.LoginRequest{
+		Email:    "john.doe@example.com",
+		Password: "wrongpassword",
+	}
+
+	response, err := login.Execute(context.Background(), input)
 	assert.Error(t, err)
 	assert.Empty(t, response.AccessToken)
 	assert.Empty(t, response.RefreshToken)
@@ -52,7 +62,12 @@ func TestLogin_InvalidPassword(t *testing.T) {
 func TestLogin_UserNotFound(t *testing.T) {
 	login := setupLogin(t)
 
-	response, err := login.Execute(context.Background(), "notfound@example.com", "password")
+	input := auth.LoginRequest{
+		Email:    "notfound@example.com",
+		Password: "password",
+	}
+
+	response, err := login.Execute(context.Background(), input)
 	assert.Error(t, err)
 	assert.Empty(t, response.AccessToken)
 	assert.Empty(t, response.RefreshToken)

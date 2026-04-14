@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 
-	domain "identity-service/internal/domain/user"
+	"identity-service/internal/domain/user"
 )
 
 type FindByID struct {
-	repo domain.UserRepository
+	repo user.UserRepository
 }
 
-func NewFindByID(repo domain.UserRepository) *FindByID {
+func NewFindByID(repo user.UserRepository) *FindByID {
 	return &FindByID{repo: repo}
 }
 

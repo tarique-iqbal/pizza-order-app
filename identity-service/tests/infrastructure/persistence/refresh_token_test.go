@@ -5,18 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"identity-service/internal/domain/auth"
 	"identity-service/internal/infrastructure/persistence"
 )
-
-func flushRedis(t *testing.T, client *redis.Client) {
-	err := client.FlushDB(context.Background()).Err()
-	require.NoError(t, err)
-}
 
 func TestRedisConnection(t *testing.T) {
 	ts := testStorage()

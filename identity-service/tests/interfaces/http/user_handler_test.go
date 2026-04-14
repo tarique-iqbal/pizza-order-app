@@ -6,9 +6,9 @@ import (
 	"errors"
 	userapp "identity-service/internal/application/user"
 	"identity-service/internal/infrastructure/auth"
-	infra "identity-service/internal/infrastructure/persistence"
+	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
-	web "identity-service/internal/interfaces/http"
+	httpui "identity-service/internal/interfaces/http"
 	"identity-service/internal/shared/event"
 	"identity-service/tests/infrastructure/db/fixtures"
 	"net/http"
@@ -36,13 +36,13 @@ func (m *MockEventPublisher) Publish(e event.Event) error {
 	return nil
 }
 
-func setupUserHandler() *web.UserHandler {
+func setupUserHandler() *httpui.UserHandler {
 	ts := testStorage()
 	truncateTables(ts.DB)
 
-	emailVerificationRepo := infra.NewEmailVerificationRepository(ts.DB)
+	emailVerificationRepo := persistence.NewEmailVerificationRepository(ts.DB)
 	codeVerifier := auth.NewEmailVerifier(emailVerificationRepo)
-	userRepo := infra.NewUserRepository(ts.DB)
+	userRepo := persistence.NewUserRepository(ts.DB)
 	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
 
@@ -53,7 +53,7 @@ func setupUserHandler() *web.UserHandler {
 		panic(err)
 	}
 
-	return web.NewUserHandler(register, findByID)
+	return httpui.NewUserHandler(register, findByID)
 }
 
 func TestUserHandler_Register_Success(t *testing.T) {

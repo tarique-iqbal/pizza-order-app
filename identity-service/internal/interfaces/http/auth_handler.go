@@ -27,16 +27,16 @@ func NewAuthHandler(
 }
 
 func (h *AuthHandler) Login(ctx *gin.Context) {
-	var dto auth.LoginRequest
+	var input auth.LoginRequest
 	reqCtx := ctx.Request.Context()
 
-	if err := ctx.ShouldBindJSON(&dto); err != nil {
+	if err := ctx.ShouldBindJSON(&input); err != nil {
 		errors := validation.ExtractValidationErrors(err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"errors": errors})
 		return
 	}
 
-	response, err := h.login.Execute(reqCtx, dto.Email, dto.Password)
+	response, err := h.login.Execute(reqCtx, input)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -46,16 +46,16 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 }
 
 func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {
-	var dto auth.EmailVerificationRequest
+	var input auth.EmailVerificationRequest
 	reqCtx := ctx.Request.Context()
 
-	if err := ctx.ShouldBindJSON(&dto); err != nil {
+	if err := ctx.ShouldBindJSON(&input); err != nil {
 		errors := validation.ExtractValidationErrors(err)
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errors})
 		return
 	}
 
-	err := h.emailOTP.Execute(reqCtx, dto)
+	err := h.emailOTP.Execute(reqCtx, input)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create verification"})
 		return

@@ -35,10 +35,9 @@ func NewLogin(
 
 func (uc *Login) Execute(
 	ctx context.Context,
-	email string,
-	password string,
+	input LoginRequest,
 ) (TokenResponse, error) {
-	user, err := uc.userRepo.FindByEmail(ctx, email)
+	user, err := uc.userRepo.FindByEmail(ctx, input.Email)
 	if user == nil {
 		return TokenResponse{}, errors.New("no record found")
 	}
@@ -47,7 +46,7 @@ func (uc *Login) Execute(
 		return TokenResponse{}, errors.New("internal server error")
 	}
 
-	status := uc.passwordHasher.Compare(user.Password, password)
+	status := uc.passwordHasher.Compare(user.Password, input.Password)
 	if !status {
 		return TokenResponse{}, errors.New("invalid credentials")
 	}

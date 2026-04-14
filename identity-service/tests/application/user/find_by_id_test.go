@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	app "identity-service/internal/application/user"
-	domain "identity-service/internal/domain/user"
+	userapp "identity-service/internal/application/user"
+	"identity-service/internal/domain/user"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/tests/infrastructure/db/fixtures"
 )
 
-func setupFindByID() *app.FindByID {
+func setupFindByID() *userapp.FindByID {
 	ts := testStorage()
 	truncateTables(ts.DB)
 
@@ -25,7 +25,7 @@ func setupFindByID() *app.FindByID {
 		panic(err)
 	}
 
-	return app.NewFindByID(userRepo)
+	return userapp.NewFindByID(userRepo)
 }
 
 func TestFindByID_Success(t *testing.T) {
@@ -33,7 +33,7 @@ func TestFindByID_Success(t *testing.T) {
 	ts := testStorage()
 	uc := setupFindByID()
 
-	u := &domain.User{
+	u := &user.User{
 		FirstName: "Tony",
 		LastName:  "Soprano",
 		Email:     "tony@satrialis.com",
@@ -66,5 +66,5 @@ func TestFindByID_NotFound(t *testing.T) {
 
 	require.Error(t, err)
 	assert.Equal(t, "user not found", err.Error())
-	assert.Equal(t, app.Response{}, res)
+	assert.Equal(t, userapp.Response{}, res)
 }

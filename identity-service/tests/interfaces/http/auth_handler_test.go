@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"identity-service/internal/application/auth"
+	authapp "identity-service/internal/application/auth"
+	"identity-service/internal/domain/auth"
 	"identity-service/internal/domain/user"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
-	uiHttp "identity-service/internal/interfaces/http"
+	httpui "identity-service/internal/interfaces/http"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,7 +20,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupAuthHandler() *uiHttp.AuthHandler {
+func setupAuthHandler() (
+	*httpui.AuthHandler,
+	user.UserRepository,
+	auth.PasswordHasher,
+	auth.JWTManager,
+) {
 	ts := testStorage()
 	truncateTables(ts.DB)
 
@@ -29,18 +35,16 @@ func setupAuthHandler() *uiHttp.AuthHandler {
 	refreshTokenRepo := persistence.NewRefreshTokenRepository(ts.Redis)
 	refreshTokenManager := security.NewRefreshTokenManager()
 
-	login := auth.NewLogin(userRepo, hasher, jwt, refreshTokenRepo, refreshTokenManager)
-	refreshToken := auth.NewRefreshToken(jwt, refreshTokenRepo, refreshTokenManager)
+	login := authapp.NewLogin(userRepo, hasher, jwt, refreshTokenRepo, refreshTokenManager)
+	refreshToken := authapp.NewRefreshToken(jwt, refreshTokenRepo, refreshTokenManager)
 
-	return uiHttp.NewAuthHandler(login, nil, refreshToken)
+	handler := httpui.NewAuthHandler(login, nil, refreshToken)
+
+	return handler, userRepo, hasher, jwt
 }
 
 func TestAuthHandler_Login_Success(t *testing.T) {
-	ts := testStorage()
-	aHandler := setupAuthHandler()
-	repo := persistence.NewUserRepository(ts.DB)
-	hasher := security.NewPasswordHasher()
-	jwt := security.NewJWTManager("TestSecretKey")
+	handler, repo, hasher, jwt := setupAuthHandler()
 	hp, _ := hasher.Hash("password123")
 
 	newUser := &user.User{
@@ -71,7 +75,7 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 
 	t.Run(tc.name, func(t *testing.T) {
 		router := gin.Default()
-		router.POST("/auth/login", aHandler.Login)
+		router.POST("/auth/login", handler.Login)
 
 		body, _ := json.Marshal(tc.requestBody)
 		req, _ := http.NewRequest(http.MethodPost, "/auth/login", bytes.NewBuffer(body))
@@ -100,10 +104,7 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 }
 
 func TestAuthHandler_Login_Failed(t *testing.T) {
-	ts := testStorage()
-	aHandler := setupAuthHandler()
-	repo := persistence.NewUserRepository(ts.DB)
-	hasher := security.NewPasswordHasher()
+	handler, repo, hasher, _ := setupAuthHandler()
 	hp, _ := hasher.Hash("password123")
 
 	newUser := &user.User{
@@ -165,7 +166,7 @@ func TestAuthHandler_Login_Failed(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			router := gin.Default()
-			router.POST("/auth/login", aHandler.Login)
+			router.POST("/auth/login", handler.Login)
 
 			body, _ := json.Marshal(tc.requestBody)
 			req, _ := http.NewRequest(http.MethodPost, "/auth/login", bytes.NewBuffer(body))
