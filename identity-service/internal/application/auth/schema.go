@@ -9,9 +9,13 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type RefreshRequest struct {
+type TokenBody struct {
 	RefreshToken string `json:"refreshToken" binding:"required"`
 }
+
+type RefreshRequest = TokenBody
+
+type LogoutRequest = TokenBody
 
 type TokenResponse struct {
 	AccessToken  string `json:"accessToken"`
