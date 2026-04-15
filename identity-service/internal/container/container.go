@@ -56,7 +56,8 @@ func NewContainer() (*Container, error) {
 	login := authapp.NewLogin(userRepo, hasher, jwtManager, refreshTokenRepo, refreshTokenManager)
 	emailOTP := authapp.NewRequestEmailOTP(emailVerificationRepo, otp, publisher)
 	refreshToken := authapp.NewRefreshToken(jwtManager, refreshTokenRepo, refreshTokenManager)
-	authHandler := http.NewAuthHandler(login, emailOTP, refreshToken)
+	logout := authapp.NewLogout(refreshTokenRepo, refreshTokenManager)
+	authHandler := http.NewAuthHandler(login, emailOTP, refreshToken, logout)
 
 	return &Container{
 		UserHandler: userHandler,

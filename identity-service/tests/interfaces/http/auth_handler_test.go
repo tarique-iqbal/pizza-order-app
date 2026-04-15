@@ -11,6 +11,7 @@ import (
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
 	httpui "identity-service/internal/interfaces/http"
+	"identity-service/tests/infrastructure/db/fixtures"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -40,8 +41,9 @@ func setupAuthHandler() (
 
 	login := authapp.NewLogin(userRepo, hasher, jwt, refreshTokenRepo, refreshTokenManager)
 	refreshToken := authapp.NewRefreshToken(jwt, refreshTokenRepo, refreshTokenManager)
+	logout := authapp.NewLogout(refreshTokenRepo, refreshTokenManager)
 
-	handler := httpui.NewAuthHandler(login, nil, refreshToken)
+	handler := httpui.NewAuthHandler(login, nil, refreshToken, logout)
 
 	return handler, userRepo, hasher, jwt, refreshTokenRepo, refreshTokenManager
 }
@@ -312,4 +314,114 @@ func TestAuthHandler_Refresh_Rotation(t *testing.T) {
 	router.ServeHTTP(w2, req2)
 
 	require.Equal(t, http.StatusUnauthorized, w2.Code)
+}
+
+func TestAuthHandler_Logout_Success(t *testing.T) {
+	ctx := context.Background()
+
+	handler, _, _, _, repo, manager := setupAuthHandler()
+
+	user, _ := fixtures.CreateUser(ts.DB, "owner")
+
+	router := gin.Default()
+	router.Use(MockAuthMiddleware(user.ID, user.Role))
+	router.POST("/auth/logout", handler.Logout)
+
+	rawToken, _ := manager.Generate()
+	hashed := manager.Hash(rawToken)
+
+	claims := auth.UserClaims{
+		UserID: 1,
+		Role:   "owner",
+	}
+
+	ttl := int64(7) * 24 * 3600
+	_ = repo.Save(ctx, hashed, claims, ttl)
+
+	body, _ := json.Marshal(authapp.RefreshRequest{
+		RefreshToken: rawToken,
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/auth/logout", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer mock-valid-token")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	// verify deleted
+	_, err := repo.Find(ctx, hashed)
+	require.Error(t, err)
+}
+
+func TestAuthHandler_Logout_Idempotent(t *testing.T) {
+	ctx := context.Background()
+
+	handler, _, _, _, repo, manager := setupAuthHandler()
+
+	user, _ := fixtures.CreateUser(ts.DB, "owner")
+
+	router := gin.Default()
+	router.Use(MockAuthMiddleware(user.ID, user.Role))
+	router.POST("/auth/logout", handler.Logout)
+
+	rawToken, _ := manager.Generate()
+	hashed := manager.Hash(rawToken)
+
+	claims := auth.UserClaims{
+		UserID: 1,
+		Role:   "owner",
+	}
+
+	ttl := int64(7) * 24 * 3600
+	_ = repo.Save(ctx, hashed, claims, ttl)
+
+	body, _ := json.Marshal(authapp.RefreshRequest{
+		RefreshToken: rawToken,
+	})
+
+	// First call
+	req1 := httptest.NewRequest(http.MethodPost, "/auth/logout", bytes.NewReader(body))
+	req1.Header.Set("Content-Type", "application/json")
+	req1.Header.Set("Authorization", "Bearer mock-valid-token")
+
+	w1 := httptest.NewRecorder()
+	router.ServeHTTP(w1, req1)
+
+	require.Equal(t, http.StatusOK, w1.Code)
+
+	// Second call
+	req2 := httptest.NewRequest(http.MethodPost, "/auth/logout", bytes.NewReader(body))
+	req2.Header.Set("Content-Type", "application/json")
+	req2.Header.Set("Authorization", "Bearer mock-valid-token")
+
+	w2 := httptest.NewRecorder()
+	router.ServeHTTP(w2, req2)
+
+	require.Equal(t, http.StatusOK, w2.Code)
+}
+
+func TestAuthHandler_Logout_InvalidRequest(t *testing.T) {
+	handler, _, _, _, _, _ := setupAuthHandler()
+
+	user, _ := fixtures.CreateUser(ts.DB, "owner")
+
+	router := gin.Default()
+	router.Use(MockAuthMiddleware(user.ID, user.Role))
+	router.POST("/auth/logout", handler.Logout)
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/auth/logout",
+		bytes.NewReader([]byte(`{}`)), // missing refreshToken
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer mock-valid-token")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
 }

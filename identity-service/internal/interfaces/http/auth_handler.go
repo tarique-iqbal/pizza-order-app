@@ -12,17 +12,20 @@ type AuthHandler struct {
 	login        *auth.Login
 	emailOTP     *auth.RequestEmailOTP
 	refreshToken *auth.RefreshToken
+	logout       *auth.Logout
 }
 
 func NewAuthHandler(
 	login *auth.Login,
 	emailOTP *auth.RequestEmailOTP,
 	refreshToken *auth.RefreshToken,
+	logout *auth.Logout,
 ) *AuthHandler {
 	return &AuthHandler{
 		login:        login,
 		emailOTP:     emailOTP,
 		refreshToken: refreshToken,
+		logout:       logout,
 	}
 }
 
@@ -79,4 +82,27 @@ func (h *AuthHandler) Refresh(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, response)
+}
+
+func (h *AuthHandler) Logout(ctx *gin.Context) {
+	var input auth.LogoutRequest
+
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	if _, exists := ctx.Get("userID"); !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if err := h.logout.Execute(ctx, input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "logged out successfully",
+	})
 }

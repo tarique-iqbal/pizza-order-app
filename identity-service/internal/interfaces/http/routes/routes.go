@@ -14,5 +14,5 @@ type Handlers struct {
 
 func SetupRoutes(router *gin.Engine, h *Handlers, m *middlewares.Middleware) {
 	SetupUserRoutes(router, h.UserHandler, m)
-	SetupAuthRoutes(router, h.AuthHandler)
+	SetupAuthRoutes(router, h.AuthHandler, m)
 }
