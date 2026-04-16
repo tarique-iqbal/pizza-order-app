@@ -13,7 +13,7 @@ END$$;
 
 -- Create users table with everything included
 CREATE TABLE users (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id UUID PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
