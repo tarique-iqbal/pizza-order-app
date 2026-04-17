@@ -28,7 +28,7 @@ func TestRefreshTokenRepository_SaveAndFind(t *testing.T) {
 
 	hashedToken := "test-token"
 	claims := auth.UserClaims{
-		UserID: 42,
+		UserID: "usr_424",
 		Role:   "owner",
 	}
 
@@ -65,7 +65,7 @@ func TestRefreshTokenRepository_Delete(t *testing.T) {
 
 	hashedToken := "delete-token"
 	claims := auth.UserClaims{
-		UserID: 99,
+		UserID: "usr_999",
 		Role:   "owner",
 	}
 
@@ -89,7 +89,7 @@ func TestRefreshTokenRepository_TTLExpiry(t *testing.T) {
 
 	hashedToken := "ttl-token"
 	claims := auth.UserClaims{
-		UserID: 7,
+		UserID: "usr_777",
 		Role:   "owner",
 	}
 

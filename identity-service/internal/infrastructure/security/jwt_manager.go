@@ -2,10 +2,12 @@ package security
 
 import (
 	"errors"
+	"fmt"
 	"identity-service/internal/domain/auth"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type jwtManager struct {
@@ -17,12 +19,12 @@ func NewJWTManager(secret string) auth.JWTManager {
 }
 
 type jwtClaims struct {
-	UserID int    `json:"user_id"`
+	UserID string `json:"user_id"`
 	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-func (j *jwtManager) Generate(userID int, role string) (string, error) {
+func (j *jwtManager) Generate(userID string, role string) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := jwtClaims{
 		UserID: userID,
@@ -38,6 +40,9 @@ func (j *jwtManager) Generate(userID int, role string) (string, error) {
 
 func (j *jwtManager) Parse(tokenString string) (*auth.UserClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &jwtClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
 		return j.secret, nil
 	})
 
@@ -45,9 +50,18 @@ func (j *jwtManager) Parse(tokenString string) (*auth.UserClaims, error) {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*jwtClaims); ok && token.Valid {
-		return &auth.UserClaims{UserID: claims.UserID, Role: claims.Role}, nil
+	claims, ok := token.Claims.(*jwtClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("invalid token")
 	}
 
-	return nil, errors.New("invalid token")
+	_, err = uuid.Parse(claims.UserID)
+	if err != nil {
+		return nil, errors.New("invalid user id format in token")
+	}
+
+	return &auth.UserClaims{
+		UserID: claims.UserID,
+		Role:   claims.Role,
+	}, nil
 }

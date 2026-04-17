@@ -5,6 +5,7 @@ import (
 	"identity-service/internal/infrastructure/security"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -24,6 +25,9 @@ func LoadUserFixtures(db *gorm.DB) error {
 	}
 
 	for _, u := range users {
+		userID, _ := uuid.NewV7()
+		u.ID = userID
+
 		db.Create(&u)
 	}
 
@@ -39,6 +43,10 @@ func CreateUser(db *gorm.DB, role string) (*user.User, error) {
 		Role:      role,
 		CreatedAt: time.Now(),
 	}
+
+	userID, _ := uuid.NewV7()
+	user.ID = userID
+
 	if err := db.Create(&user).Error; err != nil {
 		return nil, err
 	}

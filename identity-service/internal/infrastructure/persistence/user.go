@@ -5,6 +5,7 @@ import (
 	"errors"
 	"identity-service/internal/domain/user"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -40,7 +41,7 @@ func (repo *userRepo) EmailExists(email string) (bool, error) {
 	return count > 0, err
 }
 
-func (r *userRepo) FindByID(ctx context.Context, id int) (*user.User, error) {
+func (r *userRepo) FindByID(ctx context.Context, id uuid.UUID) (*user.User, error) {
 	var u user.User
 
 	err := r.db.WithContext(ctx).
