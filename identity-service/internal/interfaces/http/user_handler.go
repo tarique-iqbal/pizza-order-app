@@ -5,9 +5,9 @@ import (
 	"identity-service/internal/interfaces/http/mapper"
 	"identity-service/internal/interfaces/http/validation"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type UserHandler struct {
@@ -39,25 +39,25 @@ func (h *UserHandler) Register(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, response)
 }
 
-func (h *UserHandler) FindByID(c *gin.Context) {
-	idParam := c.Param("id")
+func (h *UserHandler) FindByID(ctx *gin.Context) {
+	idParam := ctx.Param("id")
 
-	id, err := strconv.Atoi(idParam)
+	userID, err := uuid.Parse(idParam)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
-	res, err := h.findByID.Execute(c, id)
+	res, err := h.findByID.Execute(ctx, userID)
 	if err != nil {
 		if err.Error() == "user not found" {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, res)
 }

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,9 +21,10 @@ func InitJWT() auth.JWTManager {
 func TestAuthMiddleware_ValidToken(t *testing.T) {
 	jwtManager := InitJWT()
 
-	userID := 1
+	userID, _ := uuid.NewV7()
 	role := "user"
-	token, _ := jwtManager.Generate(userID, role)
+
+	token, _ := jwtManager.Generate(userID.String(), role)
 
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)
@@ -32,10 +34,10 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 	ctx.Request = req
 
 	middlewares.AuthMiddleware(jwtManager)(ctx)
-	ctxUserID := ctx.MustGet("userID").(int)
+	ctxUserID := ctx.MustGet("userID")
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, userID, ctxUserID)
+	assert.Equal(t, userID.String(), ctxUserID)
 }
 
 func TestAuthMiddleware_InvalidToken(t *testing.T) {

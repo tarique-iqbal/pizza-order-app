@@ -13,10 +13,10 @@ import (
 	"identity-service/tests/infrastructure/db/fixtures"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -88,10 +88,10 @@ func TestUserHandler_FindByID_Success(t *testing.T) {
 	user, _ := fixtures.CreateUser(ts.DB, "user")
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID, user.Role))
+	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
 	router.GET("/users/:id", handler.FindByID)
 
-	req, _ := http.NewRequest(http.MethodGet, "/users/"+strconv.Itoa(user.ID), nil)
+	req, _ := http.NewRequest(http.MethodGet, "/users/"+user.ID.String(), nil)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer mock-valid-token")
 
@@ -119,10 +119,12 @@ func TestUserHandler_FindByID_NotFound(t *testing.T) {
 	user, _ := fixtures.CreateUser(ts.DB, "user")
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID, user.Role))
+	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
 	router.GET("/users/:id", handler.FindByID)
 
-	req := httptest.NewRequest(http.MethodGet, "/users/989", nil)
+	newID, _ := uuid.NewV7()
+
+	req := httptest.NewRequest(http.MethodGet, "/users/"+newID.String(), nil)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer mock-valid-token")
 
@@ -145,10 +147,10 @@ func TestUserHandler_FindByID_Failure_Unauthorized(t *testing.T) {
 	user, _ := fixtures.CreateUser(ts.DB, "user")
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID, user.Role))
+	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
 	router.GET("/users/:id", handler.FindByID)
 
-	req, _ := http.NewRequest(http.MethodGet, "/users/"+strconv.Itoa(user.ID), nil)
+	req, _ := http.NewRequest(http.MethodGet, "/users/"+user.ID.String(), nil)
 	req.Header.Set("Content-Type", "application/json")
 	// No Authorization header
 

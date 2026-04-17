@@ -199,7 +199,7 @@ func TestAuthHandler_Refresh_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	claims := auth.UserClaims{
-		UserID: 232,
+		UserID: "usr_232",
 		Role:   "owner",
 	}
 
@@ -288,7 +288,7 @@ func TestAuthHandler_Refresh_Rotation(t *testing.T) {
 	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
-		UserID: 232,
+		UserID: "usr_232",
 		Role:   "owner",
 	}
 
@@ -324,14 +324,14 @@ func TestAuthHandler_Logout_Success(t *testing.T) {
 	user, _ := fixtures.CreateUser(ts.DB, "owner")
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID, user.Role))
+	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
 	router.POST("/auth/logout", handler.Logout)
 
 	rawToken, _ := manager.Generate()
 	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
-		UserID: 1,
+		UserID: user.ID.String(),
 		Role:   "owner",
 	}
 
@@ -364,14 +364,14 @@ func TestAuthHandler_Logout_Idempotent(t *testing.T) {
 	user, _ := fixtures.CreateUser(ts.DB, "owner")
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID, user.Role))
+	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
 	router.POST("/auth/logout", handler.Logout)
 
 	rawToken, _ := manager.Generate()
 	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
-		UserID: 1,
+		UserID: user.ID.String(),
 		Role:   "owner",
 	}
 
@@ -409,7 +409,7 @@ func TestAuthHandler_Logout_InvalidRequest(t *testing.T) {
 	user, _ := fixtures.CreateUser(ts.DB, "owner")
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID, user.Role))
+	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
 	router.POST("/auth/logout", handler.Logout)
 
 	req := httptest.NewRequest(
