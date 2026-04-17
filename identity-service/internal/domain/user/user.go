@@ -2,10 +2,12 @@ package user
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type User struct {
-	ID        int        `gorm:"primaryKey"`
+	ID        uuid.UUID  `gorm:"type:uuid;primaryKey"`
 	FirstName string     `gorm:"size:255;not null"`
 	LastName  string     `gorm:"size:255;not null"`
 	Email     string     `gorm:"size:255;unique;not null"`
