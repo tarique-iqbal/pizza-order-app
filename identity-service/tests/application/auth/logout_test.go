@@ -37,7 +37,7 @@ func TestLogout_Success(t *testing.T) {
 	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
-		UserID: 232,
+		UserID: "usr_232",
 		Role:   "owner",
 	}
 
@@ -64,7 +64,7 @@ func TestLogout_Idempotent(t *testing.T) {
 	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
-		UserID: 232,
+		UserID: "usr_232",
 		Role:   "owner",
 	}
 

@@ -1,6 +1,10 @@
 package user
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type RegisterRequest struct {
 	FirstName string `json:"first_name" binding:"required"`
@@ -12,7 +16,7 @@ type RegisterRequest struct {
 }
 
 type Response struct {
-	ID       int          `json:"id"`
+	ID       uuid.UUID    `json:"id"`
 	Name     UserName     `json:"name"`
 	Email    string       `json:"email"`
 	Role     string       `json:"role"`

@@ -7,6 +7,8 @@ import (
 	"identity-service/internal/shared/event"
 	"log"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const defaultStatus = "active"
@@ -50,6 +52,12 @@ func (uc *Register) Execute(ctx context.Context, input RegisterRequest) (Respons
 		Role:      input.Role,
 		Status:    defaultStatus,
 	}
+
+	userID, err := uuid.NewV7()
+	if err != nil {
+		return Response{}, err
+	}
+	newUser.ID = userID
 
 	if err := uc.repo.Create(ctx, &newUser); err != nil {
 		return Response{}, err

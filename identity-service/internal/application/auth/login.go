@@ -51,7 +51,7 @@ func (uc *Login) Execute(
 		return TokenResponse{}, errors.New("invalid credentials")
 	}
 
-	accessToken, err := uc.jwtManager.Generate(user.ID, user.Role)
+	accessToken, err := uc.jwtManager.Generate(user.ID.String(), user.Role)
 	if err != nil {
 		return TokenResponse{}, err
 	}
@@ -64,7 +64,7 @@ func (uc *Login) Execute(
 	hashedToken := uc.refreshTokenManager.Hash(refreshToken)
 
 	claims := auth.UserClaims{
-		UserID: user.ID,
+		UserID: user.ID.String(),
 		Role:   user.Role,
 	}
 
