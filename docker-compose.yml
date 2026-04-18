@@ -1,18 +1,36 @@
 services:
-  # Database
-  postgres:
+  # Database (identity service)
+  postgres-identity:
     image: postgres:17-alpine
-    container_name: pizza-postgres
+    container_name: pizza-pg-identity
     environment:
-      POSTGRES_USER: pizza_user
-      POSTGRES_PASSWORD: pizza_pass
-      POSTGRES_DB: pizza_db
+      POSTGRES_USER: user_dev
+      POSTGRES_PASSWORD: pass_dev
+      POSTGRES_DB: identity_db
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pg_identity:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pizza_user -d pizza_db"]
+      test: ["CMD-SHELL", "pg_isready -U user_dev -d identity_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Database (restaurant service)
+  postgres-restaurant:
+    image: postgres:17-alpine
+    container_name: pizza-pg-restaurant
+    environment:
+      POSTGRES_USER: user_dev
+      POSTGRES_PASSWORD: pass_dev
+      POSTGRES_DB: restaurant_db
+    volumes:
+      - pg_restaurant:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_dev -d restaurant_db"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,8 +40,8 @@ services:
     image: rabbitmq:3-management-alpine
     container_name: pizza-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: pizza_user
-      RABBITMQ_DEFAULT_PASS: pizza_pass
+      RABBITMQ_DEFAULT_USER: user_dev
+      RABBITMQ_DEFAULT_PASS: pass_dev
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -76,7 +94,7 @@ services:
     volumes:
       - ./identity-service:/app
     depends_on:
-      postgres:
+      postgres-identity:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -88,7 +106,6 @@ services:
     ports:
       - "8080:8080"
     command: ["air", "-c", ".air.toml"]
-    user: root
 
   # Restaurant Service
   restaurant-service:
@@ -97,7 +114,7 @@ services:
       context: .
       dockerfile: .docker/restaurant-service/Dockerfile
     depends_on:
-      postgres:
+      postgres-restaurant:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -121,6 +138,7 @@ services:
       APP_ENV: docker
 
 volumes:
-  postgres_data:
+  pg_identity:
+  pg_restaurant:
   elasticsearch_data:
   redis_data:
