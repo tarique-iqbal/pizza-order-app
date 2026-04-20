@@ -31,8 +31,8 @@ func NewContainer() (*Container, error) {
 	emailVerificationCreatedHandler := aEmail.NewEmailVerificationCreatedHandler(smtpSender, template)
 
 	dispatcher := aEmail.NewEventDispatcher()
-	dispatcher.Register("user.registered", userRegisteredHandler)
-	dispatcher.Register("email.verification_created", emailVerificationCreatedHandler)
+	dispatcher.Register(messaging.Exchanges["identity.events"][1], userRegisteredHandler)
+	dispatcher.Register(messaging.Exchanges["identity.events"][0], emailVerificationCreatedHandler)
 
 	consumer, err := messaging.NewRabbitMQConsumer(amqpURL)
 

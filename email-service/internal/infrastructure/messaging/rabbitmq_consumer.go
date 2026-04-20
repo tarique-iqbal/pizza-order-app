@@ -13,13 +13,17 @@ import (
 )
 
 const (
-	ExchangeName     = "email_exchange"
 	QueueName        = "email_queue"
 	DLXName          = "email_dlx"
-	VerificationKey  = "email.verification_created"
-	RegistrationKey  = "user.registered"
 	MaxRetryAttempts = 3
 )
+
+var Exchanges = map[string][]string{
+	"identity.events": {
+		"email.verification_created",
+		"user.registered",
+	},
+}
 
 type RabbitMQConsumer struct {
 	conn    *amqp091.Connection
@@ -52,8 +56,10 @@ func (c *RabbitMQConsumer) connect() error {
 	}
 
 	// Declare main exchange
-	if err := ch.ExchangeDeclare(ExchangeName, "topic", true, false, false, false, nil); err != nil {
-		return fmt.Errorf("exchange declaration failed: %w", err)
+	for exchange := range Exchanges {
+		if err := ch.ExchangeDeclare(exchange, "topic", true, false, false, false, nil); err != nil {
+			return fmt.Errorf("exchange declaration failed: %w", err)
+		}
 	}
 
 	// Queue with DLX
@@ -67,9 +73,11 @@ func (c *RabbitMQConsumer) connect() error {
 	}
 
 	// Bind routing keys
-	for _, key := range []string{VerificationKey, RegistrationKey} {
-		if err := ch.QueueBind(q.Name, key, ExchangeName, false, nil); err != nil {
-			return fmt.Errorf("queue bind failed for %s: %w", key, err)
+	for exchange, routingKeys := range Exchanges {
+		for _, key := range routingKeys {
+			if err := ch.QueueBind(q.Name, key, exchange, false, nil); err != nil {
+				return fmt.Errorf("queue bind failed for exchange %s with key %s: %w", exchange, key, err)
+			}
 		}
 	}
 
