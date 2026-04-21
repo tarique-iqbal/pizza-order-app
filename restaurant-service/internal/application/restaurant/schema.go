@@ -1,6 +1,6 @@
 package restaurant
 
-type RestaurantCreateDTO struct {
+type CreateRequest struct {
 	UserID       uint     `json:"user_id"`
 	Name         string   `json:"name" binding:"required,max=100"`
 	Email        string   `json:"email" binding:"required,email"`
@@ -14,7 +14,7 @@ type RestaurantCreateDTO struct {
 	Specialties  []string `json:"specialties"`
 }
 
-type RestaurantResponseDTO struct {
+type Response struct {
 	ID           uint     `json:"id"`
 	UserID       uint     `json:"user_id"`
 	Name         string   `json:"name"`
@@ -27,4 +27,18 @@ type RestaurantResponseDTO struct {
 	Specialties  []string `json:"specialties"`
 	CreatedAt    string   `json:"created_at"`
 	UpdatedAt    *string  `json:"updated_at,omitempty"`
+}
+
+type CreatePizzaSizeRequest struct {
+	Title string `json:"title" binding:"required"`
+	Size  int    `json:"size" binding:"required,gt=0"`
+}
+
+type PizzaSizeResponse struct {
+	ID           uint    `json:"id"`
+	RestaurantID uint    `json:"restaurant_id"`
+	Title        string  `json:"title"`
+	Size         int     `json:"size"`
+	CreatedAt    string  `json:"created_at"`
+	UpdatedAt    *string `json:"updated_at,omitempty"`
 }
