@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"restaurant-service/internal/domain/restaurant"
-	sErrors "restaurant-service/internal/shared/errors"
+	apperr "restaurant-service/internal/shared/errors"
 )
 
 type CreatePizzaSizeUseCase struct {
@@ -25,22 +25,22 @@ func (uc *CreatePizzaSizeUseCase) Execute(
 	ctx context.Context,
 	restaurantID uint,
 	ownerID uint,
-	input PizzaSizeCreateDTO,
-) (PizzaSizeResponseDTO, error) {
+	input CreatePizzaSizeRequest,
+) (PizzaSizeResponse, error) {
 	owns, err := uc.restaurantRepo.IsOwnedBy(ctx, restaurantID, ownerID)
 	if err != nil {
-		return PizzaSizeResponseDTO{}, fmt.Errorf("failed to verify ownership: %w", err)
+		return PizzaSizeResponse{}, fmt.Errorf("failed to verify ownership: %w", err)
 	}
 	if !owns {
-		return PizzaSizeResponseDTO{}, sErrors.ErrForbidden
+		return PizzaSizeResponse{}, apperr.ErrForbidden
 	}
 
 	exists, err := uc.pizzaSizeRepo.PizzaSizeExists(ctx, restaurantID, input.Size)
 	if err != nil {
-		return PizzaSizeResponseDTO{}, err
+		return PizzaSizeResponse{}, err
 	}
 	if exists {
-		return PizzaSizeResponseDTO{}, restaurant.ErrPizzaSizeAlreadyExists
+		return PizzaSizeResponse{}, restaurant.ErrPizzaSizeAlreadyExists
 	}
 
 	newPizzaSize := &restaurant.PizzaSize{
@@ -50,10 +50,10 @@ func (uc *CreatePizzaSizeUseCase) Execute(
 	}
 
 	if err := uc.pizzaSizeRepo.Create(ctx, newPizzaSize); err != nil {
-		return PizzaSizeResponseDTO{}, err
+		return PizzaSizeResponse{}, err
 	}
 
-	response := PizzaSizeResponseDTO{
+	response := PizzaSizeResponse{
 		ID:           newPizzaSize.ID,
 		RestaurantID: newPizzaSize.RestaurantID,
 		Title:        newPizzaSize.Title,

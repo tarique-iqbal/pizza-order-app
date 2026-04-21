@@ -2,10 +2,10 @@ package restaurant_test
 
 import (
 	"context"
-	aRestaurant "restaurant-service/internal/application/restaurant"
+	resapp "restaurant-service/internal/application/restaurant"
 	"restaurant-service/internal/domain/restaurant"
 	"restaurant-service/internal/infrastructure/persistence"
-	sErrors "restaurant-service/internal/shared/errors"
+	apperr "restaurant-service/internal/shared/errors"
 	"restaurant-service/tests/infrastructure/db"
 	"restaurant-service/tests/infrastructure/db/fixtures"
 	"testing"
@@ -16,7 +16,7 @@ import (
 
 type createPizzaSizeUseCaseTestEnv struct {
 	Restaurant         *restaurant.Restaurant
-	CreateRestaurantUC *aRestaurant.CreatePizzaSizeUseCase
+	CreateRestaurantUC *resapp.CreatePizzaSizeUseCase
 }
 
 func setupCreatePizzaSizeUseCase() createPizzaSizeUseCaseTestEnv {
@@ -33,7 +33,7 @@ func setupCreatePizzaSizeUseCase() createPizzaSizeUseCaseTestEnv {
 
 	pizzaRepo := persistence.NewPizzaSizeRepository(testDB)
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
-	createPizzaSizeUC := aRestaurant.NewCreatePizzaSizeUseCase(pizzaRepo, restaurantRepo)
+	createPizzaSizeUC := resapp.NewCreatePizzaSizeUseCase(pizzaRepo, restaurantRepo)
 
 	return createPizzaSizeUseCaseTestEnv{
 		Restaurant:         rest,
@@ -44,7 +44,7 @@ func setupCreatePizzaSizeUseCase() createPizzaSizeUseCaseTestEnv {
 func TestCreatePizzaSizeUseCase_Execute_Success(t *testing.T) {
 	env := setupCreatePizzaSizeUseCase()
 
-	input := aRestaurant.PizzaSizeCreateDTO{
+	input := resapp.CreatePizzaSizeRequest{
 		Title: "Large",
 		Size:  12,
 	}
@@ -65,7 +65,7 @@ func TestCreatePizzaSizeUseCase_Execute_Success(t *testing.T) {
 func TestCreatePizzaSizeUseCase_Execute_Forbidden(t *testing.T) {
 	env := setupCreatePizzaSizeUseCase()
 
-	input := aRestaurant.PizzaSizeCreateDTO{
+	input := resapp.CreatePizzaSizeRequest{
 		Title: "Medium",
 		Size:  10,
 	}
@@ -76,13 +76,13 @@ func TestCreatePizzaSizeUseCase_Execute_Forbidden(t *testing.T) {
 		input,
 	)
 
-	assert.ErrorIs(t, err, sErrors.ErrForbidden)
+	assert.ErrorIs(t, err, apperr.ErrForbidden)
 }
 
 func TestCreatePizzaSizeUseCase_Execute_PizzaSize_Duplicate(t *testing.T) {
 	env := setupCreatePizzaSizeUseCase()
 
-	input := aRestaurant.PizzaSizeCreateDTO{
+	input := resapp.CreatePizzaSizeRequest{
 		Title: "Large",
 		Size:  12,
 	}

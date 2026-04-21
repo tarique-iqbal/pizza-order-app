@@ -20,7 +20,7 @@ func NewRestaurantHandler(
 }
 
 func (h *RestaurantHandler) Create(ctx *gin.Context) {
-	var dto restaurant.RestaurantCreateDTO
+	var dto restaurant.CreateRequest
 	reqCtx := ctx.Request.Context()
 
 	if err := ctx.ShouldBindJSON(&dto); err != nil {

@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"restaurant-service/internal/application/restaurant"
 	"restaurant-service/internal/infrastructure/persistence"
-	uiHttp "restaurant-service/internal/interfaces/http"
+	httpui "restaurant-service/internal/interfaces/http"
 	"restaurant-service/internal/interfaces/http/middlewares"
 	"restaurant-service/tests/infrastructure/db/fixtures"
 	"testing"
@@ -17,14 +17,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupPizzaSizeHandler(t *testing.T) *uiHttp.PizzaSizeHandler {
+func setupPizzaSizeHandler(t *testing.T) *httpui.PizzaSizeHandler {
 	resetTables(t)
 
 	pizzaSizeRepo := persistence.NewPizzaSizeRepository(testDB)
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
 	createPizzaSizeUC := restaurant.NewCreatePizzaSizeUseCase(pizzaSizeRepo, restaurantRepo)
 
-	return uiHttp.NewPizzaSizeHandler(createPizzaSizeUC)
+	return httpui.NewPizzaSizeHandler(createPizzaSizeUC)
 }
 
 func TestPizzaSizeHandler_Create_Success(t *testing.T) {
@@ -50,7 +50,7 @@ func TestPizzaSizeHandler_Create_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, recorder.Code)
 
-	var response restaurant.PizzaSizeResponseDTO
+	var response restaurant.PizzaSizeResponse
 	_ = json.Unmarshal(recorder.Body.Bytes(), &response)
 	assert.Equal(t, "Large", response.Title)
 	assert.Equal(t, 14, response.Size)

@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"restaurant-service/internal/application/restaurant"
-	dRestaurant "restaurant-service/internal/domain/restaurant"
+	resapp "restaurant-service/internal/application/restaurant"
+	"restaurant-service/internal/domain/restaurant"
 	"restaurant-service/internal/infrastructure/persistence"
-	uiHttp "restaurant-service/internal/interfaces/http"
+	httpui "restaurant-service/internal/interfaces/http"
 	"restaurant-service/internal/interfaces/http/middlewares"
 	"restaurant-service/tests/infrastructure/db/fixtures"
 	"testing"
@@ -23,19 +23,19 @@ type mockGeocoder struct {
 	err error
 }
 
-func (m *mockGeocoder) GeocodeAddress(addr dRestaurant.RestaurantAddress) (float64, float64, error) {
+func (m *mockGeocoder) GeocodeAddress(addr restaurant.RestaurantAddress) (float64, float64, error) {
 	return m.lat, m.lon, m.err
 }
 
-func setupRestaurantHandler(t *testing.T) *uiHttp.RestaurantHandler {
+func setupRestaurantHandler(t *testing.T) *httpui.RestaurantHandler {
 	resetTables(t)
 
 	mockGeo := &mockGeocoder{lat: 52.52, lon: 13.405, err: nil}
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
 	restAddrRepo := persistence.NewRestaurantAddressRepository(testDB)
-	createRestaurantUC := restaurant.NewCreateRestaurantUseCase(testDB, mockGeo, restaurantRepo, restAddrRepo)
+	createRestaurantUC := resapp.NewCreateRestaurantUseCase(testDB, mockGeo, restaurantRepo, restAddrRepo)
 
-	return uiHttp.NewRestaurantHandler(createRestaurantUC)
+	return httpui.NewRestaurantHandler(createRestaurantUC)
 }
 
 func TestRestaurantHandler_Create_Success(t *testing.T) {
@@ -69,13 +69,13 @@ func TestRestaurantHandler_Create_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, recorder.Code)
 
-	var response restaurant.RestaurantResponseDTO
+	var response resapp.Response
 	json.Unmarshal(recorder.Body.Bytes(), &response)
 	assert.Equal(t, "unique@test.com", response.Email)
 	assert.Equal(t, "test-restaurant-cityville", response.Slug)
 	assert.Equal(t, usr.ID, response.UserID)
 
-	var createdRestaurant dRestaurant.Restaurant
+	var createdRestaurant restaurant.Restaurant
 	testDB.Where("slug = ?", "test-restaurant-cityville").First(&createdRestaurant)
 
 	assert.Equal(t, "Test Restaurant", createdRestaurant.Name)

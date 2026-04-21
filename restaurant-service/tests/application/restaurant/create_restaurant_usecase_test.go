@@ -3,7 +3,7 @@ package restaurant_test
 import (
 	"context"
 	"fmt"
-	aRestaurant "restaurant-service/internal/application/restaurant"
+	resapp "restaurant-service/internal/application/restaurant"
 	"restaurant-service/internal/domain/restaurant"
 	"restaurant-service/internal/domain/user"
 	"restaurant-service/internal/infrastructure/persistence"
@@ -27,7 +27,7 @@ func (m *mockGeocoder) GeocodeAddress(addr restaurant.RestaurantAddress) (float6
 type createRestaurantUseCaseTestEnv struct {
 	User               *user.User
 	RestaurantAddress  *restaurant.RestaurantAddress
-	CreateRestaurantUC *aRestaurant.CreateRestaurantUseCase
+	CreateRestaurantUC *resapp.CreateRestaurantUseCase
 }
 
 func setupCreateRestaurantUseCase(lat float64, lon float64, errGeo error) createRestaurantUseCaseTestEnv {
@@ -50,7 +50,7 @@ func setupCreateRestaurantUseCase(lat float64, lon float64, errGeo error) create
 	mockGeo := &mockGeocoder{lat: lat, lon: lon, err: errGeo}
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
 	restAddrRepo := persistence.NewRestaurantAddressRepository(testDB)
-	createRestaurantUC := aRestaurant.NewCreateRestaurantUseCase(testDB, mockGeo, restaurantRepo, restAddrRepo)
+	createRestaurantUC := resapp.NewCreateRestaurantUseCase(testDB, mockGeo, restaurantRepo, restAddrRepo)
 
 	return createRestaurantUseCaseTestEnv{
 		User:               usr,
@@ -62,7 +62,7 @@ func setupCreateRestaurantUseCase(lat float64, lon float64, errGeo error) create
 func TestCreateRestaurant_Success(t *testing.T) {
 	env := setupCreateRestaurantUseCase(52.52, 13.405, nil)
 
-	input := aRestaurant.RestaurantCreateDTO{
+	input := resapp.CreateRequest{
 		UserID:       env.User.ID,
 		Name:         "Test Restaurant",
 		Email:        "unique@test.com",
@@ -87,7 +87,7 @@ func TestCreateRestaurant_DuplicateEmail(t *testing.T) {
 
 	existingEmail := "kontakt@pizzaparadise.de"
 
-	input := aRestaurant.RestaurantCreateDTO{
+	input := resapp.CreateRequest{
 		UserID: env.User.ID, Name: "Another", Email: existingEmail, Phone: "123",
 		House: "1", Street: "X", City: "Y", PostalCode: "12345", DeliveryType: "pick_up", DeliveryKm: 5,
 	}
@@ -102,7 +102,7 @@ func TestCreateRestaurant_DuplicateSlug(t *testing.T) {
 	name := "Pizza Paradise"
 	city := "Hamburg"
 
-	input := aRestaurant.RestaurantCreateDTO{
+	input := resapp.CreateRequest{
 		UserID: env.User.ID, Name: name, Email: "newemail@test.com", Phone: "123",
 		House: "1", Street: "X", City: city, PostalCode: "12345", DeliveryType: "pick_up", DeliveryKm: 5,
 	}

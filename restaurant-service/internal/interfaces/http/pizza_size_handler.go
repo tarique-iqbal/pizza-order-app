@@ -29,7 +29,7 @@ func (h *PizzaSizeHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	var dto restaurant.PizzaSizeCreateDTO
+	var dto restaurant.CreatePizzaSizeRequest
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
 		errors := validation.ExtractValidationErrors(err)
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errors})

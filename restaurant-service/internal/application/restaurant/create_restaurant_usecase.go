@@ -33,27 +33,27 @@ func NewCreateRestaurantUseCase(
 	}
 }
 
-func (uc *CreateRestaurantUseCase) Execute(ctx context.Context, input RestaurantCreateDTO) (RestaurantResponseDTO, error) {
+func (uc *CreateRestaurantUseCase) Execute(ctx context.Context, input CreateRequest) (Response, error) {
 	if err := uc.checkEmailUnique(ctx, input.Email); err != nil {
-		return RestaurantResponseDTO{}, err
+		return Response{}, err
 	}
 
 	slugFinal, err := uc.generateUniqueSlug(ctx, input.Name, input.City)
 	if err != nil {
-		return RestaurantResponseDTO{}, err
+		return Response{}, err
 	}
 
 	address := uc.buildAddress(input)
 	if err := uc.geocodeAddress(&address); err != nil {
-		return RestaurantResponseDTO{}, err
+		return Response{}, err
 	}
 
 	newRestaurant, newAddress, err := uc.saveAddressAndRestaurant(ctx, address, input, slugFinal)
 	if err != nil {
-		return RestaurantResponseDTO{}, err
+		return Response{}, err
 	}
 
-	return RestaurantResponseDTO{
+	return Response{
 		ID:           newRestaurant.ID,
 		UserID:       newRestaurant.UserID,
 		Name:         newRestaurant.Name,
@@ -97,7 +97,7 @@ func (uc *CreateRestaurantUseCase) generateUniqueSlug(ctx context.Context, name,
 	return slugFinal, nil
 }
 
-func (uc *CreateRestaurantUseCase) buildAddress(input RestaurantCreateDTO) restaurant.RestaurantAddress {
+func (uc *CreateRestaurantUseCase) buildAddress(input CreateRequest) restaurant.RestaurantAddress {
 	return restaurant.RestaurantAddress{
 		House:      input.House,
 		Street:     input.Street,
@@ -125,7 +125,7 @@ func (uc *CreateRestaurantUseCase) geocodeAddress(addr *restaurant.RestaurantAdd
 func (uc *CreateRestaurantUseCase) saveAddressAndRestaurant(
 	ctx context.Context,
 	address restaurant.RestaurantAddress,
-	input RestaurantCreateDTO,
+	input CreateRequest,
 	slugFinal string,
 ) (restaurant.Restaurant, restaurant.RestaurantAddress, error) {
 	var newRestaurant restaurant.Restaurant
