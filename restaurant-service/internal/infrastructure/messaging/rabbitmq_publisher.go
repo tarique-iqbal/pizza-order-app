@@ -8,6 +8,8 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
+const exchangeName = "restaurant.events"
+
 type RabbitMQPublisher struct {
 	conn    *amqp091.Connection
 	channel *amqp091.Channel
@@ -25,13 +27,13 @@ func NewRabbitMQPublisher(amqpURL string) *RabbitMQPublisher {
 	}
 
 	err = ch.ExchangeDeclare(
-		"email_exchange", // Exchange name
-		"topic",          // Exchange type
-		true,             // Durable
-		false,            // Auto-delete
-		false,            // Internal
-		false,            // No-wait
-		nil,              // Arguments
+		exchangeName, // Exchange name
+		"topic",      // Exchange type
+		true,         // Durable
+		false,        // Auto-delete
+		false,        // Internal
+		false,        // No-wait
+		nil,          // Arguments
 	)
 	if err != nil {
 		log.Fatalf("Failed to declare exchange: %v", err)
@@ -50,8 +52,8 @@ func (p *RabbitMQPublisher) Publish(event event.Event) error {
 	}
 
 	err = p.channel.Publish(
-		"email_exchange",     // Exchange name
-		event.GetEventName(), // Routing key (e.g., user.registered, order.placed)
+		exchangeName,         // Exchange name
+		event.GetEventName(), // Routing key (e.g., restaurant.created)
 		false,                // Mandatory
 		false,                // Immediate
 		amqp091.Publishing{
