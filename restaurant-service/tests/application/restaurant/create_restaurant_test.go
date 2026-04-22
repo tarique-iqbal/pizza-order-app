@@ -24,13 +24,13 @@ func (m *mockGeocoder) GeocodeAddress(addr restaurant.RestaurantAddress) (float6
 	return m.lat, m.lon, m.err
 }
 
-type createRestaurantUseCaseTestEnv struct {
-	User               *user.User
-	RestaurantAddress  *restaurant.RestaurantAddress
-	CreateRestaurantUC *resapp.CreateRestaurantUseCase
+type createRestaurantTestEnv struct {
+	User              *user.User
+	RestaurantAddress *restaurant.RestaurantAddress
+	CreateRestaurant  *resapp.CreateRestaurant
 }
 
-func setupCreateRestaurantUseCase(lat float64, lon float64, errGeo error) createRestaurantUseCaseTestEnv {
+func setupCreateRestaurant(lat float64, lon float64, errGeo error) createRestaurantTestEnv {
 	testDB := db.SetupTestDB()
 
 	usr, err := fixtures.CreateUser(testDB, "owner")
@@ -50,17 +50,17 @@ func setupCreateRestaurantUseCase(lat float64, lon float64, errGeo error) create
 	mockGeo := &mockGeocoder{lat: lat, lon: lon, err: errGeo}
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
 	restAddrRepo := persistence.NewRestaurantAddressRepository(testDB)
-	createRestaurantUC := resapp.NewCreateRestaurantUseCase(testDB, mockGeo, restaurantRepo, restAddrRepo)
+	createRestaurantUC := resapp.NewCreateRestaurant(testDB, mockGeo, restaurantRepo, restAddrRepo)
 
-	return createRestaurantUseCaseTestEnv{
-		User:               usr,
-		RestaurantAddress:  restAddr,
-		CreateRestaurantUC: createRestaurantUC,
+	return createRestaurantTestEnv{
+		User:              usr,
+		RestaurantAddress: restAddr,
+		CreateRestaurant:  createRestaurantUC,
 	}
 }
 
 func TestCreateRestaurant_Success(t *testing.T) {
-	env := setupCreateRestaurantUseCase(52.52, 13.405, nil)
+	env := setupCreateRestaurant(52.52, 13.405, nil)
 
 	input := resapp.CreateRequest{
 		UserID:       env.User.ID,
@@ -76,14 +76,14 @@ func TestCreateRestaurant_Success(t *testing.T) {
 		Specialties:  []string{"italian", "wood_fired"},
 	}
 
-	rest, err := env.CreateRestaurantUC.Execute(context.Background(), input)
+	rest, err := env.CreateRestaurant.Execute(context.Background(), input)
 	assert.NoError(t, err)
 	assert.NotZero(t, rest.ID)
 	assert.Equal(t, input.Name, rest.Name)
 }
 
 func TestCreateRestaurant_DuplicateEmail(t *testing.T) {
-	env := setupCreateRestaurantUseCase(52.52, 13.405, nil)
+	env := setupCreateRestaurant(52.52, 13.405, nil)
 
 	existingEmail := "kontakt@pizzaparadise.de"
 
@@ -92,12 +92,12 @@ func TestCreateRestaurant_DuplicateEmail(t *testing.T) {
 		House: "1", Street: "X", City: "Y", PostalCode: "12345", DeliveryType: "pick_up", DeliveryKm: 5,
 	}
 
-	_, err := env.CreateRestaurantUC.Execute(context.Background(), input)
+	_, err := env.CreateRestaurant.Execute(context.Background(), input)
 	assert.ErrorIs(t, err, restaurant.ErrEmailAlreadyExists)
 }
 
 func TestCreateRestaurant_DuplicateSlug(t *testing.T) {
-	env := setupCreateRestaurantUseCase(52.52, 13.405, nil)
+	env := setupCreateRestaurant(52.52, 13.405, nil)
 
 	name := "Pizza Paradise"
 	city := "Hamburg"
@@ -107,7 +107,7 @@ func TestCreateRestaurant_DuplicateSlug(t *testing.T) {
 		House: "1", Street: "X", City: city, PostalCode: "12345", DeliveryType: "pick_up", DeliveryKm: 5,
 	}
 
-	rest, err := env.CreateRestaurantUC.Execute(context.Background(), input)
+	rest, err := env.CreateRestaurant.Execute(context.Background(), input)
 	assert.NoError(t, err)
 	assert.NotEqual(t, fmt.Sprintf("%s-%s", name, city), rest.Slug) // should be unique
 }

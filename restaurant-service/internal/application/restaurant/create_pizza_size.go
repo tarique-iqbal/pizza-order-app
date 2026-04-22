@@ -9,19 +9,19 @@ import (
 	apperr "restaurant-service/internal/shared/errors"
 )
 
-type CreatePizzaSizeUseCase struct {
+type CreatePizzaSize struct {
 	pizzaSizeRepo  restaurant.PizzaSizeRepository
 	restaurantRepo restaurant.RestaurantRepository
 }
 
-func NewCreatePizzaSizeUseCase(
+func NewCreatePizzaSize(
 	pizzaSizeRepo restaurant.PizzaSizeRepository,
 	restaurantRepo restaurant.RestaurantRepository,
-) *CreatePizzaSizeUseCase {
-	return &CreatePizzaSizeUseCase{pizzaSizeRepo: pizzaSizeRepo, restaurantRepo: restaurantRepo}
+) *CreatePizzaSize {
+	return &CreatePizzaSize{pizzaSizeRepo: pizzaSizeRepo, restaurantRepo: restaurantRepo}
 }
 
-func (uc *CreatePizzaSizeUseCase) Execute(
+func (uc *CreatePizzaSize) Execute(
 	ctx context.Context,
 	restaurantID uint,
 	ownerID uint,

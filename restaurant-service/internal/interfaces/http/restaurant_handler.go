@@ -2,7 +2,7 @@ package http
 
 import (
 	"net/http"
-	"restaurant-service/internal/application/restaurant"
+	resapp "restaurant-service/internal/application/restaurant"
 	"restaurant-service/internal/interfaces/http/response"
 	"restaurant-service/internal/interfaces/http/validation"
 
@@ -10,17 +10,17 @@ import (
 )
 
 type RestaurantHandler struct {
-	createRestaurantUC *restaurant.CreateRestaurantUseCase
+	createRestaurantUC *resapp.CreateRestaurant
 }
 
 func NewRestaurantHandler(
-	createRestaurantUC *restaurant.CreateRestaurantUseCase,
+	createRestaurantUC *resapp.CreateRestaurant,
 ) *RestaurantHandler {
 	return &RestaurantHandler{createRestaurantUC: createRestaurantUC}
 }
 
 func (h *RestaurantHandler) Create(ctx *gin.Context) {
-	var dto restaurant.CreateRequest
+	var dto resapp.CreateRequest
 	reqCtx := ctx.Request.Context()
 
 	if err := ctx.ShouldBindJSON(&dto); err != nil {

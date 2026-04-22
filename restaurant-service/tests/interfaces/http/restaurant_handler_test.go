@@ -33,9 +33,9 @@ func setupRestaurantHandler(t *testing.T) *httpui.RestaurantHandler {
 	mockGeo := &mockGeocoder{lat: 52.52, lon: 13.405, err: nil}
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
 	restAddrRepo := persistence.NewRestaurantAddressRepository(testDB)
-	createRestaurantUC := resapp.NewCreateRestaurantUseCase(testDB, mockGeo, restaurantRepo, restAddrRepo)
+	createRestaurant := resapp.NewCreateRestaurant(testDB, mockGeo, restaurantRepo, restAddrRepo)
 
-	return httpui.NewRestaurantHandler(createRestaurantUC)
+	return httpui.NewRestaurantHandler(createRestaurant)
 }
 
 func TestRestaurantHandler_Create_Success(t *testing.T) {

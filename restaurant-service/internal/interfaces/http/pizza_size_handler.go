@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"restaurant-service/internal/application/restaurant"
+	resapp "restaurant-service/internal/application/restaurant"
 	"restaurant-service/internal/interfaces/http/response"
 	"restaurant-service/internal/interfaces/http/validation"
 
@@ -12,10 +12,10 @@ import (
 )
 
 type PizzaSizeHandler struct {
-	createPizzaSizeUC *restaurant.CreatePizzaSizeUseCase
+	createPizzaSizeUC *resapp.CreatePizzaSize
 }
 
-func NewPizzaSizeHandler(createUC *restaurant.CreatePizzaSizeUseCase) *PizzaSizeHandler {
+func NewPizzaSizeHandler(createUC *resapp.CreatePizzaSize) *PizzaSizeHandler {
 	return &PizzaSizeHandler{
 		createPizzaSizeUC: createUC,
 	}
@@ -29,7 +29,7 @@ func (h *PizzaSizeHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	var dto restaurant.CreatePizzaSizeRequest
+	var dto resapp.CreatePizzaSizeRequest
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
 		errors := validation.ExtractValidationErrors(err)
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errors})

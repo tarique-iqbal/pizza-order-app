@@ -41,7 +41,7 @@ func requestEmailOTP() *auth.RequestEmailOTP {
 	return auth.NewRequestEmailOTP(repo, otp, mockPublisher)
 }
 
-func TestCreateEmailVerificationUseCase_Success(t *testing.T) {
+func TestCreateEmailVerification_Success(t *testing.T) {
 	emailOTP = requestEmailOTP()
 
 	input := auth.EmailVerificationRequest{

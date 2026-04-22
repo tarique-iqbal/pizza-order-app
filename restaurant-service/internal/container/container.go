@@ -36,15 +36,15 @@ func NewContainer() (*Container, error) {
 	restaurantRepo := persistence.NewRestaurantRepository(database)
 
 	// restaurant
-	geocoderService := geocoder.NewOpenCageGeocoder(opencageApiKey)
+	geocoder := geocoder.NewOpenCageGeocoder(opencageApiKey)
 	restaurantAddressRepo := persistence.NewRestaurantAddressRepository(database)
-	createRestaurantUC := resapp.NewCreateRestaurantUseCase(database, geocoderService, restaurantRepo, restaurantAddressRepo)
-	restaurantHandler := http.NewRestaurantHandler(createRestaurantUC)
+	createRestaurant := resapp.NewCreateRestaurant(database, geocoder, restaurantRepo, restaurantAddressRepo)
+	restaurantHandler := http.NewRestaurantHandler(createRestaurant)
 
 	// pizza-sizes
 	pizzaSizeRepo := persistence.NewPizzaSizeRepository(database)
-	createPizzaSizeUC := resapp.NewCreatePizzaSizeUseCase(pizzaSizeRepo, restaurantRepo)
-	pizzaSizeHandler := http.NewPizzaSizeHandler(createPizzaSizeUC)
+	createPizzaSize := resapp.NewCreatePizzaSize(pizzaSizeRepo, restaurantRepo)
+	pizzaSizeHandler := http.NewPizzaSizeHandler(createPizzaSize)
 
 	return &Container{
 		RestaurantHandler: restaurantHandler,

@@ -14,12 +14,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type createPizzaSizeUseCaseTestEnv struct {
+type createPizzaSizeTestEnv struct {
 	Restaurant         *restaurant.Restaurant
-	CreateRestaurantUC *resapp.CreatePizzaSizeUseCase
+	CreateRestaurantUC *resapp.CreatePizzaSize
 }
 
-func setupCreatePizzaSizeUseCase() createPizzaSizeUseCaseTestEnv {
+func setupCreatePizzaSize() createPizzaSizeTestEnv {
 	testDB := db.SetupTestDB()
 
 	rest, err := fixtures.CreateRestaurant(testDB)
@@ -33,16 +33,16 @@ func setupCreatePizzaSizeUseCase() createPizzaSizeUseCaseTestEnv {
 
 	pizzaRepo := persistence.NewPizzaSizeRepository(testDB)
 	restaurantRepo := persistence.NewRestaurantRepository(testDB)
-	createPizzaSizeUC := resapp.NewCreatePizzaSizeUseCase(pizzaRepo, restaurantRepo)
+	createPizzaSizeUC := resapp.NewCreatePizzaSize(pizzaRepo, restaurantRepo)
 
-	return createPizzaSizeUseCaseTestEnv{
+	return createPizzaSizeTestEnv{
 		Restaurant:         rest,
 		CreateRestaurantUC: createPizzaSizeUC,
 	}
 }
 
-func TestCreatePizzaSizeUseCase_Execute_Success(t *testing.T) {
-	env := setupCreatePizzaSizeUseCase()
+func TestCreatePizzaSize_Execute_Success(t *testing.T) {
+	env := setupCreatePizzaSize()
 
 	input := resapp.CreatePizzaSizeRequest{
 		Title: "Large",
@@ -62,8 +62,8 @@ func TestCreatePizzaSizeUseCase_Execute_Success(t *testing.T) {
 	assert.NotEmpty(t, response.CreatedAt)
 }
 
-func TestCreatePizzaSizeUseCase_Execute_Forbidden(t *testing.T) {
-	env := setupCreatePizzaSizeUseCase()
+func TestCreatePizzaSize_Execute_Forbidden(t *testing.T) {
+	env := setupCreatePizzaSize()
 
 	input := resapp.CreatePizzaSizeRequest{
 		Title: "Medium",
@@ -79,8 +79,8 @@ func TestCreatePizzaSizeUseCase_Execute_Forbidden(t *testing.T) {
 	assert.ErrorIs(t, err, apperr.ErrForbidden)
 }
 
-func TestCreatePizzaSizeUseCase_Execute_PizzaSize_Duplicate(t *testing.T) {
-	env := setupCreatePizzaSizeUseCase()
+func TestCreatePizzaSize_Execute_PizzaSize_Duplicate(t *testing.T) {
+	env := setupCreatePizzaSize()
 
 	input := resapp.CreatePizzaSizeRequest{
 		Title: "Large",

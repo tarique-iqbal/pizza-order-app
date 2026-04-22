@@ -12,20 +12,20 @@ import (
 	"gorm.io/gorm"
 )
 
-type CreateRestaurantUseCase struct {
+type CreateRestaurant struct {
 	db           *gorm.DB
 	geocoder     restaurant.Geocoder
 	repo         restaurant.RestaurantRepository
 	restAddrRepo restaurant.RestaurantAddressRepository
 }
 
-func NewCreateRestaurantUseCase(
+func NewCreateRestaurant(
 	db *gorm.DB,
 	geocoder restaurant.Geocoder,
 	repo restaurant.RestaurantRepository,
 	addressRepo restaurant.RestaurantAddressRepository,
-) *CreateRestaurantUseCase {
-	return &CreateRestaurantUseCase{
+) *CreateRestaurant {
+	return &CreateRestaurant{
 		db:           db,
 		geocoder:     geocoder,
 		repo:         repo,
@@ -33,7 +33,7 @@ func NewCreateRestaurantUseCase(
 	}
 }
 
-func (uc *CreateRestaurantUseCase) Execute(ctx context.Context, input CreateRequest) (Response, error) {
+func (uc *CreateRestaurant) Execute(ctx context.Context, input CreateRequest) (Response, error) {
 	if err := uc.checkEmailUnique(ctx, input.Email); err != nil {
 		return Response{}, err
 	}
@@ -68,7 +68,7 @@ func (uc *CreateRestaurantUseCase) Execute(ctx context.Context, input CreateRequ
 	}, nil
 }
 
-func (uc *CreateRestaurantUseCase) checkEmailUnique(ctx context.Context, email string) error {
+func (uc *CreateRestaurant) checkEmailUnique(ctx context.Context, email string) error {
 	exists, err := uc.repo.IsEmailExists(ctx, email)
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func (uc *CreateRestaurantUseCase) checkEmailUnique(ctx context.Context, email s
 	return nil
 }
 
-func (uc *CreateRestaurantUseCase) generateUniqueSlug(ctx context.Context, name, city string) (string, error) {
+func (uc *CreateRestaurant) generateUniqueSlug(ctx context.Context, name, city string) (string, error) {
 	slugBase := slug.Make(fmt.Sprintf("%s-%s", name, city))
 	slugFinal := slugBase
 	attempt := 1
@@ -97,7 +97,7 @@ func (uc *CreateRestaurantUseCase) generateUniqueSlug(ctx context.Context, name,
 	return slugFinal, nil
 }
 
-func (uc *CreateRestaurantUseCase) buildAddress(input CreateRequest) restaurant.RestaurantAddress {
+func (uc *CreateRestaurant) buildAddress(input CreateRequest) restaurant.RestaurantAddress {
 	return restaurant.RestaurantAddress{
 		House:      input.House,
 		Street:     input.Street,
@@ -112,7 +112,7 @@ func (uc *CreateRestaurantUseCase) buildAddress(input CreateRequest) restaurant.
 	}
 }
 
-func (uc *CreateRestaurantUseCase) geocodeAddress(addr *restaurant.RestaurantAddress) error {
+func (uc *CreateRestaurant) geocodeAddress(addr *restaurant.RestaurantAddress) error {
 	lat, lon, err := uc.geocoder.GeocodeAddress(*addr)
 	if err != nil {
 		return fmt.Errorf("failed to geocode address: %w", err)
@@ -122,7 +122,7 @@ func (uc *CreateRestaurantUseCase) geocodeAddress(addr *restaurant.RestaurantAdd
 	return nil
 }
 
-func (uc *CreateRestaurantUseCase) saveAddressAndRestaurant(
+func (uc *CreateRestaurant) saveAddressAndRestaurant(
 	ctx context.Context,
 	address restaurant.RestaurantAddress,
 	input CreateRequest,
