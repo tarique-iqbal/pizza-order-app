@@ -8,15 +8,15 @@ import (
 	"restaurant-service/internal/domain/restaurant"
 )
 
-type openCageService struct {
+type openCageGeocoder struct {
 	apiKey string
 }
 
-func NewOpenCageService(apiKey string) restaurant.GeocoderService {
-	return &openCageService{apiKey: apiKey}
+func NewOpenCageGeocoder(apiKey string) restaurant.Geocoder {
+	return &openCageGeocoder{apiKey: apiKey}
 }
 
-func (s *openCageService) GeocodeAddress(addr restaurant.RestaurantAddress) (float64, float64, error) {
+func (s *openCageGeocoder) GeocodeAddress(addr restaurant.RestaurantAddress) (float64, float64, error) {
 	query := fmt.Sprintf("%s %s, %s %s", addr.House, addr.Street, addr.PostalCode, addr.City)
 	endpoint := fmt.Sprintf("https://api.opencagedata.com/geocode/v1/json?q=%s&key=%s", url.QueryEscape(query), s.apiKey)
 

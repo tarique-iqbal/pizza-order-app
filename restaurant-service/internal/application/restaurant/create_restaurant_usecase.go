@@ -14,14 +14,14 @@ import (
 
 type CreateRestaurantUseCase struct {
 	db           *gorm.DB
-	geocoder     restaurant.GeocoderService
+	geocoder     restaurant.Geocoder
 	repo         restaurant.RestaurantRepository
 	restAddrRepo restaurant.RestaurantAddressRepository
 }
 
 func NewCreateRestaurantUseCase(
 	db *gorm.DB,
-	geocoder restaurant.GeocoderService,
+	geocoder restaurant.Geocoder,
 	repo restaurant.RestaurantRepository,
 	addressRepo restaurant.RestaurantAddressRepository,
 ) *CreateRestaurantUseCase {

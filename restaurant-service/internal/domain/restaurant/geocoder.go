@@ -1,5 +1,5 @@
 package restaurant
 
-type GeocoderService interface {
+type Geocoder interface {
 	GeocodeAddress(address RestaurantAddress) (lat float64, lng float64, err error)
 }

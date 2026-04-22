@@ -2,7 +2,7 @@ package container
 
 import (
 	"os"
-	aRestaurant "restaurant-service/internal/application/restaurant"
+	resapp "restaurant-service/internal/application/restaurant"
 	"restaurant-service/internal/infrastructure/db"
 	"restaurant-service/internal/infrastructure/geocoder"
 	"restaurant-service/internal/infrastructure/messaging"
@@ -36,14 +36,14 @@ func NewContainer() (*Container, error) {
 	restaurantRepo := persistence.NewRestaurantRepository(database)
 
 	// restaurant
-	geocoderService := geocoder.NewOpenCageService(opencageApiKey)
+	geocoderService := geocoder.NewOpenCageGeocoder(opencageApiKey)
 	restaurantAddressRepo := persistence.NewRestaurantAddressRepository(database)
-	createRestaurantUC := aRestaurant.NewCreateRestaurantUseCase(database, geocoderService, restaurantRepo, restaurantAddressRepo)
+	createRestaurantUC := resapp.NewCreateRestaurantUseCase(database, geocoderService, restaurantRepo, restaurantAddressRepo)
 	restaurantHandler := http.NewRestaurantHandler(createRestaurantUC)
 
 	// pizza-sizes
 	pizzaSizeRepo := persistence.NewPizzaSizeRepository(database)
-	createPizzaSizeUC := aRestaurant.NewCreatePizzaSizeUseCase(pizzaSizeRepo, restaurantRepo)
+	createPizzaSizeUC := resapp.NewCreatePizzaSizeUseCase(pizzaSizeRepo, restaurantRepo)
 	pizzaSizeHandler := http.NewPizzaSizeHandler(createPizzaSizeUC)
 
 	return &Container{
