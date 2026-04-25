@@ -21,7 +21,7 @@ CREATE TABLE users (
     role user_role_enum DEFAULT 'user',
     status user_status_enum DEFAULT 'active',
     phone VARCHAR(32),
-    logged_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP
+    logged_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ
 );
