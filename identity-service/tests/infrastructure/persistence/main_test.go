@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -52,4 +53,12 @@ func truncateTables(tdb *gorm.DB) {
 func flushRedis(t *testing.T, client *goredis.Client) {
 	err := client.FlushDB(context.Background()).Err()
 	require.NoError(t, err)
+}
+
+func generateUUID() uuid.UUID {
+	id, err := uuid.NewV7()
+	if err != nil {
+		panic(err)
+	}
+	return id
 }
