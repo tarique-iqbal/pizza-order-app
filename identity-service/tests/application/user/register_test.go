@@ -22,10 +22,10 @@ type MockEventPublisher struct {
 }
 
 func (m *MockEventPublisher) Publish(e event.Event) error {
+	m.PublishedEvents = append(m.PublishedEvents, e)
 	if m.ShouldFail {
 		return errors.New("mock publish failure")
 	}
-	m.PublishedEvents = append(m.PublishedEvents, e)
 	return nil
 }
 
