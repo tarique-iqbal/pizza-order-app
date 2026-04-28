@@ -15,6 +15,12 @@ type RegisterRequest struct {
 	Code      string `json:"code" binding:"required,min=6"`
 }
 
+type RegisterOwnerRequest struct {
+	RegisterRequest
+	BusinessName string `json:"businessName" validate:"required,min=2,max=100"`
+	VATNumber    string `json:"vatNumber" validate:"required,startswith=DE,len=11,alphanum"`
+}
+
 type Response struct {
 	ID       uuid.UUID    `json:"id"`
 	Name     UserName     `json:"name"`
