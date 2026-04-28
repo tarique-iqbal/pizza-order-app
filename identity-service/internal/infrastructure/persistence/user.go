@@ -17,6 +17,10 @@ func NewUserRepository(db *gorm.DB) user.UserRepository {
 	return &userRepo{db: db}
 }
 
+func (repo *userRepo) WithTx(tx *gorm.DB) user.UserRepository {
+	return &userRepo{db: tx}
+}
+
 func (repo *userRepo) FindByEmail(ctx context.Context, email string) (*user.User, error) {
 	var u user.User
 	err := repo.db.WithContext(ctx).Where("email = ?", email).First(&u).Error

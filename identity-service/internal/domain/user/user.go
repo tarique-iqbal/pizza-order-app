@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const DefaultStatus = "active"
+
 type User struct {
 	ID        uuid.UUID  `gorm:"type:uuid;primaryKey"`
 	FirstName string     `gorm:"size:255;not null"`

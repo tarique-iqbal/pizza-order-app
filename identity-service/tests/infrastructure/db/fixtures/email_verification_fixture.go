@@ -31,6 +31,13 @@ func LoadEmailVerificationFixtures(db *gorm.DB) error {
 			CreatedAt: time.Now(),
 		},
 		{
+			Email:     "sophie.mueller@example.com",
+			Code:      "365189",
+			IsUsed:    false,
+			ExpiresAt: time.Now().Add(15 * time.Minute),
+			CreatedAt: time.Now(),
+		},
+		{
 			Email:     "already.used@example.com",
 			Code:      "137468",
 			IsUsed:    true,

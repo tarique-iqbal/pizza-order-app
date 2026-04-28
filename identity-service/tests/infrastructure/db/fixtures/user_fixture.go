@@ -20,7 +20,15 @@ func LoadUserFixtures(db *gorm.DB) error {
 			Email:     "john.doe@example.com",
 			Password:  password,
 			Role:      "user",
-			CreatedAt: time.Now(),
+			CreatedAt: time.Now().UTC(),
+		},
+		{
+			FirstName: "Existing",
+			LastName:  "User",
+			Email:     "existing@example.com",
+			Password:  password,
+			Role:      "owner",
+			CreatedAt: time.Now().UTC(),
 		},
 	}
 
