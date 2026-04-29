@@ -321,7 +321,10 @@ func TestAuthHandler_Logout_Success(t *testing.T) {
 
 	handler, _, _, _, repo, manager := setupAuthHandler()
 
-	user, _ := fixtures.CreateUser(ts.DB, "owner")
+	u := fixtures.NewUser()
+	u.Role = "owner"
+	user, err := fixtures.CreateUser(ts.DB, u)
+	require.NoError(t, err)
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
@@ -352,7 +355,7 @@ func TestAuthHandler_Logout_Success(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code)
 
 	// verify deleted
-	_, err := repo.Find(ctx, hashed)
+	_, err = repo.Find(ctx, hashed)
 	require.Error(t, err)
 }
 
@@ -361,7 +364,10 @@ func TestAuthHandler_Logout_Idempotent(t *testing.T) {
 
 	handler, _, _, _, repo, manager := setupAuthHandler()
 
-	user, _ := fixtures.CreateUser(ts.DB, "owner")
+	u := fixtures.NewUser()
+	u.Role = "owner"
+	user, err := fixtures.CreateUser(ts.DB, u)
+	require.NoError(t, err)
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
@@ -406,7 +412,10 @@ func TestAuthHandler_Logout_Idempotent(t *testing.T) {
 func TestAuthHandler_Logout_InvalidRequest(t *testing.T) {
 	handler, _, _, _, _, _ := setupAuthHandler()
 
-	user, _ := fixtures.CreateUser(ts.DB, "owner")
+	u := fixtures.NewUser()
+	u.Role = "owner"
+	user, err := fixtures.CreateUser(ts.DB, u)
+	require.NoError(t, err)
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))

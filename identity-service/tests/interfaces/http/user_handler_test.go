@@ -180,7 +180,9 @@ func TestUserHandler_FindByID_Success(t *testing.T) {
 	ts := testStorage()
 	handler := setupUserHandler()
 
-	user, _ := fixtures.CreateUser(ts.DB, "user")
+	u := fixtures.NewUser()
+	user, err := fixtures.CreateUser(ts.DB, u)
+	require.NoError(t, err)
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
@@ -196,7 +198,7 @@ func TestUserHandler_FindByID_Success(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code)
 
 	var res userapp.Response
-	err := json.Unmarshal(w.Body.Bytes(), &res)
+	err = json.Unmarshal(w.Body.Bytes(), &res)
 	require.NoError(t, err)
 
 	assert.Equal(t, user.ID, res.ID)
@@ -211,7 +213,9 @@ func TestUserHandler_FindByID_NotFound(t *testing.T) {
 	ts := testStorage()
 	handler := setupUserHandler()
 
-	user, _ := fixtures.CreateUser(ts.DB, "user")
+	u := fixtures.NewUser()
+	user, err := fixtures.CreateUser(ts.DB, u)
+	require.NoError(t, err)
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
@@ -229,7 +233,7 @@ func TestUserHandler_FindByID_NotFound(t *testing.T) {
 	require.Equal(t, http.StatusNotFound, w.Code)
 
 	var body map[string]string
-	err := json.Unmarshal(w.Body.Bytes(), &body)
+	err = json.Unmarshal(w.Body.Bytes(), &body)
 	require.NoError(t, err)
 
 	assert.Equal(t, "user not found", body["error"])
@@ -239,7 +243,9 @@ func TestUserHandler_FindByID_Failure_Unauthorized(t *testing.T) {
 	ts := testStorage()
 	handler := setupUserHandler()
 
-	user, _ := fixtures.CreateUser(ts.DB, "user")
+	u := fixtures.NewUser()
+	user, err := fixtures.CreateUser(ts.DB, u)
+	require.NoError(t, err)
 
 	router := gin.Default()
 	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))

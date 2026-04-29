@@ -1,6 +1,7 @@
 package fixtures
 
 import (
+	"fmt"
 	"identity-service/internal/domain/user"
 	"identity-service/internal/infrastructure/security"
 	"time"
@@ -42,22 +43,31 @@ func LoadUserFixtures(db *gorm.DB) error {
 	return nil
 }
 
-func CreateUser(db *gorm.DB, role string) (*user.User, error) {
-	user := user.User{
-		FirstName: "Sofia",
-		LastName:  "Harland",
-		Email:     "sofia.harland@example.com",
-		Password:  "hashedpassword",
-		Role:      role,
-		CreatedAt: time.Now(),
+func NewUser() *user.User {
+	id, err := uuid.NewV7()
+	if err != nil {
+		panic(err)
 	}
 
-	userID, _ := uuid.NewV7()
-	user.ID = userID
+	return &user.User{
+		ID:        id,
+		FirstName: "Sofia",
+		LastName:  "Harland",
+		Email:     randomEmail(),
+		Password:  "hashedpassword",
+		Role:      "user",
+		CreatedAt: time.Now().UTC(),
+	}
+}
 
-	if err := db.Create(&user).Error; err != nil {
+func CreateUser(db *gorm.DB, u *user.User) (*user.User, error) {
+	if err := db.Create(u).Error; err != nil {
 		return nil, err
 	}
 
-	return &user, nil
+	return u, nil
+}
+
+func randomEmail() string {
+	return fmt.Sprintf("user_%d@example.com", time.Now().UnixNano())
 }
