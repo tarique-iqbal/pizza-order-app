@@ -44,13 +44,15 @@ func NewContainer() (*Container, error) {
 	refreshTokenRepo := persistence.NewRefreshTokenRepository(rc)
 	emailVerificationRepo := persistence.NewEmailVerificationRepository(database)
 	userRepo := persistence.NewUserRepository(database)
+	outboxRepo := persistence.NewOutboxRepository(database)
 
 	codeVerifier := authinfra.NewEmailVerifier(emailVerificationRepo)
 
 	// user
 	register := user.NewRegister(codeVerifier, userRepo, hasher, publisher)
+	registerOwner := user.NewRegisterOwner(database, codeVerifier, hasher, userRepo, outboxRepo, publisher)
 	findByID := user.NewFindByID(userRepo)
-	userHandler := http.NewUserHandler(register, findByID)
+	userHandler := http.NewUserHandler(register, registerOwner, findByID)
 
 	// auth
 	login := authapp.NewLogin(userRepo, hasher, jwtManager, refreshTokenRepo, refreshTokenManager)
