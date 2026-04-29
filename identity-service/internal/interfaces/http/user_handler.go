@@ -11,25 +11,52 @@ import (
 )
 
 type UserHandler struct {
-	register *user.Register
-	findByID *user.FindByID
+	register      *user.Register
+	registerOwner *user.RegisterOwner
+	findByID      *user.FindByID
 }
 
-func NewUserHandler(reg *user.Register, findByID *user.FindByID) *UserHandler {
-	return &UserHandler{register: reg, findByID: findByID}
+func NewUserHandler(
+	reg *user.Register,
+	regOwner *user.RegisterOwner,
+	findByID *user.FindByID,
+) *UserHandler {
+	return &UserHandler{
+		register:      reg,
+		registerOwner: regOwner,
+		findByID:      findByID,
+	}
 }
 
 func (h *UserHandler) Register(ctx *gin.Context) {
-	var input user.RegisterRequest
 	reqCtx := ctx.Request.Context()
+	role, _ := reqCtx.Value("role").(string)
 
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		errors := validation.ExtractValidationErrors(err)
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errors})
-		return
+	var response user.Response
+	var err error
+
+	if role == "owner" {
+		var input user.RegisterOwnerRequest
+
+		if err := ctx.ShouldBindJSON(&input); err != nil {
+			errors := validation.ExtractValidationErrors(err)
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errors})
+			return
+		}
+
+		response, err = h.registerOwner.Execute(reqCtx, input)
+	} else {
+		var input user.RegisterRequest
+
+		if err := ctx.ShouldBindJSON(&input); err != nil {
+			errors := validation.ExtractValidationErrors(err)
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errors})
+			return
+		}
+
+		response, err = h.register.Execute(reqCtx, input)
 	}
 
-	response, err := h.register.Execute(reqCtx, input)
 	if err != nil {
 		status := mapper.MapErrorToHTTPStatus(err)
 		ctx.JSON(status, gin.H{"error": err.Error()})
