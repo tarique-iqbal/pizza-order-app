@@ -72,8 +72,8 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "owner success",
 			body: map[string]string{
-				"first_name":   "Alice",
-				"last_name":    "Doe",
+				"firstName":    "Alice",
+				"lastName":     "Doe",
 				"email":        "alice@example.com",
 				"password":     "pass123",
 				"code":         "347578", // fixture
@@ -93,8 +93,8 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "owner invalid code",
 			body: map[string]string{
-				"first_name":   "Alice",
-				"last_name":    "Doe",
+				"firstName":    "Alice",
+				"lastName":     "Doe",
 				"email":        "alice@example.com",
 				"password":     "pass123",
 				"code":         "000000", // invalid
@@ -108,12 +108,12 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "user success",
 			body: map[string]string{
-				"first_name": "Sophie",
-				"last_name":  "Mueller",
-				"email":      "sophie.mueller@example.com",
-				"password":   "pass123",
-				"code":       "365189", // fixture
-				"role":       "user",
+				"firstName": "Sophie",
+				"lastName":  "Mueller",
+				"email":     "sophie.mueller@example.com",
+				"password":  "pass123",
+				"code":      "365189", // fixture
+				"role":      "user",
 			},
 			expectedStatus: http.StatusCreated,
 		},
@@ -126,12 +126,12 @@ func TestUserHandler_Register(t *testing.T) {
 		{
 			name: "user duplicate email",
 			body: map[string]string{
-				"first_name": "Existing",
-				"last_name":  "User",
-				"email":      "existing@example.com", // fixture
-				"password":   "pass123",
-				"code":       "347578",
-				"role":       "user",
+				"firstName": "Existing",
+				"lastName":  "User",
+				"email":     "existing@example.com", // fixture
+				"password":  "pass123",
+				"code":      "347578",
+				"role":      "user",
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectError:    true,
