@@ -12,13 +12,13 @@ type RegisterRequest struct {
 	Email     string `json:"email" binding:"required,email"`
 	Password  string `json:"password" binding:"required,min=6"`
 	Role      string `json:"role" binding:"required,oneof=user owner admin"`
-	Code      string `json:"code" binding:"required,min=6"`
+	Code      string `json:"code" binding:"required,len=6,numeric"`
 }
 
 type RegisterOwnerRequest struct {
 	RegisterRequest
-	BusinessName string `json:"businessName" validate:"required,min=2,max=100"`
-	VATNumber    string `json:"vatNumber" validate:"required,startswith=DE,len=11,alphanum"`
+	BusinessName string `json:"businessName" binding:"required,min=2,max=128"`
+	VATNumber    string `json:"vatNumber" binding:"required,startswith=DE,len=11,alphanum"`
 }
 
 type Response struct {
