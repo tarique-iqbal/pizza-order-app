@@ -32,7 +32,7 @@ func TestUserRepository_Create(t *testing.T) {
 		LastName:  "D'Angelo",
 		Email:     "adam.dangelo@example.com",
 		Password:  "hashedpassword",
-		Role:      "user",
+		Role:      "customer",
 		CreatedAt: time.Now(),
 	}
 

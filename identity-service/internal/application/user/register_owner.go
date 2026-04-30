@@ -67,7 +67,7 @@ func (uc *RegisterOwner) Execute(ctx context.Context, input RegisterOwnerRequest
 		LastName:  input.LastName,
 		Email:     input.Email,
 		Password:  hashedPassword,
-		Role:      input.Role,
+		Role:      user.RoleOwner,
 		Status:    user.DefaultStatus,
 	}
 

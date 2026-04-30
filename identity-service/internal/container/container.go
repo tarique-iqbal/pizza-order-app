@@ -49,10 +49,10 @@ func NewContainer() (*Container, error) {
 	codeVerifier := authinfra.NewEmailVerifier(emailVerificationRepo)
 
 	// user
-	register := user.NewRegister(codeVerifier, userRepo, hasher, publisher)
+	registerCustomer := user.NewRegisterCustomer(codeVerifier, userRepo, hasher, publisher)
 	registerOwner := user.NewRegisterOwner(database, codeVerifier, hasher, userRepo, outboxRepo, publisher)
 	findByID := user.NewFindByID(userRepo)
-	userHandler := http.NewUserHandler(register, registerOwner, findByID)
+	userHandler := http.NewUserHandler(registerCustomer, registerOwner, findByID)
 
 	// auth
 	login := authapp.NewLogin(userRepo, hasher, jwtManager, refreshTokenRepo, refreshTokenManager)

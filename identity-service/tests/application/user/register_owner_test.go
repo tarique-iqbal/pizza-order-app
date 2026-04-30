@@ -37,7 +37,7 @@ func TestRegisterOwner_Success(t *testing.T) {
 	registerOwner := setupRegisterOwner()
 
 	input := user.RegisterOwnerRequest{
-		RegisterRequest: user.RegisterRequest{
+		RegisterCustomerRequest: user.RegisterCustomerRequest{
 			FirstName: "Sophie",
 			LastName:  "Müller",
 			Email:     "sophie.mueller@example.com",
@@ -67,7 +67,7 @@ func TestRegisterOwner_Failure_EmailVerification(t *testing.T) {
 	registerOwner := setupRegisterOwner()
 
 	input := user.RegisterOwnerRequest{
-		RegisterRequest: user.RegisterRequest{
+		RegisterCustomerRequest: user.RegisterCustomerRequest{
 			FirstName: "John",
 			LastName:  "Doe",
 			Email:     "invalid@example.com",
@@ -91,7 +91,7 @@ func TestRegisterOwner_Failure_DuplicateEmail(t *testing.T) {
 	registerOwner := setupRegisterOwner()
 
 	input := user.RegisterOwnerRequest{
-		RegisterRequest: user.RegisterRequest{
+		RegisterCustomerRequest: user.RegisterCustomerRequest{
 			FirstName: "Existing",
 			LastName:  "User",
 			Email:     "existing@example.com", // from fixture
@@ -118,7 +118,7 @@ func TestRegisterOwner_PublishFails_ShouldStillSucceed(t *testing.T) {
 	mockPublisher.ShouldFail = true
 
 	input := user.RegisterOwnerRequest{
-		RegisterRequest: user.RegisterRequest{
+		RegisterCustomerRequest: user.RegisterCustomerRequest{
 			FirstName: "Alice",
 			LastName:  "Schmidt",
 			Email:     "alice@example.com",

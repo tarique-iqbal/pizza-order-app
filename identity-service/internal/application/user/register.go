@@ -11,22 +11,20 @@ import (
 	"github.com/google/uuid"
 )
 
-const defaultStatus = "active"
-
-type Register struct {
+type RegisterCustomer struct {
 	emailVerifier auth.EmailVerifier
 	repo          user.UserRepository
 	hasher        auth.PasswordHasher
 	publisher     event.EventPublisher
 }
 
-func NewRegister(
+func NewRegisterCustomer(
 	emailVerifier auth.EmailVerifier,
 	repo user.UserRepository,
 	hasher auth.PasswordHasher,
 	publisher event.EventPublisher,
-) *Register {
-	return &Register{
+) *RegisterCustomer {
+	return &RegisterCustomer{
 		emailVerifier: emailVerifier,
 		repo:          repo,
 		hasher:        hasher,
@@ -34,7 +32,7 @@ func NewRegister(
 	}
 }
 
-func (uc *Register) Execute(ctx context.Context, input RegisterRequest) (Response, error) {
+func (uc *RegisterCustomer) Execute(ctx context.Context, input RegisterCustomerRequest) (Response, error) {
 	if err := uc.emailVerifier.Verify(ctx, input.Email, input.Code); err != nil {
 		return Response{}, err
 	}
@@ -49,8 +47,8 @@ func (uc *Register) Execute(ctx context.Context, input RegisterRequest) (Respons
 		LastName:  input.LastName,
 		Email:     input.Email,
 		Password:  hashedPassword,
-		Role:      input.Role,
-		Status:    defaultStatus,
+		Role:      user.RoleCustomer,
+		Status:    user.DefaultStatus,
 	}
 
 	userID, err := uuid.NewV7()

@@ -29,7 +29,7 @@ func (m *MockEventPublisher) Publish(e event.Event) error {
 	return nil
 }
 
-func setupRegister() *user.Register {
+func setupRegisterCustomer() *user.RegisterCustomer {
 	ts := testStorage()
 	truncateTables(ts.DB)
 
@@ -46,13 +46,13 @@ func setupRegister() *user.Register {
 		panic(err)
 	}
 
-	return user.NewRegister(codeVerifier, userRepo, hasher, mockPublisher)
+	return user.NewRegisterCustomer(codeVerifier, userRepo, hasher, mockPublisher)
 }
 
 func TestRegister(t *testing.T) {
-	register := setupRegister()
+	register := setupRegisterCustomer()
 
-	input := user.RegisterRequest{
+	input := user.RegisterCustomerRequest{
 		FirstName: "Adam",
 		LastName:  "D'Angelo",
 		Email:     "adam.dangelo@example.com",

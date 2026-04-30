@@ -57,7 +57,7 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 		LastName:  "Doe",
 		Email:     "test@example.com",
 		Password:  hp,
-		Role:      "user",
+		Role:      "customer",
 		CreatedAt: time.Now(),
 		UpdatedAt: nil,
 	}
@@ -117,7 +117,7 @@ func TestAuthHandler_Login_Failed(t *testing.T) {
 		LastName:  "Doe",
 		Email:     "test@example.com",
 		Password:  hp,
-		Role:      "user",
+		Role:      "customer",
 		CreatedAt: time.Now(),
 		UpdatedAt: nil,
 	}

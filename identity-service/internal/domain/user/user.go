@@ -6,7 +6,12 @@ import (
 	"github.com/google/uuid"
 )
 
-const DefaultStatus = "active"
+const (
+	DefaultStatus = "active"
+
+	RoleCustomer = "customer"
+	RoleOwner    = "owner"
+)
 
 type User struct {
 	ID        uuid.UUID  `gorm:"type:uuid;primaryKey"`
@@ -14,7 +19,7 @@ type User struct {
 	LastName  string     `gorm:"size:255;not null"`
 	Email     string     `gorm:"size:255;unique;not null"`
 	Password  string     `gorm:"not null"`
-	Role      string     `gorm:"type:user_role_enum;default:'user'"`
+	Role      string     `gorm:"type:user_role_enum;default:'customer'"`
 	Status    string     `gorm:"type:user_status_enum;default:'active'"`
 	LoggedAt  *time.Time `gorm:"column:logged_at;default:null"`
 	CreatedAt time.Time  `gorm:"autoCreateTime"`

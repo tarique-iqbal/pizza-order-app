@@ -22,7 +22,7 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 	jwtManager := InitJWT()
 
 	userID, _ := uuid.NewV7()
-	role := "user"
+	role := "customer"
 
 	token, _ := jwtManager.Generate(userID.String(), role)
 

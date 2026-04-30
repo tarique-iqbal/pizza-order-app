@@ -11,20 +11,20 @@ import (
 )
 
 type UserHandler struct {
-	register      *user.Register
-	registerOwner *user.RegisterOwner
-	findByID      *user.FindByID
+	regCustomer *user.RegisterCustomer
+	regOwner    *user.RegisterOwner
+	findByID    *user.FindByID
 }
 
 func NewUserHandler(
-	reg *user.Register,
+	regCustomer *user.RegisterCustomer,
 	regOwner *user.RegisterOwner,
 	findByID *user.FindByID,
 ) *UserHandler {
 	return &UserHandler{
-		register:      reg,
-		registerOwner: regOwner,
-		findByID:      findByID,
+		regCustomer: regCustomer,
+		regOwner:    regOwner,
+		findByID:    findByID,
 	}
 }
 
@@ -44,9 +44,9 @@ func (h *UserHandler) Register(ctx *gin.Context) {
 			return
 		}
 
-		response, err = h.registerOwner.Execute(reqCtx, input)
+		response, err = h.regOwner.Execute(reqCtx, input)
 	} else {
-		var input user.RegisterRequest
+		var input user.RegisterCustomerRequest
 
 		if err := ctx.ShouldBindJSON(&input); err != nil {
 			errors := validation.ExtractValidationErrors(err)
@@ -54,7 +54,7 @@ func (h *UserHandler) Register(ctx *gin.Context) {
 			return
 		}
 
-		response, err = h.register.Execute(reqCtx, input)
+		response, err = h.regCustomer.Execute(reqCtx, input)
 	}
 
 	if err != nil {
@@ -75,7 +75,7 @@ func (h *UserHandler) FindByID(ctx *gin.Context) {
 		return
 	}
 
-	res, err := h.findByID.Execute(ctx, userID)
+	response, err := h.findByID.Execute(ctx, userID)
 	if err != nil {
 		if err.Error() == "user not found" {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -86,5 +86,5 @@ func (h *UserHandler) FindByID(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, response)
 }

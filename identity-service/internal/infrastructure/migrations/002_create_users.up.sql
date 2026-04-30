@@ -7,7 +7,7 @@ END$$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_enum') THEN
-        CREATE TYPE user_role_enum AS ENUM ('user', 'owner', 'admin');
+        CREATE TYPE user_role_enum AS ENUM ('customer', 'owner', 'admin');
     END IF;
 END$$;
 
@@ -18,7 +18,7 @@ CREATE TABLE users (
     last_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role user_role_enum DEFAULT 'user',
+    role user_role_enum DEFAULT 'customer',
     status user_status_enum DEFAULT 'active',
     phone VARCHAR(32),
     logged_at TIMESTAMPTZ,

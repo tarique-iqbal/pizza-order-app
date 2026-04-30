@@ -47,7 +47,7 @@ func setupUserHandler() *httpui.UserHandler {
 	outboxRepo := persistence.NewOutboxRepository(ts.DB)
 	mockPublisher = &MockEventPublisher{}
 
-	register := userapp.NewRegister(codeVerifier, userRepo, hasher, mockPublisher)
+	register := userapp.NewRegisterCustomer(codeVerifier, userRepo, hasher, mockPublisher)
 	registerOwner := userapp.NewRegisterOwner(ts.DB, codeVerifier, hasher, userRepo, outboxRepo, mockPublisher)
 	findByID := userapp.NewFindByID(userRepo)
 
@@ -113,7 +113,7 @@ func TestUserHandler_Register(t *testing.T) {
 				"email":     "sophie.mueller@example.com",
 				"password":  "pass123",
 				"code":      "365189", // fixture
-				"role":      "user",
+				"role":      "customer",
 			},
 			expectedStatus: http.StatusCreated,
 		},
@@ -131,7 +131,7 @@ func TestUserHandler_Register(t *testing.T) {
 				"email":     "existing@example.com", // fixture
 				"password":  "pass123",
 				"code":      "347578",
-				"role":      "user",
+				"role":      "customer",
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectError:    true,
