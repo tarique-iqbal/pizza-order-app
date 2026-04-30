@@ -101,8 +101,6 @@ services:
       redis:
         condition: service_healthy
     env_file: identity-service/.env
-    environment:
-      APP_ENV: docker
     ports:
       - "8080:8080"
     command: ["air", "-c", ".air.toml"]
@@ -119,8 +117,6 @@ services:
       rabbitmq:
         condition: service_healthy
     env_file: restaurant-service/.env
-    environment:
-      APP_ENV: docker
     ports:
       - "8081:8080"
 
@@ -134,8 +130,6 @@ services:
       rabbitmq:
         condition: service_healthy
     env_file: email-service/.env
-    environment:
-      APP_ENV: docker
 
 volumes:
   pg_identity:
