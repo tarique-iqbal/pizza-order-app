@@ -25,7 +25,7 @@ func TestJWTManager_GenerateToken(t *testing.T) {
 	jwtManager := InitJWT()
 
 	userID, _ := uuid.NewV7()
-	role := "user"
+	role := "customer"
 
 	tokenString, err := jwtManager.Generate(userID.String(), role)
 	assert.NoError(t, err)
