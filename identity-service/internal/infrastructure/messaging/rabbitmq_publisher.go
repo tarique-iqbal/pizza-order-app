@@ -1,10 +1,13 @@
 package messaging
 
 import (
+	"context"
 	"encoding/json"
 	"identity-service/internal/shared/event"
 	"log"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rabbitmq/amqp091-go"
 )
 
@@ -42,30 +45,75 @@ func NewRabbitMQPublisher(amqpURL string) *RabbitMQPublisher {
 	return &RabbitMQPublisher{conn: conn, channel: ch}
 }
 
-func (p *RabbitMQPublisher) Publish(event event.Event) error {
-	var body []byte
-	var err error
-
-	body, err = json.Marshal(event)
+func (p *RabbitMQPublisher) PublishEvent(ctx context.Context, event event.Event) error {
+	body, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 
-	err = p.channel.Publish(
-		exchangeName,         // Exchange name
-		event.GetEventName(), // Routing key (e.g., email.verification_created, user.registered)
-		false,                // Mandatory
-		false,                // Immediate
-		amqp091.Publishing{
-			ContentType:  "application/json",
-			Body:         body,
-			DeliveryMode: amqp091.Persistent,
-		},
-	)
-	if err != nil {
-		log.Printf("Failed to publish message: %v body: %s event: %s", err, body, event.GetEventName())
+	return p.publish(ctx, event.GetEventName(), body)
+}
+
+func (p *RabbitMQPublisher) PublishRaw(
+	ctx context.Context,
+	routingKey string,
+	body []byte,
+) error {
+	return p.publish(ctx, routingKey, body)
+}
+
+func (p *RabbitMQPublisher) publish(
+	ctx context.Context,
+	routingKey string,
+	body []byte,
+) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
 	}
-	return err
+
+	errCh := make(chan error, 1)
+
+	go func() {
+		err := p.channel.Publish(
+			exchangeName,
+			routingKey,
+			false,
+			false,
+			amqp091.Publishing{
+				ContentType:  "application/json",
+				Body:         body,
+				DeliveryMode: amqp091.Persistent,
+				MessageId:    uuid.NewString(),
+				Timestamp:    time.Now().UTC(),
+				Type:         routingKey,
+				Headers: amqp091.Table{
+					"x-event-name": routingKey,
+				},
+			},
+		)
+
+		// prevent goroutine leak
+		select {
+		case errCh <- err:
+		default:
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+
+	case err := <-errCh:
+		if err != nil {
+			log.Printf(
+				"Failed to publish message: %v body: %s event: %s",
+				err, body, routingKey,
+			)
+		}
+		return err
+	}
 }
 
 func (p *RabbitMQPublisher) Close() {
