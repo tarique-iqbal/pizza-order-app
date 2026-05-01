@@ -8,18 +8,9 @@ import (
 	"syscall"
 
 	"email-service/internal/container"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	env := os.Getenv("APP_ENV")
-	if env != "docker" {
-		if err := godotenv.Load(); err != nil {
-			log.Fatal("Error loading .env file")
-		}
-	}
-
 	app, err := container.NewContainer()
 	if err != nil {
 		log.Fatalf("Failed to initialize container: %v", err)
