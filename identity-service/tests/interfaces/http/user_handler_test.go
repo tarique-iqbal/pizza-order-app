@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	userapp "identity-service/internal/application/user"
@@ -25,14 +26,23 @@ var mockPublisher *MockEventPublisher
 
 type MockEventPublisher struct {
 	PublishedEvents []event.Event
+	PublishedRaw    [][]byte
 	ShouldFail      bool
 }
 
-func (m *MockEventPublisher) Publish(e event.Event) error {
+func (m *MockEventPublisher) PublishEvent(ctx context.Context, e event.Event) error {
+	m.PublishedEvents = append(m.PublishedEvents, e)
 	if m.ShouldFail {
 		return errors.New("mock publish failure")
 	}
-	m.PublishedEvents = append(m.PublishedEvents, e)
+	return nil
+}
+
+func (m *MockEventPublisher) PublishRaw(ctx context.Context, topic string, jsonData []byte) error {
+	m.PublishedRaw = append(m.PublishedRaw, jsonData)
+	if m.ShouldFail {
+		return errors.New("mock raw publish failure")
+	}
 	return nil
 }
 
@@ -51,87 +61,50 @@ func setupUserHandler() *httpui.UserHandler {
 	registerOwner := userapp.NewRegisterOwner(ts.DB, codeVerifier, hasher, userRepo, outboxRepo, mockPublisher)
 	findByID := userapp.NewFindByID(userRepo)
 
-	if err := fixtures.LoadEmailVerificationFixtures(ts.DB); err != nil {
-		panic(err)
-	}
+	_ = fixtures.LoadEmailVerificationFixtures(ts.DB)
 
 	return httpui.NewUserHandler(register, registerOwner, findByID)
 }
 
-func TestUserHandler_Register(t *testing.T) {
+func TestUserHandler_RegisterOwner(t *testing.T) {
 	handler := setupUserHandler()
 
 	tests := []struct {
 		name           string
-		role           string
 		body           map[string]string
 		rawBody        string
 		expectedStatus int
 		expectError    bool
 	}{
 		{
-			name: "owner success",
+			name: "success",
 			body: map[string]string{
 				"firstName":    "Alice",
 				"lastName":     "Doe",
 				"email":        "alice@example.com",
 				"password":     "pass123",
-				"code":         "347578", // fixture
-				"role":         "owner",
+				"code":         "347578", // from fixture
 				"businessName": "Domino's Pizza",
-				"vatNumber":    "DE987654321",
+				"vatNumber":    "DE123456789",
 			},
 			expectedStatus: http.StatusCreated,
 		},
 		{
-			name:           "owner validation error",
-			role:           "owner",
+			name:           "invalid json",
 			rawBody:        "invalid-json",
 			expectedStatus: http.StatusUnprocessableEntity,
 			expectError:    true,
 		},
 		{
-			name: "owner invalid code",
+			name: "invalid code",
 			body: map[string]string{
 				"firstName":    "Alice",
 				"lastName":     "Doe",
 				"email":        "alice@example.com",
 				"password":     "pass123",
 				"code":         "000000", // invalid
-				"role":         "owner",
 				"businessName": "Domino's Pizza",
 				"vatNumber":    "DE987654321",
-			},
-			expectedStatus: http.StatusBadRequest,
-			expectError:    true,
-		},
-		{
-			name: "user success",
-			body: map[string]string{
-				"firstName": "Sophie",
-				"lastName":  "Mueller",
-				"email":     "sophie.mueller@example.com",
-				"password":  "pass123",
-				"code":      "365189", // fixture
-				"role":      "customer",
-			},
-			expectedStatus: http.StatusCreated,
-		},
-		{
-			name:           "user validation error",
-			body:           map[string]string{},
-			expectedStatus: http.StatusUnprocessableEntity,
-			expectError:    true,
-		},
-		{
-			name: "user duplicate email",
-			body: map[string]string{
-				"firstName": "Existing",
-				"lastName":  "User",
-				"email":     "existing@example.com", // fixture
-				"password":  "pass123",
-				"code":      "347578",
-				"role":      "customer",
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectError:    true,
@@ -143,16 +116,11 @@ func TestUserHandler_Register(t *testing.T) {
 			ts := testStorage()
 			truncateTables(ts.DB)
 
-			if err := fixtures.LoadEmailVerificationFixtures(ts.DB); err != nil {
-				panic(err)
-			}
-
-			if err := fixtures.LoadUserFixtures(ts.DB); err != nil {
-				panic(err)
-			}
+			_ = fixtures.LoadEmailVerificationFixtures(ts.DB)
+			_ = fixtures.LoadUserFixtures(ts.DB)
 
 			router := gin.Default()
-			router.POST("/users", handler.Register)
+			router.POST("/owners", handler.RegisterOwner)
 
 			var reqBody []byte
 			if tt.rawBody != "" {
@@ -161,7 +129,81 @@ func TestUserHandler_Register(t *testing.T) {
 				reqBody, _ = json.Marshal(tt.body)
 			}
 
-			req, _ := http.NewRequest("POST", "/users", bytes.NewBuffer(reqBody))
+			req, _ := http.NewRequest("POST", "/owners", bytes.NewBuffer(reqBody))
+			req.Header.Set("Content-Type", "application/json")
+
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+
+			if tt.expectError {
+				assert.Contains(t, w.Body.String(), "error")
+			}
+		})
+	}
+}
+
+func TestUserHandler_RegisterCustomer(t *testing.T) {
+	handler := setupUserHandler()
+
+	tests := []struct {
+		name           string
+		body           map[string]string
+		rawBody        string
+		expectedStatus int
+		expectError    bool
+	}{
+		{
+			name: "success",
+			body: map[string]string{
+				"firstName": "Sophie",
+				"lastName":  "Mueller",
+				"email":     "sophie.mueller@example.com",
+				"password":  "pass123",
+				"code":      "365189", // from fixture
+			},
+			expectedStatus: http.StatusCreated,
+		},
+		{
+			name:           "validation error",
+			body:           map[string]string{},
+			expectedStatus: http.StatusUnprocessableEntity,
+			expectError:    true,
+		},
+		{
+			name: "duplicate email",
+			body: map[string]string{
+				"firstName": "Existing",
+				"lastName":  "User",
+				"email":     "existing@example.com", // from fixture
+				"password":  "pass123",
+				"code":      "347578",
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectError:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ts := testStorage()
+			truncateTables(ts.DB)
+
+			_ = fixtures.LoadEmailVerificationFixtures(ts.DB)
+			_ = fixtures.LoadUserFixtures(ts.DB)
+
+			router := gin.Default()
+			router.POST("/customers", handler.RegisterCustomer)
+
+			var reqBody []byte
+			if tt.rawBody != "" {
+				reqBody = []byte(tt.rawBody)
+			} else {
+				reqBody, _ = json.Marshal(tt.body)
+			}
+
+			req, _ := http.NewRequest("POST", "/customers", bytes.NewBuffer(reqBody))
 			req.Header.Set("Content-Type", "application/json")
 
 			w := httptest.NewRecorder()

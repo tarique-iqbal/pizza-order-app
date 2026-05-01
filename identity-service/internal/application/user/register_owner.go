@@ -113,7 +113,7 @@ func (uc *RegisterOwner) Execute(ctx context.Context, input RegisterOwnerRequest
 	}
 	userRegistered.EventName = userRegistered.GetEventName()
 
-	if err := uc.publisher.Publish(userRegistered); err != nil {
+	if err := uc.publisher.PublishEvent(ctx, userRegistered); err != nil {
 		log.Println("Failed to publish user.registered event:", err)
 	}
 

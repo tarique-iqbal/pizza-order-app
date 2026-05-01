@@ -19,14 +19,23 @@ var repo dAuth.EmailVerificationRepository
 
 type MockEventPublisher struct {
 	PublishedEvents []event.Event
+	PublishedRaw    [][]byte
 	ShouldFail      bool
 }
 
-func (m *MockEventPublisher) Publish(e event.Event) error {
+func (m *MockEventPublisher) PublishEvent(ctx context.Context, e event.Event) error {
+	m.PublishedEvents = append(m.PublishedEvents, e)
 	if m.ShouldFail {
 		return errors.New("mock publish failure")
 	}
-	m.PublishedEvents = append(m.PublishedEvents, e)
+	return nil
+}
+
+func (m *MockEventPublisher) PublishRaw(ctx context.Context, topic string, jsonData []byte) error {
+	m.PublishedRaw = append(m.PublishedRaw, jsonData)
+	if m.ShouldFail {
+		return errors.New("mock raw publish failure")
+	}
 	return nil
 }
 

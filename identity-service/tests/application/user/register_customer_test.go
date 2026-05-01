@@ -18,13 +18,22 @@ var mockPublisher *MockEventPublisher
 
 type MockEventPublisher struct {
 	PublishedEvents []event.Event
+	PublishedRaw    [][]byte
 	ShouldFail      bool
 }
 
-func (m *MockEventPublisher) Publish(e event.Event) error {
+func (m *MockEventPublisher) PublishEvent(ctx context.Context, e event.Event) error {
 	m.PublishedEvents = append(m.PublishedEvents, e)
 	if m.ShouldFail {
 		return errors.New("mock publish failure")
+	}
+	return nil
+}
+
+func (m *MockEventPublisher) PublishRaw(ctx context.Context, topic string, jsonData []byte) error {
+	m.PublishedRaw = append(m.PublishedRaw, jsonData)
+	if m.ShouldFail {
+		return errors.New("mock raw publish failure")
 	}
 	return nil
 }
@@ -57,7 +66,6 @@ func TestRegisterCustomer_Success(t *testing.T) {
 		LastName:  "D'Angelo",
 		Email:     "adam.dangelo@example.com",
 		Password:  "securepassword",
-		Role:      "customer",
 		Code:      "476190", // from fixture
 	}
 
@@ -83,7 +91,6 @@ func TestRegisterCustomer_Failure_EmailVerification(t *testing.T) {
 		LastName:  "Doe",
 		Email:     "invalid@example.com",
 		Password:  "password",
-		Role:      "customer",
 		Code:      "wrong-code", // invalid
 	}
 
@@ -103,7 +110,6 @@ func TestRegisterCustomer_Failure_DuplicateEmail(t *testing.T) {
 		LastName:  "User",
 		Email:     "existing@example.com", // from fixture
 		Password:  "password",
-		Role:      "customer",
 		Code:      "365189",
 	}
 
@@ -126,7 +132,6 @@ func TestRegisterCustomer_PublishFails_ShouldStillSucceed(t *testing.T) {
 		LastName:  "Schmidt",
 		Email:     "alice@example.com",
 		Password:  "password",
-		Role:      "customer",
 		Code:      "347578",
 	}
 

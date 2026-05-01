@@ -69,7 +69,7 @@ func (uc *RegisterCustomer) Execute(ctx context.Context, input RegisterCustomerR
 	}
 	event.EventName = event.GetEventName()
 
-	if err := uc.publisher.Publish(event); err != nil {
+	if err := uc.publisher.PublishEvent(ctx, event); err != nil {
 		log.Println("Failed to publish user.registered event:", err)
 	}
 

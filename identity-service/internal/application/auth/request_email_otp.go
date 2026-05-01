@@ -69,5 +69,5 @@ func (uc *RequestEmailOTP) Execute(
 	}
 	event.EventName = event.GetEventName()
 
-	return uc.publisher.Publish(event)
+	return uc.publisher.PublishEvent(ctx, event)
 }
