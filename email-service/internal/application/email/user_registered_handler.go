@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	RoleUser  = "user"
-	RoleOwner = "owner"
+	RoleCustomer = "customer"
+	RoleOwner    = "owner"
 )
 
 type UserRegisteredHandler struct {
@@ -32,7 +32,7 @@ func (h *UserRegisteredHandler) Handle(event email.EventPayload) error {
 		return err
 	}
 
-	validRoles := map[string]bool{RoleUser: true, RoleOwner: true}
+	validRoles := map[string]bool{RoleCustomer: true, RoleOwner: true}
 	if !validRoles[payload.Role] {
 		return fmt.Errorf("invalid role in event payload: %s", payload.Role)
 	}
