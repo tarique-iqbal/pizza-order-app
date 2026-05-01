@@ -37,14 +37,11 @@ func TestRegisterOwner_Success(t *testing.T) {
 	registerOwner := setupRegisterOwner()
 
 	input := user.RegisterOwnerRequest{
-		RegisterCustomerRequest: user.RegisterCustomerRequest{
-			FirstName: "Sophie",
-			LastName:  "Müller",
-			Email:     "sophie.mueller@example.com",
-			Password:  "securepassword",
-			Role:      "owner",
-			Code:      "365189",
-		},
+		FirstName:    "Sophie",
+		LastName:     "Müller",
+		Email:        "sophie.mueller@example.com",
+		Password:     "securepassword",
+		Code:         "365189",
 		BusinessName: "Domino's Pizza",
 		VATNumber:    "DE987654321",
 	}
@@ -67,14 +64,11 @@ func TestRegisterOwner_Failure_EmailVerification(t *testing.T) {
 	registerOwner := setupRegisterOwner()
 
 	input := user.RegisterOwnerRequest{
-		RegisterCustomerRequest: user.RegisterCustomerRequest{
-			FirstName: "John",
-			LastName:  "Doe",
-			Email:     "invalid@example.com",
-			Password:  "password",
-			Role:      "owner",
-			Code:      "wrong-code", // invalid
-		},
+		FirstName:    "John",
+		LastName:     "Doe",
+		Email:        "invalid@example.com",
+		Password:     "password",
+		Code:         "wrong-code", // invalid
 		BusinessName: "Test Biz",
 		VATNumber:    "DE111654321",
 	}
@@ -91,14 +85,11 @@ func TestRegisterOwner_Failure_DuplicateEmail(t *testing.T) {
 	registerOwner := setupRegisterOwner()
 
 	input := user.RegisterOwnerRequest{
-		RegisterCustomerRequest: user.RegisterCustomerRequest{
-			FirstName: "Existing",
-			LastName:  "User",
-			Email:     "existing@example.com", // from fixture
-			Password:  "password",
-			Role:      "owner",
-			Code:      "365189",
-		},
+		FirstName:    "Existing",
+		LastName:     "User",
+		Email:        "existing@example.com", // from fixture
+		Password:     "password",
+		Code:         "365189",
 		BusinessName: "Biz",
 		VATNumber:    "DE222654321",
 	}
@@ -118,14 +109,11 @@ func TestRegisterOwner_PublishFails_ShouldStillSucceed(t *testing.T) {
 	mockPublisher.ShouldFail = true
 
 	input := user.RegisterOwnerRequest{
-		RegisterCustomerRequest: user.RegisterCustomerRequest{
-			FirstName: "Alice",
-			LastName:  "Schmidt",
-			Email:     "alice@example.com",
-			Password:  "password",
-			Role:      "owner",
-			Code:      "347578",
-		},
+		FirstName:    "Alice",
+		LastName:     "Schmidt",
+		Email:        "alice@example.com",
+		Password:     "password",
+		Code:         "347578",
 		BusinessName: "Pizza Hub",
 		VATNumber:    "DE444654321",
 	}

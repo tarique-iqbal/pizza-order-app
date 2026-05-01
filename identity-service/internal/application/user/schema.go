@@ -11,14 +11,17 @@ type RegisterCustomerRequest struct {
 	LastName  string `json:"lastName" binding:"required"`
 	Email     string `json:"email" binding:"required,email"`
 	Password  string `json:"password" binding:"required,min=6"`
-	Role      string `json:"role" binding:"required,oneof=customer owner"`
 	Code      string `json:"code" binding:"required,len=6,numeric"`
 }
 
 type RegisterOwnerRequest struct {
-	RegisterCustomerRequest
+	FirstName    string `json:"firstName" binding:"required"`
+	LastName     string `json:"lastName" binding:"required"`
+	Email        string `json:"email" binding:"required,email"`
+	Password     string `json:"password" binding:"required,min=6"`
+	Code         string `json:"code" binding:"required,len=6,numeric"`
 	BusinessName string `json:"businessName" binding:"required,min=2,max=128"`
-	VATNumber    string `json:"vatNumber" binding:"required,startswith=DE,len=11,alphanum"`
+	VATNumber    string `json:"vatNumber" binding:"required,len=11,alphanum"`
 }
 
 type Response struct {
