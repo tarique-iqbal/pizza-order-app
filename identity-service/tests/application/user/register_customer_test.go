@@ -49,7 +49,7 @@ func setupRegisterCustomer() *user.RegisterCustomer {
 	return user.NewRegisterCustomer(codeVerifier, userRepo, hasher, mockPublisher)
 }
 
-func TestRegister(t *testing.T) {
+func TestRegisterCustomer_Success(t *testing.T) {
 	register := setupRegisterCustomer()
 
 	input := user.RegisterCustomerRequest{
@@ -57,7 +57,8 @@ func TestRegister(t *testing.T) {
 		LastName:  "D'Angelo",
 		Email:     "adam.dangelo@example.com",
 		Password:  "securepassword",
-		Code:      "476190",
+		Role:      "customer",
+		Code:      "476190", // from fixture
 	}
 
 	newUser, err := register.Execute(context.Background(), input)
@@ -71,5 +72,69 @@ func TestRegister(t *testing.T) {
 	assert.Equal(t, "Adam", createdEvent.FirstName)
 	assert.Equal(t, "adam.dangelo@example.com", createdEvent.Email)
 	assert.Equal(t, "user.registered", createdEvent.GetEventName())
+	assert.Len(t, mockPublisher.PublishedEvents, 1)
+}
+
+func TestRegisterCustomer_Failure_EmailVerification(t *testing.T) {
+	register := setupRegisterCustomer()
+
+	input := user.RegisterCustomerRequest{
+		FirstName: "John",
+		LastName:  "Doe",
+		Email:     "invalid@example.com",
+		Password:  "password",
+		Role:      "customer",
+		Code:      "wrong-code", // invalid
+	}
+
+	response, err := register.Execute(context.Background(), input)
+
+	assert.Error(t, err)
+	assert.Empty(t, response)
+
+	assert.Len(t, mockPublisher.PublishedEvents, 0)
+}
+
+func TestRegisterCustomer_Failure_DuplicateEmail(t *testing.T) {
+	register := setupRegisterCustomer()
+
+	input := user.RegisterCustomerRequest{
+		FirstName: "Existing",
+		LastName:  "User",
+		Email:     "existing@example.com", // from fixture
+		Password:  "password",
+		Role:      "customer",
+		Code:      "365189",
+	}
+
+	response, err := register.Execute(context.Background(), input)
+
+	assert.Error(t, err)
+	assert.Empty(t, response)
+
+	assert.Len(t, mockPublisher.PublishedEvents, 0)
+}
+
+func TestRegisterCustomer_PublishFails_ShouldStillSucceed(t *testing.T) {
+	register := setupRegisterCustomer()
+
+	// override publisher to fail
+	mockPublisher.ShouldFail = true
+
+	input := user.RegisterCustomerRequest{
+		FirstName: "Alice",
+		LastName:  "Schmidt",
+		Email:     "alice@example.com",
+		Password:  "password",
+		Role:      "customer",
+		Code:      "347578",
+	}
+
+	response, err := register.Execute(context.Background(), input)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, response)
+
+	// event attempted
 	assert.Len(t, mockPublisher.PublishedEvents, 1)
 }

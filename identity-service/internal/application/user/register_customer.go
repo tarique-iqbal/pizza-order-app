@@ -73,7 +73,5 @@ func (uc *RegisterCustomer) Execute(ctx context.Context, input RegisterCustomerR
 		log.Println("Failed to publish user.registered event:", err)
 	}
 
-	response := MapToResponse(&newUser)
-
-	return response, nil
+	return MapToResponse(&newUser), nil
 }
