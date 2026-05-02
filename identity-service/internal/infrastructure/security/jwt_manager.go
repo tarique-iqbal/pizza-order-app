@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"identity-service/internal/domain/auth"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -25,7 +26,13 @@ type jwtClaims struct {
 }
 
 func (j *jwtManager) Generate(userID string, role string) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
+	duration := 30 * time.Minute
+	if os.Getenv("APP_ENV") == "dev" {
+		duration = 24 * time.Hour
+	}
+
+	expirationTime := time.Now().Add(duration)
+
 	claims := jwtClaims{
 		UserID: userID,
 		Role:   role,
