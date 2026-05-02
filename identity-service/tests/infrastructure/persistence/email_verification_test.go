@@ -29,8 +29,8 @@ func TestEmailVerificationRepository_Create(t *testing.T) {
 		Email:     "adam.dangelo@example.com",
 		Code:      "467923",
 		IsUsed:    false,
-		ExpiresAt: time.Now().Add(15 * time.Minute),
-		CreatedAt: time.Now(),
+		ExpiresAt: time.Now().UTC().Add(15 * time.Minute),
+		CreatedAt: time.Now().UTC(),
 	}
 
 	err := emVerRepo.Create(context.Background(), &emailVerification)
@@ -45,7 +45,7 @@ func TestEmailVerificationRepository_Updates(t *testing.T) {
 	existing, _ := emVerRepo.FindByEmail(context.Background(), "john.doe@example.com")
 	existing.Code = "478326"
 	existing.IsUsed = false
-	existing.ExpiresAt = time.Now().Add(15 * time.Minute)
+	existing.ExpiresAt = time.Now().UTC().Add(15 * time.Minute)
 
 	err := emVerRepo.Updates(context.Background(), existing)
 

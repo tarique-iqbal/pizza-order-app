@@ -33,7 +33,7 @@ func TestUserRepository_Create(t *testing.T) {
 		Email:     "adam.dangelo@example.com",
 		Password:  "hashedpassword",
 		Role:      "customer",
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
 	}
 
 	userID, _ := uuid.NewV7()
@@ -75,7 +75,7 @@ func TestUserRepository_FindByID_Success(t *testing.T) {
 		Email:     "tony@satrialis.com",
 		Role:      "owner",
 		Status:    "active",
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
 	}
 
 	userID, _ := uuid.NewV7()

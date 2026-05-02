@@ -104,12 +104,11 @@ func (uc *RegisterOwner) Execute(ctx context.Context, input RegisterOwnerRequest
 		return Response{}, err
 	}
 
-	t := time.Now().UTC()
 	userRegistered := UserRegistered{
 		Email:     newUser.Email,
 		FirstName: newUser.FirstName,
 		Role:      newUser.Role,
-		Timestamp: t.Format(time.RFC3339),
+		Timestamp: time.Now().UTC(),
 	}
 	userRegistered.EventName = userRegistered.GetEventName()
 

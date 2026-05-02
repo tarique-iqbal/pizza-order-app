@@ -64,7 +64,7 @@ func TestJWTManager_ExpiredToken(t *testing.T) {
 	expiredClaims := jwtClaims{
 		UserID: userID.String(),
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-1 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(-1 * time.Hour)),
 		},
 	}
 

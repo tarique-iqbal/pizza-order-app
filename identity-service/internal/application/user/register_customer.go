@@ -65,7 +65,7 @@ func (uc *RegisterCustomer) Execute(ctx context.Context, input RegisterCustomerR
 		Email:     newUser.Email,
 		FirstName: newUser.FirstName,
 		Role:      newUser.Role,
-		Timestamp: newUser.CreatedAt.Format(time.RFC3339),
+		Timestamp: time.Now().UTC(),
 	}
 	event.EventName = event.GetEventName()
 

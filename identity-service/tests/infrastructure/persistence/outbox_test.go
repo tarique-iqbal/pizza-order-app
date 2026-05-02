@@ -129,7 +129,7 @@ func TestOutboxRepository_ReleaseForRetry(t *testing.T) {
 	// simulate processing state
 	require.NoError(t, ts.DB.Model(&event).Updates(map[string]interface{}{
 		"status":       outbox.StatusProcessing,
-		"locked_until": time.Now().Add(30 * time.Second),
+		"locked_until": time.Now().UTC().Add(30 * time.Second),
 	}).Error)
 
 	err := repo.ReleaseForRetry(context.Background(), event.ID, "temporary failure")
@@ -154,7 +154,7 @@ func TestOutboxRepository_FetchAndMarkProcessing_SkipLocked(t *testing.T) {
 	// lock one event manually
 	require.NoError(t, ts.DB.Model(&event).Updates(map[string]interface{}{
 		"status":       outbox.StatusProcessing,
-		"locked_until": time.Now().Add(30 * time.Second),
+		"locked_until": time.Now().UTC().Add(30 * time.Second),
 	}).Error)
 
 	events, err := repo.FetchAndMarkProcessing(context.Background(), 10)

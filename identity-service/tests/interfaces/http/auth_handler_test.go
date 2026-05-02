@@ -58,7 +58,7 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 		Email:     "test@example.com",
 		Password:  hp,
 		Role:      "customer",
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
 		UpdatedAt: nil,
 	}
 
@@ -118,7 +118,7 @@ func TestAuthHandler_Login_Failed(t *testing.T) {
 		Email:     "test@example.com",
 		Password:  hp,
 		Role:      "customer",
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
 		UpdatedAt: nil,
 	}
 

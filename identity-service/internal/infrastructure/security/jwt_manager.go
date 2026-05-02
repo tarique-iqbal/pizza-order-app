@@ -31,17 +31,20 @@ func (j *jwtManager) Generate(userID string, role string) (string, error) {
 		duration = 24 * time.Hour
 	}
 
-	expirationTime := time.Now().Add(duration)
+	now := time.Now().UTC()
 
 	claims := jwtClaims{
 		UserID: userID,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			ExpiresAt: jwt.NewNumericDate(now.Add(duration)),
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
 	return token.SignedString(j.secret)
 }
 

@@ -35,11 +35,12 @@ func (uc *RequestEmailOTP) Execute(
 		return err
 	}
 
+	expiry := time.Duration(accessTokenExpiry) * time.Minute
 	verification := &auth.EmailVerification{
 		Email:     email,
 		Code:      code,
 		IsUsed:    false,
-		ExpiresAt: time.Now().Add(time.Duration(accessTokenExpiry) * time.Minute),
+		ExpiresAt: time.Now().UTC().Add(expiry),
 	}
 
 	existing, err := uc.repo.FindByEmail(ctx, email)
@@ -65,7 +66,7 @@ func (uc *RequestEmailOTP) Execute(
 	event := EmailVerificationCreated{
 		Email:     email,
 		Code:      code,
-		Timestamp: time.Now().Format(time.RFC3339),
+		Timestamp: time.Now().UTC(),
 	}
 	event.EventName = event.GetEventName()
 

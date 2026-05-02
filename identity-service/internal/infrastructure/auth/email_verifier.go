@@ -35,7 +35,7 @@ func (s *emailVerifier) Verify(ctx context.Context, email string, code string) e
 		return auth.ErrCodeInvalid
 	}
 
-	if time.Now().After(emailVerification.ExpiresAt) {
+	if time.Now().UTC().After(emailVerification.ExpiresAt) {
 		return auth.ErrCodeExpired
 	}
 

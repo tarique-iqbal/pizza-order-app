@@ -40,7 +40,7 @@ func TestFindByID_Success(t *testing.T) {
 		Email:     "tony@satrialis.com",
 		Role:      "owner",
 		Status:    "active",
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
 	}
 
 	userID, _ := uuid.NewV7()
