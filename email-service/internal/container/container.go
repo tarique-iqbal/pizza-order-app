@@ -3,16 +3,16 @@ package container
 import (
 	"os"
 
-	aEmail "email-service/internal/application/email"
-	dEmail "email-service/internal/domain/email"
-	iEmail "email-service/internal/infrastructure/email"
+	emailapp "email-service/internal/application/email"
+	"email-service/internal/domain/email"
+	emailinfra "email-service/internal/infrastructure/email"
 	"email-service/internal/infrastructure/messaging"
 )
 
 const emailTemplatePath = "internal/infrastructure/email/templates"
 
 type Container struct {
-	Dispatcher dEmail.EventDispatcher
+	Dispatcher email.EventDispatcher
 	Consumer   *messaging.RabbitMQConsumer
 }
 
@@ -24,13 +24,13 @@ func NewContainer() (*Container, error) {
 	smtpPass := os.Getenv("SMTP_PASS")
 	senderEmail := os.Getenv("SENDER_EMAIL")
 
-	smtpSender := iEmail.NewSMTPSender(smtpHost, smtpPort, smtpUser, smtpPass, senderEmail)
-	template := iEmail.NewHTMLTemplateLoader(emailTemplatePath)
+	smtpSender := emailinfra.NewSMTPSender(smtpHost, smtpPort, smtpUser, smtpPass, senderEmail)
+	template := emailinfra.NewHTMLTemplateLoader(emailTemplatePath)
 
-	userRegisteredHandler := aEmail.NewUserRegisteredHandler(smtpSender, template)
-	emailVerificationCreatedHandler := aEmail.NewEmailVerificationCreatedHandler(smtpSender, template)
+	userRegisteredHandler := emailapp.NewUserRegisteredHandler(smtpSender, template)
+	emailVerificationCreatedHandler := emailapp.NewEmailVerificationCreatedHandler(smtpSender, template)
 
-	dispatcher := aEmail.NewEventDispatcher()
+	dispatcher := emailapp.NewEventDispatcher()
 	dispatcher.Register(messaging.Exchanges["identity.events"][1], userRegisteredHandler)
 	dispatcher.Register(messaging.Exchanges["identity.events"][0], emailVerificationCreatedHandler)
 

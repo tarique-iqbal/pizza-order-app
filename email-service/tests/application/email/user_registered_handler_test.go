@@ -5,15 +5,15 @@ import (
 	"os"
 	"testing"
 
-	"email-service/internal/application/email"
-	dEmail "email-service/internal/domain/email"
+	emailapp "email-service/internal/application/email"
+	"email-service/internal/domain/email"
 
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	_ dEmail.Sender         = (*mockSender)(nil)
-	_ dEmail.TemplateLoader = (*mockTemplateLoader)(nil)
+	_ email.Sender         = (*mockSender)(nil)
+	_ email.TemplateLoader = (*mockTemplateLoader)(nil)
 )
 
 type mockSender struct {
@@ -55,9 +55,9 @@ func TestUserRegisteredHandler_Handle_Success(t *testing.T) {
 
 	sender := &mockSender{}
 	template := &mockTemplateLoader{}
-	handler := email.NewUserRegisteredHandler(sender, template)
+	handler := emailapp.NewUserRegisteredHandler(sender, template)
 
-	event := dEmail.EventPayload{
+	event := email.EventPayload{
 		Name: "user.registered",
 		Data: []byte(`{
 			"email": "test@example.com",
@@ -79,9 +79,9 @@ func TestUserRegisteredHandler_Handle_Success(t *testing.T) {
 func TestUserRegisteredHandler_Handle_InvalidJSON(t *testing.T) {
 	sender := &mockSender{}
 	template := &mockTemplateLoader{}
-	handler := email.NewUserRegisteredHandler(sender, template)
+	handler := emailapp.NewUserRegisteredHandler(sender, template)
 
-	event := dEmail.EventPayload{
+	event := email.EventPayload{
 		Name: "user.registered",
 		Data: []byte(`{invalid}`),
 	}
@@ -95,9 +95,9 @@ func TestUserRegisteredHandler_Handle_InvalidJSON(t *testing.T) {
 func TestUserRegisteredHandler_Handle_TemplateRenderFails(t *testing.T) {
 	sender := &mockSender{}
 	template := &mockTemplateLoader{Fail: true}
-	handler := email.NewUserRegisteredHandler(sender, template)
+	handler := emailapp.NewUserRegisteredHandler(sender, template)
 
-	event := dEmail.EventPayload{
+	event := email.EventPayload{
 		Name: "user.registered",
 		Data: []byte(`{
 			"email": "test@example.com",
@@ -116,9 +116,9 @@ func TestUserRegisteredHandler_Handle_TemplateRenderFails(t *testing.T) {
 func TestUserRegisteredHandler_Handle_EmailSendFails(t *testing.T) {
 	sender := &mockSender{Err: errors.New("smtp error")}
 	template := &mockTemplateLoader{}
-	handler := email.NewUserRegisteredHandler(sender, template)
+	handler := emailapp.NewUserRegisteredHandler(sender, template)
 
-	event := dEmail.EventPayload{
+	event := email.EventPayload{
 		Name: "user.registered",
 		Data: []byte(`{
 			"email": "test@example.com",

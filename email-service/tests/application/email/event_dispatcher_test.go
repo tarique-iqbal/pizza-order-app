@@ -4,31 +4,31 @@ import (
 	"errors"
 	"testing"
 
-	aEmail "email-service/internal/application/email"
-	dEmail "email-service/internal/domain/email"
+	emailapp "email-service/internal/application/email"
+	"email-service/internal/domain/email"
 
 	"github.com/stretchr/testify/assert"
 )
 
 type mockHandler struct {
 	Called bool
-	Passed dEmail.EventPayload
+	Passed email.EventPayload
 	Err    error
 }
 
-func (m *mockHandler) Handle(event dEmail.EventPayload) error {
+func (m *mockHandler) Handle(event email.EventPayload) error {
 	m.Called = true
 	m.Passed = event
 	return m.Err
 }
 
 func TestDispatch_CallsRegisteredHandler(t *testing.T) {
-	dispatcher := aEmail.NewEventDispatcher()
+	dispatcher := emailapp.NewEventDispatcher()
 	mock := &mockHandler{}
 
 	dispatcher.Register("user.registered", mock)
 
-	event := dEmail.EventPayload{Name: "user.registered", Data: []byte(`{}`)}
+	event := email.EventPayload{Name: "user.registered", Data: []byte(`{}`)}
 	err := dispatcher.Dispatch(event)
 
 	assert.NoError(t, err)
@@ -37,9 +37,9 @@ func TestDispatch_CallsRegisteredHandler(t *testing.T) {
 }
 
 func TestDispatch_NoHandler(t *testing.T) {
-	dispatcher := aEmail.NewEventDispatcher()
+	dispatcher := emailapp.NewEventDispatcher()
 
-	event := dEmail.EventPayload{Name: "user.unknown", Data: []byte(`{}`)}
+	event := email.EventPayload{Name: "user.unknown", Data: []byte(`{}`)}
 	err := dispatcher.Dispatch(event)
 
 	assert.Error(t, err)
@@ -47,12 +47,12 @@ func TestDispatch_NoHandler(t *testing.T) {
 }
 
 func TestDispatch_HandlerReturnsError(t *testing.T) {
-	var dispatcher dEmail.EventDispatcher = aEmail.NewEventDispatcher()
+	var dispatcher email.EventDispatcher = emailapp.NewEventDispatcher()
 	mock := &mockHandler{Err: errors.New("handler error")}
 
 	dispatcher.Register("user.registered", mock)
 
-	event := dEmail.EventPayload{Name: "user.registered", Data: []byte(`{}`)}
+	event := email.EventPayload{Name: "user.registered", Data: []byte(`{}`)}
 	err := dispatcher.Dispatch(event)
 
 	assert.Error(t, err)
