@@ -103,7 +103,6 @@ services:
     env_file: identity-service/.env
     ports:
       - "8080:8080"
-    command: ["air", "-c", ".air.toml"]
 
   # Restaurant Service
   restaurant-service:
@@ -124,7 +123,6 @@ services:
     env_file: restaurant-service/.env
     ports:
       - "8081:8080"
-    command: ["air", "-c", ".air.toml"]
 
   # Email Service
   email-service:
@@ -132,9 +130,12 @@ services:
     build:
       context: .
       dockerfile: docker/email-service/Dockerfile
+      target: dev
     depends_on:
       rabbitmq:
         condition: service_healthy
+    volumes:
+      - ./email-service:/app
     env_file: email-service/.env
 
 volumes:

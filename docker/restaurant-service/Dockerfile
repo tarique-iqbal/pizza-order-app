@@ -19,7 +19,7 @@ COPY restaurant-service/ .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /restaurant-service ./cmd/main.go
 
 # Stage 4: Final (Production Image)
-FROM alpine:latest
+FROM alpine:3.21
 WORKDIR /app
 
 RUN apk add --no-cache ca-certificates postgresql-client
