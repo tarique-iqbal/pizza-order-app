@@ -49,5 +49,6 @@ docker-compose*  # Except our main compose file
 !README.md
 
 identity-service/tmp
+restaurant-service/tmp
 web-user/build/
 web-user/node_modules/

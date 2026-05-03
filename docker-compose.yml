@@ -111,14 +111,20 @@ services:
     build:
       context: .
       dockerfile: .docker/restaurant-service/Dockerfile
+      target: dev
+    volumes:
+      - ./restaurant-service:/app
     depends_on:
       postgres-restaurant:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     env_file: restaurant-service/.env
     ports:
       - "8081:8080"
+    command: ["air", "-c", ".air.toml"]
 
   # Email Service
   email-service:
