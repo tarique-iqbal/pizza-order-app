@@ -6,16 +6,16 @@ import (
 	"os"
 )
 
-type EmailVerificationCreatedHandler struct {
+type EmailVerificationCreated struct {
 	sender   email.Sender
 	template email.TemplateLoader
 }
 
-func NewEmailVerificationCreatedHandler(sender email.Sender, template email.TemplateLoader) *EmailVerificationCreatedHandler {
-	return &EmailVerificationCreatedHandler{sender: sender, template: template}
+func NewEmailVerificationCreated(sender email.Sender, template email.TemplateLoader) *EmailVerificationCreated {
+	return &EmailVerificationCreated{sender: sender, template: template}
 }
 
-func (h *EmailVerificationCreatedHandler) Handle(event email.EventPayload) error {
+func (h *EmailVerificationCreated) Handle(event email.EventPayload) error {
 	var payload struct {
 		Email string `json:"email"`
 		Code  string `json:"code"`

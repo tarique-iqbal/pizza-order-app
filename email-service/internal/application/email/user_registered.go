@@ -12,16 +12,16 @@ const (
 	RoleOwner    = "owner"
 )
 
-type UserRegisteredHandler struct {
+type UserRegistered struct {
 	sender   email.Sender
 	template email.TemplateLoader
 }
 
-func NewUserRegisteredHandler(sender email.Sender, template email.TemplateLoader) *UserRegisteredHandler {
-	return &UserRegisteredHandler{sender: sender, template: template}
+func NewUserRegistered(sender email.Sender, template email.TemplateLoader) *UserRegistered {
+	return &UserRegistered{sender: sender, template: template}
 }
 
-func (h *UserRegisteredHandler) Handle(event email.EventPayload) error {
+func (h *UserRegistered) Handle(event email.EventPayload) error {
 	var payload struct {
 		Email     string `json:"email"`
 		FirstName string `json:"first_name"`

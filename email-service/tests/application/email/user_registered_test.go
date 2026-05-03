@@ -49,13 +49,13 @@ func (m *mockTemplateLoader) Render(name string, data any) (string, error) {
 	return "", nil
 }
 
-func TestUserRegisteredHandler_Handle_Success(t *testing.T) {
+func TestUserRegistered_Handle_Success(t *testing.T) {
 	os.Setenv("APP_NAME", "MockApp")
 	os.Setenv("SUPPORT_EMAIL", "support@mock.com")
 
 	sender := &mockSender{}
 	template := &mockTemplateLoader{}
-	handler := emailapp.NewUserRegisteredHandler(sender, template)
+	handler := emailapp.NewUserRegistered(sender, template)
 
 	event := email.EventPayload{
 		Name: "user.registered",
@@ -76,10 +76,10 @@ func TestUserRegisteredHandler_Handle_Success(t *testing.T) {
 	assert.Equal(t, 2, template.RenderCount) // subject + body
 }
 
-func TestUserRegisteredHandler_Handle_InvalidJSON(t *testing.T) {
+func TestUserRegistered_Handle_InvalidJSON(t *testing.T) {
 	sender := &mockSender{}
 	template := &mockTemplateLoader{}
-	handler := emailapp.NewUserRegisteredHandler(sender, template)
+	handler := emailapp.NewUserRegistered(sender, template)
 
 	event := email.EventPayload{
 		Name: "user.registered",
@@ -92,10 +92,10 @@ func TestUserRegisteredHandler_Handle_InvalidJSON(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid character")
 }
 
-func TestUserRegisteredHandler_Handle_TemplateRenderFails(t *testing.T) {
+func TestUserRegistered_Handle_TemplateRenderFails(t *testing.T) {
 	sender := &mockSender{}
 	template := &mockTemplateLoader{Fail: true}
-	handler := emailapp.NewUserRegisteredHandler(sender, template)
+	handler := emailapp.NewUserRegistered(sender, template)
 
 	event := email.EventPayload{
 		Name: "user.registered",
@@ -113,10 +113,10 @@ func TestUserRegisteredHandler_Handle_TemplateRenderFails(t *testing.T) {
 	assert.Contains(t, err.Error(), "template rendering failed")
 }
 
-func TestUserRegisteredHandler_Handle_EmailSendFails(t *testing.T) {
+func TestUserRegistered_Handle_EmailSendFails(t *testing.T) {
 	sender := &mockSender{Err: errors.New("smtp error")}
 	template := &mockTemplateLoader{}
-	handler := emailapp.NewUserRegisteredHandler(sender, template)
+	handler := emailapp.NewUserRegistered(sender, template)
 
 	event := email.EventPayload{
 		Name: "user.registered",
