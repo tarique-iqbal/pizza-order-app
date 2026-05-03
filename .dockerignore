@@ -40,8 +40,8 @@ coverage.out
 *.coverprofile
 *.cover
 
-!.docker/  # Keep this directory
-Dockerfile*  # Ignore root Dockerfiles (we use .docker/*/Dockerfile)
+!docker/  # Keep this directory
+Dockerfile*  # Ignore root Dockerfiles (we use docker/*/Dockerfile)
 docker-compose*  # Except our main compose file
 !docker-compose.yml
 

@@ -89,7 +89,7 @@ services:
     container_name: pizza-identity-service
     build:
       context: .
-      dockerfile: .docker/identity-service/Dockerfile
+      dockerfile: docker/identity-service/Dockerfile
       target: dev
     volumes:
       - ./identity-service:/app
@@ -110,7 +110,7 @@ services:
     container_name: pizza-restaurant-service
     build:
       context: .
-      dockerfile: .docker/restaurant-service/Dockerfile
+      dockerfile: docker/restaurant-service/Dockerfile
       target: dev
     volumes:
       - ./restaurant-service:/app
@@ -131,7 +131,7 @@ services:
     container_name: pizza-email-service
     build:
       context: .
-      dockerfile: .docker/email-service/Dockerfile
+      dockerfile: docker/email-service/Dockerfile
     depends_on:
       rabbitmq:
         condition: service_healthy
