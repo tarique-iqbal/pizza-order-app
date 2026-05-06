@@ -1,7 +1,7 @@
--- First, drop the table (removes columns and constraints)
+-- first, drop the table (removes columns and constraints)
 DROP TABLE IF EXISTS users;
 
--- Then, drop the ENUM types if they exist
+-- then, drop the ENUM types if they exist
 DO $$ BEGIN
     IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_enum') THEN
         DROP TYPE user_role_enum;
