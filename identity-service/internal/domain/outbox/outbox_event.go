@@ -19,16 +19,17 @@ const (
 )
 
 type OutboxEvent struct {
-	ID          int64          `gorm:"primaryKey;autoIncrement"`
-	AggregateID uuid.UUID      `gorm:"type:uuid;not null;index"`
-	EventName   string         `gorm:"type:varchar(64);not null"`
-	Payload     datatypes.JSON `gorm:"type:jsonb;not null"`
-	Status      OutboxStatus   `gorm:"type:varchar(16);not null;default:'pending';index"`
-	Attempts    int            `gorm:"not null;default:0"`
-	LockedUntil *time.Time     `gorm:"type:timestamptz"`
-	LastError   *string        `gorm:"type:text"`
-	CreatedAt   time.Time      `gorm:"autoCreateTime"`
-	ProcessedAt *time.Time     `gorm:"type:timestamptz"`
+	ID            int64          `gorm:"primaryKey;autoIncrement"`
+	AggregateID   uuid.UUID      `gorm:"type:uuid;not null;index"`
+	EventName     string         `gorm:"type:varchar(64);not null"`
+	Payload       datatypes.JSON `gorm:"type:jsonb;not null"`
+	Status        OutboxStatus   `gorm:"type:varchar(16);not null;default:'pending';index"`
+	Attempts      int            `gorm:"not null;default:0"`
+	LockedUntil   *time.Time     `gorm:"type:timestamptz"`
+	NextAttemptAt *time.Time     `gorm:"type:timestamptz;index"`
+	LastError     *string        `gorm:"type:text"`
+	CreatedAt     time.Time      `gorm:"type:timestamptz;not null"`
+	ProcessedAt   *time.Time     `gorm:"type:timestamptz"`
 }
 
 func (OutboxEvent) TableName() string {
@@ -41,5 +42,6 @@ func NewOutboxEvent(aggregateID uuid.UUID, name string, payload []byte) OutboxEv
 		EventName:   name,
 		Payload:     datatypes.JSON(payload),
 		Status:      StatusPending,
+		CreatedAt:   time.Now().UTC(),
 	}
 }
