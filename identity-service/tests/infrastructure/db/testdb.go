@@ -3,16 +3,31 @@ package db
 import (
 	"identity-service/internal/infrastructure/db"
 	"log"
+	"sync"
 
 	"gorm.io/gorm"
 )
 
-func SetupTestDB() *gorm.DB {
-	tdb, err := db.InitDB()
-	if err != nil {
-		log.Fatalf("DB connection failed: %v", err)
-	}
+var (
+	once sync.Once
+	tdb  *gorm.DB
+	err  error
+)
 
+func SetupTestDB() *gorm.DB {
+	once.Do(func() {
+		tdb, err = db.InitDB()
+		if err != nil {
+			log.Fatalf("DB connection failed: %v", err)
+		}
+
+		recreateTable(tdb)
+	})
+
+	return tdb
+}
+
+func recreateTable(tdb *gorm.DB) {
 	tdb.Exec(`
 		DROP TABLE IF EXISTS email_verifications CASCADE;
 		DROP TABLE IF EXISTS users CASCADE;
@@ -23,7 +38,9 @@ func SetupTestDB() *gorm.DB {
 		CREATE TYPE user_status_enum AS ENUM ('active', 'inactive', 'suspended');
 		CREATE TYPE user_role_enum AS ENUM ('customer', 'owner', 'admin');
 
-		DROP INDEX IF EXISTS idx_outbox_events_relay;
+		DROP INDEX IF EXISTS idx_outbox_fetch_pending;
+		DROP INDEX IF EXISTS idx_outbox_processing_locked;
+		DROP INDEX IF EXISTS idx_outbox_failed;
 		DROP TABLE IF EXISTS outbox_events;
 
 		CREATE TABLE users (
@@ -49,25 +66,34 @@ func SetupTestDB() *gorm.DB {
 		);
 
 		CREATE TABLE outbox_events (
-			id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-			aggregate_id  UUID NOT NULL,
-			event_name    VARCHAR(64) NOT NULL,
-			payload       JSONB NOT NULL,
-			status        VARCHAR(16) NOT NULL DEFAULT 'pending',
-			attempts      INTEGER NOT NULL DEFAULT 0,
-			locked_until  TIMESTAMPTZ,
-			last_error    TEXT,
-			created_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			processed_at  TIMESTAMPTZ,
-
+			id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+			aggregate_id     UUID        NOT NULL,
+			event_name       VARCHAR(64) NOT NULL,
+			payload          JSONB       NOT NULL,
+			status           VARCHAR(16) NOT NULL DEFAULT 'pending',
+			attempts         INTEGER     NOT NULL DEFAULT 0,
+			locked_until     TIMESTAMPTZ,
+			next_attempt_at  TIMESTAMPTZ,
+			last_error       TEXT,
+			created_at       TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			processed_at     TIMESTAMPTZ,
 			CONSTRAINT outbox_events_status_check
-			CHECK (status IN ('pending', 'processing', 'processed', 'failed'))
+				CHECK (status IN ('pending', 'processing', 'processed', 'failed'))
 		);
 
-		CREATE INDEX idx_outbox_events_relay
-		ON outbox_events (status, created_at ASC)
-		WHERE status IN ('pending', 'processing');
-	`)
+		-- core worker index
+		CREATE INDEX idx_outbox_fetch_pending
+		ON outbox_events (next_attempt_at ASC, created_at ASC)
+		WHERE status = 'pending';
 
-	return tdb
+		-- lock recovery
+		CREATE INDEX idx_outbox_processing_locked
+		ON outbox_events (locked_until)
+		WHERE status = 'processing';
+
+		-- dead-letter / failed inspection
+		CREATE INDEX idx_outbox_failed
+		ON outbox_events (created_at DESC)
+		WHERE status = 'failed';
+	`)
 }
