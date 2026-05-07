@@ -14,10 +14,12 @@ import (
 )
 
 func setupCodeVerification() auth.EmailVerifier {
-	testDB := db.SetupTestDB()
-	repo := persistence.NewEmailVerificationRepository(testDB)
+	tdb := db.SetupTestDB()
+	repo := persistence.NewEmailVerificationRepository(tdb)
 
-	if err := fixtures.LoadEmailVerificationFixtures(testDB); err != nil {
+	tdb.Exec("TRUNCATE TABLE email_verifications RESTART IDENTITY CASCADE")
+
+	if err := fixtures.LoadEmailVerificationFixtures(tdb); err != nil {
 		panic(err)
 	}
 
