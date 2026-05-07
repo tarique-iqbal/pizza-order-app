@@ -6,6 +6,7 @@ import (
 	"identity-service/internal/domain/outbox"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/tests/infrastructure/db/fixtures"
+	"identity-service/tests/testutil"
 	"testing"
 	"time"
 
@@ -28,10 +29,10 @@ func TestOutboxRepository_Create(t *testing.T) {
 	ts := testStorage()
 	repo := setupOutboxRepo()
 
-	restaurantID := generateUUID()
+	restaurantID := testutil.MustNewID()
 	payloadMap := map[string]interface{}{
 		"restaurant_id": restaurantID,
-		"owner_id":      generateUUID(),
+		"owner_id":      testutil.MustNewID(),
 		"business_name": "Domino's Pizza",
 		"vat_number":    "DE123456121",
 	}
@@ -88,7 +89,7 @@ func TestOutboxRepository_FetchAndMarkProcessing_Limit(t *testing.T) {
 	// insert extra events
 	for range 3 {
 		e := outbox.NewOutboxEvent(
-			generateUUID(),
+			testutil.MustNewID(),
 			outbox.EventRestaurantInitiated,
 			[]byte(`{}`),
 		)
@@ -107,6 +108,9 @@ func TestOutboxRepository_MarkProcessed(t *testing.T) {
 
 	var event outbox.OutboxEvent
 	require.NoError(t, ts.DB.First(&event).Error)
+
+	event.Status = outbox.StatusProcessing
+	require.NoError(t, ts.DB.Save(&event).Error)
 
 	err := repo.MarkProcessed(context.Background(), event.ID)
 	require.NoError(t, err)
@@ -132,7 +136,7 @@ func TestOutboxRepository_ReleaseForRetry(t *testing.T) {
 		"locked_until": time.Now().UTC().Add(30 * time.Second),
 	}).Error)
 
-	err := repo.ReleaseForRetry(context.Background(), event.ID, "temporary failure")
+	err := repo.ReleaseForRetry(context.Background(), event.ID, "temporary failure", 10*time.Second)
 	require.NoError(t, err)
 
 	var updated outbox.OutboxEvent

@@ -2,48 +2,62 @@ package fixtures
 
 import (
 	"encoding/json"
+	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	"identity-service/internal/domain/outbox"
+	"identity-service/tests/testutil"
 )
 
 func LoadOutboxEventFixtures(db *gorm.DB) error {
-	restaurantID := uuid.MustParse("019da239-5f40-7212-8d20-eb3dde923e18")
-	userID := uuid.MustParse("019dcf5d-d90e-7abc-8def-1234567890ab")
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	payloadMap := map[string]interface{}{
-		"restaurant_id": restaurantID,
-		"owner_id":      userID,
-		"business_name": "Test Restaurant",
-		"vat_number":    "DE123456789",
-	}
+	for range 5 {
+		restaurantID, payload, err := restaurantPayload(r)
+		if err != nil {
+			return err
+		}
 
-	payload, err := json.Marshal(payloadMap)
-	if err != nil {
-		return err
-	}
-
-	events := []outbox.OutboxEvent{
-		outbox.NewOutboxEvent(
+		event := outbox.NewOutboxEvent(
 			restaurantID,
 			outbox.EventRestaurantInitiated,
 			payload,
-		),
-	}
+		)
 
-	for _, e := range events {
-		e.CreatedAt = time.Now().UTC()
-		e.Status = outbox.StatusPending
-		e.Payload = datatypes.JSON(payload)
-
-		if err := db.Create(&e).Error; err != nil {
+		if err := db.Create(&event).Error; err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func restaurantPayload(r *rand.Rand) (restaurantID uuid.UUID, payload []byte, err error) {
+	restaurantID = testutil.MustNewID()
+
+	payloadMap := map[string]any{
+		"restaurant_id": restaurantID,
+		"owner_id":      testutil.MustNewID(),
+		"business_name": randomString(r, "Restaurant"),
+		"vat_number":    randomVAT(r),
+	}
+
+	payload, err = json.Marshal(payloadMap)
+	if err != nil {
+		return restaurantID, nil, err
+	}
+
+	return restaurantID, payload, nil
+}
+
+func randomString(r *rand.Rand, prefix string) string {
+	return fmt.Sprintf("%s_%d", prefix, r.Intn(1_000_000))
+}
+
+func randomVAT(r *rand.Rand) string {
+	return fmt.Sprintf("DE%09d", r.Intn(1_000_000_000))
 }
