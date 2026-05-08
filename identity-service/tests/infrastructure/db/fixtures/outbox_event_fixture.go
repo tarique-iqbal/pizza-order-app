@@ -4,23 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
 	"identity-service/internal/domain/outbox"
 	"identity-service/tests/testutil"
 )
 
-func LoadOutboxEventFixtures(db *gorm.DB) error {
+func LoadOutboxEventFixtures(t *testing.T, db *gorm.DB) error {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	for range 5 {
 		restaurantID, payload, err := restaurantPayload(r)
-		if err != nil {
-			return err
-		}
+		require.NoError(t, err)
 
 		event := outbox.NewOutboxEvent(
 			restaurantID,
@@ -28,9 +28,8 @@ func LoadOutboxEventFixtures(db *gorm.DB) error {
 			payload,
 		)
 
-		if err := db.Create(&event).Error; err != nil {
-			return err
-		}
+		err = db.Create(&event).Error
+		require.NoError(t, err)
 	}
 
 	return nil

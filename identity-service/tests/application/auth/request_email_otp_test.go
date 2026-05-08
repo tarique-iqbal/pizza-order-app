@@ -8,6 +8,7 @@ import (
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
 	"identity-service/internal/shared/event"
+	"identity-service/tests/testutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,11 +40,11 @@ func (m *MockEventPublisher) PublishRaw(ctx context.Context, topic string, jsonD
 	return nil
 }
 
-func requestEmailOTP() *auth.RequestEmailOTP {
-	ts := testStorage()
-	truncateTables(ts.DB)
+func requestEmailOTP(t *testing.T) *auth.RequestEmailOTP {
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableEmailVerification)
 
-	repo = persistence.NewEmailVerificationRepository(ts.DB)
+	repo = persistence.NewEmailVerificationRepository(db.DB)
 	otp := security.NewOTPGenerator()
 	mockPublisher = &MockEventPublisher{}
 
@@ -51,7 +52,7 @@ func requestEmailOTP() *auth.RequestEmailOTP {
 }
 
 func TestCreateEmailVerification_Success(t *testing.T) {
-	emailOTP = requestEmailOTP()
+	emailOTP = requestEmailOTP(t)
 
 	input := auth.EmailVerificationRequest{
 		Email: "adam.dangelo@example.com",

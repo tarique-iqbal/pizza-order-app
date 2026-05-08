@@ -5,6 +5,7 @@ import (
 	"identity-service/internal/domain/user"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/tests/infrastructure/db/fixtures"
+	"identity-service/tests/testutil"
 	"testing"
 	"time"
 
@@ -13,19 +14,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupUserRepo() user.UserRepository {
-	ts := testStorage()
-	truncateTables(ts.DB)
+func setupUserRepo(t *testing.T) user.UserRepository {
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableUser)
 
-	if err := fixtures.LoadUserFixtures(ts.DB); err != nil {
-		panic(err)
-	}
+	_ = fixtures.LoadUserFixtures(t, db.DB)
 
-	return persistence.NewUserRepository(ts.DB)
+	return persistence.NewUserRepository(db.DB)
 }
 
 func TestUserRepository_Create(t *testing.T) {
-	userRepo := setupUserRepo()
+	userRepo := setupUserRepo(t)
 
 	usr := user.User{
 		FirstName: "Adam",
@@ -46,7 +45,7 @@ func TestUserRepository_Create(t *testing.T) {
 }
 
 func TestUserRepository_FindByEmail(t *testing.T) {
-	userRepo := setupUserRepo()
+	userRepo := setupUserRepo(t)
 
 	usr, err := userRepo.FindByEmail(context.Background(), "john.doe@example.com")
 	assert.NoError(t, err)
@@ -54,7 +53,7 @@ func TestUserRepository_FindByEmail(t *testing.T) {
 }
 
 func TestUserRepository_EmailExists(t *testing.T) {
-	userRepo := setupUserRepo()
+	userRepo := setupUserRepo(t)
 
 	exists, err := userRepo.EmailExists("john.doe@example.com")
 	assert.NoError(t, err)
@@ -67,7 +66,7 @@ func TestUserRepository_EmailExists(t *testing.T) {
 
 func TestUserRepository_FindByID_Success(t *testing.T) {
 	ctx := context.Background()
-	userRepo := setupUserRepo()
+	userRepo := setupUserRepo(t)
 
 	u := &user.User{
 		FirstName: "Tony",
@@ -99,7 +98,7 @@ func TestUserRepository_FindByID_Success(t *testing.T) {
 
 func TestUserRepository_FindByID_NotFound(t *testing.T) {
 	ctx := context.Background()
-	repo := setupUserRepo()
+	repo := setupUserRepo(t)
 
 	userID, _ := uuid.NewV7()
 

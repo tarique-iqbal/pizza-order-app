@@ -9,53 +9,51 @@ import (
 	"identity-service/internal/domain/auth"
 	authinfra "identity-service/internal/infrastructure/auth"
 	"identity-service/internal/infrastructure/persistence"
-	"identity-service/tests/infrastructure/db"
 	"identity-service/tests/infrastructure/db/fixtures"
+	"identity-service/tests/testutil"
 )
 
-func setupCodeVerification() auth.EmailVerifier {
-	tdb := db.SetupTestDB()
-	repo := persistence.NewEmailVerificationRepository(tdb)
+func setupCodeVerification(t *testing.T) auth.EmailVerifier {
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableEmailVerification)
 
-	tdb.Exec("TRUNCATE TABLE email_verifications RESTART IDENTITY CASCADE")
+	_ = fixtures.LoadEmailVerificationFixtures(t, db.DB)
 
-	if err := fixtures.LoadEmailVerificationFixtures(tdb); err != nil {
-		panic(err)
-	}
+	repo := persistence.NewEmailVerificationRepository(db.DB)
 
 	return authinfra.NewEmailVerifier(repo)
 }
 
 func TestVerify_Success(t *testing.T) {
-	svc := setupCodeVerification()
+	svc := setupCodeVerification(t)
 
 	err := svc.Verify(context.Background(), "alice@example.com", "347578")
 	assert.NoError(t, err)
 }
 
 func TestVerify_CodeMismatch(t *testing.T) {
-	svc := setupCodeVerification()
+	svc := setupCodeVerification(t)
 
 	err := svc.Verify(context.Background(), "alice@example.com", "010101")
 	assert.ErrorIs(t, err, auth.ErrCodeInvalid)
 }
 
 func TestVerify_AlreadyUsed(t *testing.T) {
-	svc := setupCodeVerification()
+	svc := setupCodeVerification(t)
 
 	err := svc.Verify(context.Background(), "already.used@example.com", "137468")
 	assert.ErrorIs(t, err, auth.ErrCodeUsed)
 }
 
 func TestVerify_Expired(t *testing.T) {
-	svc := setupCodeVerification()
+	svc := setupCodeVerification(t)
 
 	err := svc.Verify(context.Background(), "expired@example.com", "743802")
 	assert.ErrorIs(t, err, auth.ErrCodeExpired)
 }
 
 func TestVerify_CodeNotIssued(t *testing.T) {
-	svc := setupCodeVerification()
+	svc := setupCodeVerification(t)
 
 	err := svc.Verify(context.Background(), "not.found@example.com", "578578")
 	assert.ErrorIs(t, err, auth.ErrCodeNotIssued)

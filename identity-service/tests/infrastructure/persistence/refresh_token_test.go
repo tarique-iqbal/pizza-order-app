@@ -10,21 +10,22 @@ import (
 
 	"identity-service/internal/domain/auth"
 	"identity-service/internal/infrastructure/persistence"
+	"identity-service/tests/testutil"
 )
 
 func TestRedisConnection(t *testing.T) {
-	ts := testStorage()
-	err := ts.Redis.Ping(context.Background()).Err()
+	rdb := testutil.Redis(t)
+	err := rdb.Client.Ping(context.Background()).Err()
 	require.NoError(t, err)
 }
 
 func TestRefreshTokenRepository_SaveAndFind(t *testing.T) {
 	ctx := context.Background()
 
-	ts := testStorage()
-	flushRedis(t, ts.Redis)
+	rdb := testutil.Redis(t)
+	rdb.Flush(t)
 
-	repo := persistence.NewRefreshTokenRepository(ts.Redis)
+	repo := persistence.NewRefreshTokenRepository(rdb.Client)
 
 	hashedToken := "test-token"
 	claims := auth.UserClaims{
@@ -44,10 +45,10 @@ func TestRefreshTokenRepository_SaveAndFind(t *testing.T) {
 func TestRefreshTokenRepository_Find_NotFound(t *testing.T) {
 	ctx := context.Background()
 
-	ts := testStorage()
-	flushRedis(t, ts.Redis)
+	rdb := testutil.Redis(t)
+	rdb.Flush(t)
 
-	repo := persistence.NewRefreshTokenRepository(ts.Redis)
+	repo := persistence.NewRefreshTokenRepository(rdb.Client)
 
 	_, err := repo.Find(ctx, "non-existing-token")
 
@@ -58,10 +59,10 @@ func TestRefreshTokenRepository_Find_NotFound(t *testing.T) {
 func TestRefreshTokenRepository_Delete(t *testing.T) {
 	ctx := context.Background()
 
-	ts := testStorage()
-	flushRedis(t, ts.Redis)
+	rdb := testutil.Redis(t)
+	rdb.Flush(t)
 
-	repo := persistence.NewRefreshTokenRepository(ts.Redis)
+	repo := persistence.NewRefreshTokenRepository(rdb.Client)
 
 	hashedToken := "delete-token"
 	claims := auth.UserClaims{
@@ -82,10 +83,10 @@ func TestRefreshTokenRepository_Delete(t *testing.T) {
 func TestRefreshTokenRepository_TTLExpiry(t *testing.T) {
 	ctx := context.Background()
 
-	ts := testStorage()
-	flushRedis(t, ts.Redis)
+	rdb := testutil.Redis(t)
+	rdb.Flush(t)
 
-	repo := persistence.NewRefreshTokenRepository(ts.Redis)
+	repo := persistence.NewRefreshTokenRepository(rdb.Client)
 
 	hashedToken := "ttl-token"
 	claims := auth.UserClaims{

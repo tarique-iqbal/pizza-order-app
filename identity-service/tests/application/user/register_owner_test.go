@@ -7,34 +7,31 @@ import (
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
 	"identity-service/tests/infrastructure/db/fixtures"
+	"identity-service/tests/testutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func setupRegisterOwner() *user.RegisterOwner {
-	ts := testStorage()
-	truncateTables(ts.DB)
+func setupRegisterOwner(t *testing.T) *user.RegisterOwner {
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableEmailVerification, testutil.TableUser)
 
-	emailVerificationRepo := persistence.NewEmailVerificationRepository(ts.DB)
+	_ = fixtures.LoadEmailVerificationFixtures(t, db.DB)
+	_ = fixtures.LoadUserFixtures(t, db.DB)
+
+	emailVerificationRepo := persistence.NewEmailVerificationRepository(db.DB)
 	codeVerifier := auth.NewEmailVerifier(emailVerificationRepo)
-	userRepo := persistence.NewUserRepository(ts.DB)
-	outboxRepo := persistence.NewOutboxRepository(ts.DB)
+	userRepo := persistence.NewUserRepository(db.DB)
+	outboxRepo := persistence.NewOutboxRepository(db.DB)
 	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
 
-	if err := fixtures.LoadEmailVerificationFixtures(ts.DB); err != nil {
-		panic(err)
-	}
-	if err := fixtures.LoadUserFixtures(ts.DB); err != nil {
-		panic(err)
-	}
-
-	return user.NewRegisterOwner(ts.DB, codeVerifier, hasher, userRepo, outboxRepo, mockPublisher)
+	return user.NewRegisterOwner(db.DB, codeVerifier, hasher, userRepo, outboxRepo, mockPublisher)
 }
 
 func TestRegisterOwner_Success(t *testing.T) {
-	registerOwner := setupRegisterOwner()
+	registerOwner := setupRegisterOwner(t)
 
 	input := user.RegisterOwnerRequest{
 		FirstName:    "Sophie",
@@ -61,7 +58,7 @@ func TestRegisterOwner_Success(t *testing.T) {
 }
 
 func TestRegisterOwner_Failure_EmailVerification(t *testing.T) {
-	registerOwner := setupRegisterOwner()
+	registerOwner := setupRegisterOwner(t)
 
 	input := user.RegisterOwnerRequest{
 		FirstName:    "John",
@@ -82,7 +79,7 @@ func TestRegisterOwner_Failure_EmailVerification(t *testing.T) {
 }
 
 func TestRegisterOwner_Failure_DuplicateEmail(t *testing.T) {
-	registerOwner := setupRegisterOwner()
+	registerOwner := setupRegisterOwner(t)
 
 	input := user.RegisterOwnerRequest{
 		FirstName:    "Existing",
@@ -103,7 +100,7 @@ func TestRegisterOwner_Failure_DuplicateEmail(t *testing.T) {
 }
 
 func TestRegisterOwner_PublishFails_ShouldStillSucceed(t *testing.T) {
-	registerOwner := setupRegisterOwner()
+	registerOwner := setupRegisterOwner(t)
 
 	// override publisher to fail
 	mockPublisher.ShouldFail = true

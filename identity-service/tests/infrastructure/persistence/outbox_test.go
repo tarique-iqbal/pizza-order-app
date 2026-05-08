@@ -14,20 +14,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupOutboxRepo() outbox.OutboxRepository {
-	ts := testStorage()
-	truncateTables(ts.DB)
+func setupOutboxRepo(t *testing.T) outbox.OutboxRepository {
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableOutboxEvent)
 
-	if err := fixtures.LoadOutboxEventFixtures(ts.DB); err != nil {
-		panic(err)
-	}
+	_ = fixtures.LoadOutboxEventFixtures(t, db.DB)
 
-	return persistence.NewOutboxRepository(ts.DB)
+	return persistence.NewOutboxRepository(db.DB)
 }
 
 func TestOutboxRepository_Create(t *testing.T) {
-	ts := testStorage()
-	repo := setupOutboxRepo()
+	db := testutil.DB(t)
+	repo := setupOutboxRepo(t)
 
 	restaurantID := testutil.MustNewID()
 	payloadMap := map[string]interface{}{
@@ -50,7 +48,7 @@ func TestOutboxRepository_Create(t *testing.T) {
 	assert.NotZero(t, event.ID)
 
 	var found outbox.OutboxEvent
-	err = ts.DB.First(&found, event.ID).Error
+	err = db.DB.First(&found, event.ID).Error
 	require.NoError(t, err)
 
 	assert.Equal(t, outbox.StatusPending, found.Status)
@@ -58,8 +56,8 @@ func TestOutboxRepository_Create(t *testing.T) {
 }
 
 func TestOutboxRepository_FetchAndMarkProcessing(t *testing.T) {
-	ts := testStorage()
-	repo := setupOutboxRepo()
+	db := testutil.DB(t)
+	repo := setupOutboxRepo(t)
 
 	events, err := repo.FetchAndMarkProcessing(context.Background(), 1)
 
@@ -75,7 +73,7 @@ func TestOutboxRepository_FetchAndMarkProcessing(t *testing.T) {
 
 	// DB verification (critical)
 	var dbEvent outbox.OutboxEvent
-	err = ts.DB.First(&dbEvent, e.ID).Error
+	err = db.DB.First(&dbEvent, e.ID).Error
 	require.NoError(t, err)
 
 	assert.Equal(t, outbox.StatusProcessing, dbEvent.Status)
@@ -84,7 +82,7 @@ func TestOutboxRepository_FetchAndMarkProcessing(t *testing.T) {
 }
 
 func TestOutboxRepository_FetchAndMarkProcessing_Limit(t *testing.T) {
-	repo := setupOutboxRepo()
+	repo := setupOutboxRepo(t)
 
 	// insert extra events
 	for range 3 {
@@ -103,20 +101,20 @@ func TestOutboxRepository_FetchAndMarkProcessing_Limit(t *testing.T) {
 }
 
 func TestOutboxRepository_MarkProcessed(t *testing.T) {
-	ts := testStorage()
-	repo := setupOutboxRepo()
+	db := testutil.DB(t)
+	repo := setupOutboxRepo(t)
 
 	var event outbox.OutboxEvent
-	require.NoError(t, ts.DB.First(&event).Error)
+	require.NoError(t, db.DB.First(&event).Error)
 
 	event.Status = outbox.StatusProcessing
-	require.NoError(t, ts.DB.Save(&event).Error)
+	require.NoError(t, db.DB.Save(&event).Error)
 
 	err := repo.MarkProcessed(context.Background(), event.ID)
 	require.NoError(t, err)
 
 	var updated outbox.OutboxEvent
-	require.NoError(t, ts.DB.First(&updated, event.ID).Error)
+	require.NoError(t, db.DB.First(&updated, event.ID).Error)
 
 	assert.Equal(t, outbox.StatusProcessed, updated.Status)
 	assert.NotNil(t, updated.ProcessedAt)
@@ -124,14 +122,14 @@ func TestOutboxRepository_MarkProcessed(t *testing.T) {
 }
 
 func TestOutboxRepository_ReleaseForRetry(t *testing.T) {
-	ts := testStorage()
-	repo := setupOutboxRepo()
+	db := testutil.DB(t)
+	repo := setupOutboxRepo(t)
 
 	var event outbox.OutboxEvent
-	require.NoError(t, ts.DB.First(&event).Error)
+	require.NoError(t, db.DB.First(&event).Error)
 
 	// simulate processing state
-	require.NoError(t, ts.DB.Model(&event).Updates(map[string]interface{}{
+	require.NoError(t, db.DB.Model(&event).Updates(map[string]interface{}{
 		"status":       outbox.StatusProcessing,
 		"locked_until": time.Now().UTC().Add(30 * time.Second),
 	}).Error)
@@ -140,7 +138,7 @@ func TestOutboxRepository_ReleaseForRetry(t *testing.T) {
 	require.NoError(t, err)
 
 	var updated outbox.OutboxEvent
-	require.NoError(t, ts.DB.First(&updated, event.ID).Error)
+	require.NoError(t, db.DB.First(&updated, event.ID).Error)
 
 	require.NotNil(t, updated.LastError)
 	assert.Equal(t, outbox.StatusPending, updated.Status)
@@ -149,14 +147,14 @@ func TestOutboxRepository_ReleaseForRetry(t *testing.T) {
 }
 
 func TestOutboxRepository_FetchAndMarkProcessing_SkipLocked(t *testing.T) {
-	ts := testStorage()
-	repo := setupOutboxRepo()
+	db := testutil.DB(t)
+	repo := setupOutboxRepo(t)
 
 	var event outbox.OutboxEvent
-	require.NoError(t, ts.DB.First(&event).Error)
+	require.NoError(t, db.DB.First(&event).Error)
 
 	// lock one event manually
-	require.NoError(t, ts.DB.Model(&event).Updates(map[string]interface{}{
+	require.NoError(t, db.DB.Model(&event).Updates(map[string]interface{}{
 		"status":       outbox.StatusProcessing,
 		"locked_until": time.Now().UTC().Add(30 * time.Second),
 	}).Error)

@@ -6,6 +6,7 @@ import (
 	"identity-service/internal/domain/auth"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
+	"identity-service/tests/testutil"
 	"testing"
 	"time"
 
@@ -20,11 +21,11 @@ func setupRefreshToken(t *testing.T) (
 	auth.RefreshTokenManager,
 	auth.RefreshTokenRepository,
 ) {
-	ts := testStorage()
-	flushRedis(t, ts.Redis)
+	rdb := testutil.Redis(t)
+	rdb.Flush(t)
 
 	jwt := security.NewJWTManager("TestSecretKey")
-	repo := persistence.NewRefreshTokenRepository(ts.Redis)
+	repo := persistence.NewRefreshTokenRepository(rdb.Client)
 	manager := security.NewRefreshTokenManager()
 
 	refresher = authapp.NewRefreshToken(jwt, repo, manager)

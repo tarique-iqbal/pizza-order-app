@@ -13,26 +13,25 @@ import (
 	"identity-service/internal/domain/user"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/tests/infrastructure/db/fixtures"
+	"identity-service/tests/testutil"
 )
 
-func setupFindByID() *userapp.FindByID {
-	ts := testStorage()
-	truncateTables(ts.DB)
+func setupFindByID(t *testing.T) *userapp.FindByID {
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableUser)
 
-	userRepo := persistence.NewUserRepository(ts.DB)
+	_ = fixtures.LoadUserFixtures(t, db.DB)
+
+	userRepo := persistence.NewUserRepository(db.DB)
 	mockPublisher = &MockEventPublisher{}
-
-	if err := fixtures.LoadUserFixtures(ts.DB); err != nil {
-		panic(err)
-	}
 
 	return userapp.NewFindByID(userRepo)
 }
 
 func TestFindByID_Success(t *testing.T) {
 	ctx := context.Background()
-	ts := testStorage()
-	uc := setupFindByID()
+	db := testutil.DB(t)
+	uc := setupFindByID(t)
 
 	u := &user.User{
 		FirstName: "Tony",
@@ -46,7 +45,7 @@ func TestFindByID_Success(t *testing.T) {
 	userID, _ := uuid.NewV7()
 	u.ID = userID
 
-	err := ts.DB.WithContext(ctx).Create(u).Error
+	err := db.DB.WithContext(ctx).Create(u).Error
 	require.NoError(t, err)
 
 	res, err := uc.Execute(ctx, userID)
@@ -64,7 +63,7 @@ func TestFindByID_Success(t *testing.T) {
 
 func TestFindByID_NotFound(t *testing.T) {
 	ctx := context.Background()
-	uc := setupFindByID()
+	uc := setupFindByID(t)
 
 	userID, _ := uuid.NewV7()
 

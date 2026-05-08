@@ -12,31 +12,34 @@ import (
 	"identity-service/internal/infrastructure/security"
 	httpui "identity-service/internal/interfaces/http"
 	"identity-service/tests/infrastructure/db/fixtures"
+	"identity-service/tests/testutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func setupAuthHandler() (
+func setupAuthHandler(t *testing.T) (
 	*httpui.AuthHandler,
-	user.UserRepository,
-	auth.PasswordHasher,
 	auth.JWTManager,
 	auth.RefreshTokenRepository,
 	auth.RefreshTokenManager,
 ) {
-	ts := testStorage()
-	truncateTables(ts.DB)
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableEmailVerification, testutil.TableUser)
 
-	userRepo := persistence.NewUserRepository(ts.DB)
+	_ = fixtures.LoadUserFixtures(t, db.DB)
+
+	rdb := testutil.Redis(t)
+	rdb.Flush(t)
+
+	userRepo := persistence.NewUserRepository(db.DB)
 	hasher := security.NewPasswordHasher()
 	jwt := security.NewJWTManager("TestSecretKey")
-	refreshTokenRepo := persistence.NewRefreshTokenRepository(ts.Redis)
+	refreshTokenRepo := persistence.NewRefreshTokenRepository(rdb.Client)
 	refreshTokenManager := security.NewRefreshTokenManager()
 
 	login := authapp.NewLogin(userRepo, hasher, jwt, refreshTokenRepo, refreshTokenManager)
@@ -45,24 +48,11 @@ func setupAuthHandler() (
 
 	handler := httpui.NewAuthHandler(login, nil, refreshToken, logout)
 
-	return handler, userRepo, hasher, jwt, refreshTokenRepo, refreshTokenManager
+	return handler, jwt, refreshTokenRepo, refreshTokenManager
 }
 
 func TestAuthHandler_Login_Success(t *testing.T) {
-	handler, repo, hasher, jwt, _, _ := setupAuthHandler()
-	hp, _ := hasher.Hash("password123")
-
-	newUser := &user.User{
-		FirstName: "John",
-		LastName:  "Doe",
-		Email:     "test@example.com",
-		Password:  hp,
-		Role:      "customer",
-		CreatedAt: time.Now().UTC(),
-		UpdatedAt: nil,
-	}
-
-	repo.Create(context.Background(), newUser)
+	handler, jwt, _, _ := setupAuthHandler(t)
 
 	tc := struct {
 		name         string
@@ -72,8 +62,8 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 	}{
 		name: "Successful Login",
 		requestBody: map[string]string{
-			"email":    "test@example.com",
-			"password": "password123",
+			"email":    "existing@example.com", // from fixture
+			"password": "plainPassword",
 		},
 		expectedCode: http.StatusOK,
 	}
@@ -109,20 +99,7 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 }
 
 func TestAuthHandler_Login_Failed(t *testing.T) {
-	handler, repo, hasher, _, _, _ := setupAuthHandler()
-	hp, _ := hasher.Hash("password123")
-
-	newUser := &user.User{
-		FirstName: "John",
-		LastName:  "Doe",
-		Email:     "test@example.com",
-		Password:  hp,
-		Role:      "customer",
-		CreatedAt: time.Now().UTC(),
-		UpdatedAt: nil,
-	}
-
-	repo.Create(context.Background(), newUser)
+	handler, _, _, _ := setupAuthHandler(t)
 
 	tests := []struct {
 		name         string
@@ -133,7 +110,7 @@ func TestAuthHandler_Login_Failed(t *testing.T) {
 		{
 			name: "Successful Login",
 			requestBody: map[string]string{
-				"email":    "test@example.com",
+				"email":    "existing@example.com", // from fixture
 				"password": "wrongpassword",
 			},
 			expectedCode: http.StatusUnauthorized,
@@ -187,7 +164,7 @@ func TestAuthHandler_Login_Failed(t *testing.T) {
 }
 
 func TestAuthHandler_Refresh_Success(t *testing.T) {
-	handler, _, _, _, repo, manager := setupAuthHandler()
+	handler, _, repo, manager := setupAuthHandler(t)
 
 	router := gin.Default()
 	router.POST("/auth/refresh", handler.Refresh)
@@ -229,7 +206,7 @@ func TestAuthHandler_Refresh_Success(t *testing.T) {
 }
 
 func TestAuthHandler_Refresh_InvalidToken(t *testing.T) {
-	handler, _, _, _, _, _ := setupAuthHandler()
+	handler, _, _, _ := setupAuthHandler(t)
 
 	router := gin.Default()
 	router.POST("/auth/refresh", handler.Refresh)
@@ -254,7 +231,7 @@ func TestAuthHandler_Refresh_InvalidToken(t *testing.T) {
 }
 
 func TestAuthHandler_Refresh_InvalidRequest(t *testing.T) {
-	handler, _, _, _, _, _ := setupAuthHandler()
+	handler, _, _, _ := setupAuthHandler(t)
 
 	router := gin.Default()
 	router.POST("/auth/refresh", handler.Refresh)
@@ -279,7 +256,7 @@ func TestAuthHandler_Refresh_InvalidRequest(t *testing.T) {
 }
 
 func TestAuthHandler_Refresh_Rotation(t *testing.T) {
-	handler, _, _, _, repo, manager := setupAuthHandler()
+	handler, _, repo, manager := setupAuthHandler(t)
 
 	router := gin.Default()
 	router.POST("/auth/refresh", handler.Refresh)
@@ -318,23 +295,23 @@ func TestAuthHandler_Refresh_Rotation(t *testing.T) {
 
 func TestAuthHandler_Logout_Success(t *testing.T) {
 	ctx := context.Background()
+	db := testutil.DB(t)
 
-	handler, _, _, _, repo, manager := setupAuthHandler()
+	handler, _, repo, manager := setupAuthHandler(t)
 
-	u := fixtures.NewUser()
-	u.Role = "owner"
-	user, err := fixtures.CreateUser(ts.DB, u)
+	var u user.User
+	err := db.DB.Where("email = ?", "existing@example.com").First(&u).Error // from fixture
 	require.NoError(t, err)
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
+	router.Use(MockAuthMiddleware(u.ID.String(), u.Role))
 	router.POST("/auth/logout", handler.Logout)
 
 	rawToken, _ := manager.Generate()
 	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
-		UserID: user.ID.String(),
+		UserID: u.ID.String(),
 		Role:   "owner",
 	}
 
@@ -361,23 +338,23 @@ func TestAuthHandler_Logout_Success(t *testing.T) {
 
 func TestAuthHandler_Logout_Idempotent(t *testing.T) {
 	ctx := context.Background()
+	db := testutil.DB(t)
 
-	handler, _, _, _, repo, manager := setupAuthHandler()
+	handler, _, repo, manager := setupAuthHandler(t)
 
-	u := fixtures.NewUser()
-	u.Role = "owner"
-	user, err := fixtures.CreateUser(ts.DB, u)
+	var u user.User
+	err := db.DB.Where("email = ?", "existing@example.com").First(&u).Error // from fixture
 	require.NoError(t, err)
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
+	router.Use(MockAuthMiddleware(u.ID.String(), u.Role))
 	router.POST("/auth/logout", handler.Logout)
 
 	rawToken, _ := manager.Generate()
 	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
-		UserID: user.ID.String(),
+		UserID: u.ID.String(),
 		Role:   "owner",
 	}
 
@@ -410,15 +387,15 @@ func TestAuthHandler_Logout_Idempotent(t *testing.T) {
 }
 
 func TestAuthHandler_Logout_InvalidRequest(t *testing.T) {
-	handler, _, _, _, _, _ := setupAuthHandler()
+	handler, _, _, _ := setupAuthHandler(t)
+	db := testutil.DB(t)
 
-	u := fixtures.NewUser()
-	u.Role = "owner"
-	user, err := fixtures.CreateUser(ts.DB, u)
+	var u user.User
+	err := db.DB.Where("email = ?", "existing@example.com").First(&u).Error // from fixture
 	require.NoError(t, err)
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
+	router.Use(MockAuthMiddleware(u.ID.String(), u.Role))
 	router.POST("/auth/logout", handler.Logout)
 
 	req := httptest.NewRequest(

@@ -10,6 +10,7 @@ import (
 	"identity-service/internal/domain/auth"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
+	"identity-service/tests/testutil"
 )
 
 func setupLogout(t *testing.T) (
@@ -17,10 +18,10 @@ func setupLogout(t *testing.T) (
 	auth.RefreshTokenManager,
 	auth.RefreshTokenRepository,
 ) {
-	ts := testStorage()
-	flushRedis(t, ts.Redis)
+	rdb := testutil.Redis(t)
+	rdb.Flush(t)
 
-	repo := persistence.NewRefreshTokenRepository(ts.Redis)
+	repo := persistence.NewRefreshTokenRepository(rdb.Client)
 	manager := security.NewRefreshTokenManager()
 
 	logout := authapp.NewLogout(repo, manager)

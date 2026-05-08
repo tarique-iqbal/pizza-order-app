@@ -3,7 +3,6 @@ package outbox_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"os"
 	"sync"
@@ -14,6 +13,7 @@ import (
 	"identity-service/internal/domain/outbox"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/tests/infrastructure/db/fixtures"
+	"identity-service/tests/testutil"
 
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -48,30 +48,28 @@ func (r *relayStub) Process(ctx context.Context, e outbox.OutboxEvent) error {
 	return r.fn(ctx, e)
 }
 
-func newTestDB() TestDB {
-	ts := testStorage()
-	truncateTables(ts.DB)
+func newTestDB(t *testing.T) TestDB {
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableOutboxEvent)
 
-	if err := fixtures.LoadOutboxEventFixtures(ts.DB); err != nil {
-		panic(fmt.Sprintf("failed to load fixtures: %v", err))
-	}
+	_ = fixtures.LoadOutboxEventFixtures(t, db.DB)
 
-	repo := persistence.NewOutboxRepository(ts.DB)
+	repo := persistence.NewOutboxRepository(db.DB)
 
 	return TestDB{
-		DB:   ts.DB,
+		DB:   db.DB,
 		Repo: repo,
 	}
 }
 
-func newEmptyTestDB() TestDB {
-	ts := testStorage()
-	truncateTables(ts.DB)
+func newEmptyTestDB(t *testing.T) TestDB {
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableOutboxEvent)
 
-	repo := persistence.NewOutboxRepository(ts.DB)
+	repo := persistence.NewOutboxRepository(db.DB)
 
 	return TestDB{
-		DB:   ts.DB,
+		DB:   db.DB,
 		Repo: repo,
 	}
 }
@@ -156,7 +154,7 @@ func startWorker(t *testing.T, repo outbox.OutboxRepository, relayer *relayStub)
 }
 
 func TestWorker_Start_success(t *testing.T) {
-	tdb := newTestDB()
+	tdb := newTestDB(t)
 
 	relayer := &relayStub{
 		fn: func(ctx context.Context, e outbox.OutboxEvent) error {
@@ -178,7 +176,7 @@ func TestWorker_Start_success(t *testing.T) {
 }
 
 func TestWorker_Start_failure(t *testing.T) {
-	tdb := newTestDB()
+	tdb := newTestDB(t)
 
 	relayer := &relayStub{
 		fn: func(ctx context.Context, e outbox.OutboxEvent) error {
@@ -201,7 +199,7 @@ func TestWorker_Start_failure(t *testing.T) {
 }
 
 func TestWorker_Start_partial(t *testing.T) {
-	tdb := newTestDB()
+	tdb := newTestDB(t)
 
 	// first event succeeds, subsequent events fail
 	relayer := &relayStub{
@@ -256,7 +254,7 @@ func TestWorker_Start_partial(t *testing.T) {
 }
 
 func TestWorker_Start_empty(t *testing.T) {
-	tdb := newEmptyTestDB()
+	tdb := newEmptyTestDB(t)
 
 	// verify database is empty
 	events := listEvents(t, tdb.DB)
@@ -279,7 +277,7 @@ func TestWorker_Start_empty(t *testing.T) {
 }
 
 func TestWorker_GracefulShutdown(t *testing.T) {
-	tdb := newTestDB()
+	tdb := newTestDB(t)
 
 	// slow processor to test graceful shutdown
 	processing := make(chan struct{})
@@ -336,7 +334,7 @@ func TestWorker_GracefulShutdown(t *testing.T) {
 }
 
 func TestWorker_ContextCancellation(t *testing.T) {
-	tdb := newTestDB()
+	tdb := newTestDB(t)
 
 	blockProcessing := make(chan struct{})
 	relayer := &relayStub{
@@ -380,39 +378,4 @@ func TestWorker_ContextCancellation(t *testing.T) {
 	}
 
 	close(blockProcessing) // unblock the goroutine for cleanup
-}
-
-func BenchmarkWorkerProcessEvents(b *testing.B) {
-	tdb := newTestDB()
-
-	relayer := &relayStub{
-		fn: func(ctx context.Context, e outbox.OutboxEvent) error {
-			return nil
-		},
-	}
-
-	config := testConfig()
-	config.PollInterval = 1 * time.Millisecond // ultra-fast for benchmark
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelWarn, // reduce log noise
-	}))
-
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		worker := outboxapp.NewWorker(tdb.Repo, relayer, config, logger)
-		ctx, cancel := context.WithCancel(context.Background())
-
-		var wg sync.WaitGroup
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			worker.Start(ctx)
-		}()
-
-		// wait for processing
-		time.Sleep(200 * time.Millisecond)
-		cancel()
-		wg.Wait()
-	}
 }

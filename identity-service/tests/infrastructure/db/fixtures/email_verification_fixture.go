@@ -2,12 +2,14 @@ package fixtures
 
 import (
 	"identity-service/internal/domain/auth"
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
-func LoadEmailVerificationFixtures(db *gorm.DB) error {
+func LoadEmailVerificationFixtures(t *testing.T, db *gorm.DB) error {
 	emailVerification := []auth.EmailVerification{
 		{
 			Email:     "john.doe@example.com",
@@ -54,7 +56,8 @@ func LoadEmailVerificationFixtures(db *gorm.DB) error {
 	}
 
 	for _, u := range emailVerification {
-		db.Create(&u)
+		err := db.Create(&u).Error
+		require.NoError(t, err)
 	}
 
 	return nil

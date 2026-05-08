@@ -9,6 +9,7 @@ import (
 	"identity-service/internal/infrastructure/security"
 	"identity-service/internal/shared/event"
 	"identity-service/tests/infrastructure/db/fixtures"
+	"identity-service/tests/testutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,28 +39,24 @@ func (m *MockEventPublisher) PublishRaw(ctx context.Context, topic string, jsonD
 	return nil
 }
 
-func setupRegisterCustomer() *user.RegisterCustomer {
-	ts := testStorage()
-	truncateTables(ts.DB)
+func setupRegisterCustomer(t *testing.T) *user.RegisterCustomer {
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableEmailVerification, testutil.TableUser)
 
-	emailVerificationRepo := persistence.NewEmailVerificationRepository(ts.DB)
+	_ = fixtures.LoadEmailVerificationFixtures(t, db.DB)
+	_ = fixtures.LoadUserFixtures(t, db.DB)
+
+	emailVerificationRepo := persistence.NewEmailVerificationRepository(db.DB)
 	codeVerifier := auth.NewEmailVerifier(emailVerificationRepo)
-	userRepo := persistence.NewUserRepository(ts.DB)
+	userRepo := persistence.NewUserRepository(db.DB)
 	hasher := security.NewPasswordHasher()
 	mockPublisher = &MockEventPublisher{}
-
-	if err := fixtures.LoadEmailVerificationFixtures(ts.DB); err != nil {
-		panic(err)
-	}
-	if err := fixtures.LoadUserFixtures(ts.DB); err != nil {
-		panic(err)
-	}
 
 	return user.NewRegisterCustomer(codeVerifier, userRepo, hasher, mockPublisher)
 }
 
 func TestRegisterCustomer_Success(t *testing.T) {
-	register := setupRegisterCustomer()
+	register := setupRegisterCustomer(t)
 
 	input := user.RegisterCustomerRequest{
 		FirstName: "Adam",
@@ -84,7 +81,7 @@ func TestRegisterCustomer_Success(t *testing.T) {
 }
 
 func TestRegisterCustomer_Failure_EmailVerification(t *testing.T) {
-	register := setupRegisterCustomer()
+	register := setupRegisterCustomer(t)
 
 	input := user.RegisterCustomerRequest{
 		FirstName: "John",
@@ -103,7 +100,7 @@ func TestRegisterCustomer_Failure_EmailVerification(t *testing.T) {
 }
 
 func TestRegisterCustomer_Failure_DuplicateEmail(t *testing.T) {
-	register := setupRegisterCustomer()
+	register := setupRegisterCustomer(t)
 
 	input := user.RegisterCustomerRequest{
 		FirstName: "Existing",
@@ -122,7 +119,7 @@ func TestRegisterCustomer_Failure_DuplicateEmail(t *testing.T) {
 }
 
 func TestRegisterCustomer_PublishFails_ShouldStillSucceed(t *testing.T) {
-	register := setupRegisterCustomer()
+	register := setupRegisterCustomer(t)
 
 	// override publisher to fail
 	mockPublisher.ShouldFail = true

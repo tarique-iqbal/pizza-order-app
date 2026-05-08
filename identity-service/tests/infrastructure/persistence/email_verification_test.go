@@ -5,25 +5,24 @@ import (
 	"identity-service/internal/domain/auth"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/tests/infrastructure/db/fixtures"
+	"identity-service/tests/testutil"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func setupEmailVerificationRepo() auth.EmailVerificationRepository {
-	ts := testStorage()
-	truncateTables(ts.DB)
+func setupEmailVerificationRepo(t *testing.T) auth.EmailVerificationRepository {
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableEmailVerification)
 
-	if err := fixtures.LoadEmailVerificationFixtures(ts.DB); err != nil {
-		panic(err)
-	}
+	_ = fixtures.LoadEmailVerificationFixtures(t, db.DB)
 
-	return persistence.NewEmailVerificationRepository(ts.DB)
+	return persistence.NewEmailVerificationRepository(db.DB)
 }
 
 func TestEmailVerificationRepository_Create(t *testing.T) {
-	emVerRepo := setupEmailVerificationRepo()
+	emVerRepo := setupEmailVerificationRepo(t)
 
 	emailVerification := auth.EmailVerification{
 		Email:     "adam.dangelo@example.com",
@@ -40,7 +39,7 @@ func TestEmailVerificationRepository_Create(t *testing.T) {
 }
 
 func TestEmailVerificationRepository_Updates(t *testing.T) {
-	emVerRepo := setupEmailVerificationRepo()
+	emVerRepo := setupEmailVerificationRepo(t)
 
 	existing, _ := emVerRepo.FindByEmail(context.Background(), "john.doe@example.com")
 	existing.Code = "478326"
@@ -53,7 +52,7 @@ func TestEmailVerificationRepository_Updates(t *testing.T) {
 }
 
 func TestEmailVerificationRepository_FindByEmail(t *testing.T) {
-	emVerRepo := setupEmailVerificationRepo()
+	emVerRepo := setupEmailVerificationRepo(t)
 
 	emVer, err := emVerRepo.FindByEmail(context.Background(), "john.doe@example.com")
 

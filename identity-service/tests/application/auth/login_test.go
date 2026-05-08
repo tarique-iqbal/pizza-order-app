@@ -6,6 +6,7 @@ import (
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
 	"identity-service/tests/infrastructure/db/fixtures"
+	"identity-service/tests/testutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,18 +15,18 @@ import (
 var login *auth.Login
 
 func setupLogin(t *testing.T) *auth.Login {
-	ts := testStorage()
-	flushRedis(t, ts.Redis)
-	truncateTables(ts.DB)
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableUser)
 
-	if err := fixtures.LoadUserFixtures(ts.DB); err != nil {
-		panic(err)
-	}
+	rdb := testutil.Redis(t)
+	rdb.Flush(t)
 
-	repo := persistence.NewUserRepository(ts.DB)
+	_ = fixtures.LoadUserFixtures(t, db.DB)
+
+	repo := persistence.NewUserRepository(db.DB)
 	hasher := security.NewPasswordHasher()
 	jwt := security.NewJWTManager("TestSecretKey")
-	refreshTokenRepo := persistence.NewRefreshTokenRepository(ts.Redis)
+	refreshTokenRepo := persistence.NewRefreshTokenRepository(rdb.Client)
 	refreshTokenManager := security.NewRefreshTokenManager()
 
 	return auth.NewLogin(repo, hasher, jwt, refreshTokenRepo, refreshTokenManager)

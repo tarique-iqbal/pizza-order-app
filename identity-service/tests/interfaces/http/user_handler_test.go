@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	userapp "identity-service/internal/application/user"
+	"identity-service/internal/domain/user"
 	"identity-service/internal/infrastructure/auth"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/security"
 	httpui "identity-service/internal/interfaces/http"
 	"identity-service/internal/shared/event"
 	"identity-service/tests/infrastructure/db/fixtures"
+	"identity-service/tests/testutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -46,28 +48,29 @@ func (m *MockEventPublisher) PublishRaw(ctx context.Context, topic string, jsonD
 	return nil
 }
 
-func setupUserHandler() *httpui.UserHandler {
-	ts := testStorage()
-	truncateTables(ts.DB)
+func setupUserHandler(t *testing.T) *httpui.UserHandler {
+	db := testutil.DB(t)
+	db.TruncateTables(t, testutil.TableEmailVerification, testutil.TableUser)
 
-	emailVerificationRepo := persistence.NewEmailVerificationRepository(ts.DB)
+	_ = fixtures.LoadEmailVerificationFixtures(t, db.DB)
+	_ = fixtures.LoadUserFixtures(t, db.DB)
+
+	emailVerificationRepo := persistence.NewEmailVerificationRepository(db.DB)
 	codeVerifier := auth.NewEmailVerifier(emailVerificationRepo)
 	hasher := security.NewPasswordHasher()
-	userRepo := persistence.NewUserRepository(ts.DB)
-	outboxRepo := persistence.NewOutboxRepository(ts.DB)
+	userRepo := persistence.NewUserRepository(db.DB)
+	outboxRepo := persistence.NewOutboxRepository(db.DB)
 	mockPublisher = &MockEventPublisher{}
 
 	register := userapp.NewRegisterCustomer(codeVerifier, userRepo, hasher, mockPublisher)
-	registerOwner := userapp.NewRegisterOwner(ts.DB, codeVerifier, hasher, userRepo, outboxRepo, mockPublisher)
+	registerOwner := userapp.NewRegisterOwner(db.DB, codeVerifier, hasher, userRepo, outboxRepo, mockPublisher)
 	findByID := userapp.NewFindByID(userRepo)
-
-	_ = fixtures.LoadEmailVerificationFixtures(ts.DB)
 
 	return httpui.NewUserHandler(register, registerOwner, findByID)
 }
 
 func TestUserHandler_RegisterOwner(t *testing.T) {
-	handler := setupUserHandler()
+	handler := setupUserHandler(t)
 
 	tests := []struct {
 		name           string
@@ -113,11 +116,16 @@ func TestUserHandler_RegisterOwner(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ts := testStorage()
-			truncateTables(ts.DB)
+			db := testutil.DB(t)
+			db.TruncateTables(
+				t,
+				testutil.TableEmailVerification,
+				testutil.TableUser,
+				testutil.TableOutboxEvent,
+			)
 
-			_ = fixtures.LoadEmailVerificationFixtures(ts.DB)
-			_ = fixtures.LoadUserFixtures(ts.DB)
+			_ = fixtures.LoadEmailVerificationFixtures(t, db.DB)
+			_ = fixtures.LoadUserFixtures(t, db.DB)
 
 			router := gin.Default()
 			router.POST("/owners", handler.RegisterOwner)
@@ -145,7 +153,7 @@ func TestUserHandler_RegisterOwner(t *testing.T) {
 }
 
 func TestUserHandler_RegisterCustomer(t *testing.T) {
-	handler := setupUserHandler()
+	handler := setupUserHandler(t)
 
 	tests := []struct {
 		name           string
@@ -187,11 +195,16 @@ func TestUserHandler_RegisterCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ts := testStorage()
-			truncateTables(ts.DB)
+			db := testutil.DB(t)
+			db.TruncateTables(
+				t,
+				testutil.TableEmailVerification,
+				testutil.TableUser,
+				testutil.TableOutboxEvent,
+			)
 
-			_ = fixtures.LoadEmailVerificationFixtures(ts.DB)
-			_ = fixtures.LoadUserFixtures(ts.DB)
+			_ = fixtures.LoadEmailVerificationFixtures(t, db.DB)
+			_ = fixtures.LoadUserFixtures(t, db.DB)
 
 			router := gin.Default()
 			router.POST("/customers", handler.RegisterCustomer)
@@ -219,18 +232,18 @@ func TestUserHandler_RegisterCustomer(t *testing.T) {
 }
 
 func TestUserHandler_FindByID_Success(t *testing.T) {
-	ts := testStorage()
-	handler := setupUserHandler()
+	handler := setupUserHandler(t)
+	db := testutil.DB(t)
 
-	u := fixtures.NewUser()
-	user, err := fixtures.CreateUser(ts.DB, u)
+	var u user.User
+	err := db.DB.Where("email = ?", "existing@example.com").First(&u).Error // from fixture
 	require.NoError(t, err)
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
+	router.Use(MockAuthMiddleware(u.ID.String(), u.Role))
 	router.GET("/users/:id", handler.FindByID)
 
-	req, _ := http.NewRequest(http.MethodGet, "/users/"+user.ID.String(), nil)
+	req, _ := http.NewRequest(http.MethodGet, "/users/"+u.ID.String(), nil)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer mock-valid-token")
 
@@ -243,24 +256,24 @@ func TestUserHandler_FindByID_Success(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &res)
 	require.NoError(t, err)
 
-	assert.Equal(t, user.ID, res.ID)
-	assert.Equal(t, user.FirstName, res.Name.First)
-	assert.Equal(t, user.LastName, res.Name.Last)
-	assert.Equal(t, user.Email, res.Email)
-	assert.Equal(t, user.Role, res.Role)
-	assert.Equal(t, user.Status, res.Status)
+	assert.Equal(t, u.ID, res.ID)
+	assert.Equal(t, u.FirstName, res.Name.First)
+	assert.Equal(t, u.LastName, res.Name.Last)
+	assert.Equal(t, u.Email, res.Email)
+	assert.Equal(t, u.Role, res.Role)
+	assert.Equal(t, u.Status, res.Status)
 }
 
 func TestUserHandler_FindByID_NotFound(t *testing.T) {
-	ts := testStorage()
-	handler := setupUserHandler()
+	handler := setupUserHandler(t)
+	db := testutil.DB(t)
 
-	u := fixtures.NewUser()
-	user, err := fixtures.CreateUser(ts.DB, u)
+	var u user.User
+	err := db.DB.Where("email = ?", "existing@example.com").First(&u).Error // from fixture
 	require.NoError(t, err)
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
+	router.Use(MockAuthMiddleware(u.ID.String(), u.Role))
 	router.GET("/users/:id", handler.FindByID)
 
 	newID, _ := uuid.NewV7()
@@ -282,18 +295,18 @@ func TestUserHandler_FindByID_NotFound(t *testing.T) {
 }
 
 func TestUserHandler_FindByID_Failure_Unauthorized(t *testing.T) {
-	ts := testStorage()
-	handler := setupUserHandler()
+	handler := setupUserHandler(t)
+	db := testutil.DB(t)
 
-	u := fixtures.NewUser()
-	user, err := fixtures.CreateUser(ts.DB, u)
+	var u user.User
+	err := db.DB.Where("email = ?", "existing@example.com").First(&u).Error // from fixture
 	require.NoError(t, err)
 
 	router := gin.Default()
-	router.Use(MockAuthMiddleware(user.ID.String(), user.Role))
+	router.Use(MockAuthMiddleware(u.ID.String(), u.Role))
 	router.GET("/users/:id", handler.FindByID)
 
-	req, _ := http.NewRequest(http.MethodGet, "/users/"+user.ID.String(), nil)
+	req, _ := http.NewRequest(http.MethodGet, "/users/"+u.ID.String(), nil)
 	req.Header.Set("Content-Type", "application/json")
 	// No Authorization header
 
