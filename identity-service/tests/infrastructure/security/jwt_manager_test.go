@@ -3,11 +3,11 @@ package security_test
 import (
 	"identity-service/internal/domain/auth"
 	"identity-service/internal/infrastructure/security"
+	"identity-service/tests/testutil"
 	"testing"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +24,7 @@ func InitJWT() auth.JWTManager {
 func TestJWTManager_GenerateToken(t *testing.T) {
 	jwtManager := InitJWT()
 
-	userID, _ := uuid.NewV7()
+	userID := testutil.MustNewID()
 	role := "customer"
 
 	tokenString, err := jwtManager.Generate(userID.String(), role)
@@ -40,7 +40,7 @@ func TestJWTManager_GenerateToken(t *testing.T) {
 func TestJWTManager_ValidToken(t *testing.T) {
 	jwtManager := InitJWT()
 
-	userID, _ := uuid.NewV7()
+	userID := testutil.MustNewID()
 	role := "owner"
 
 	tokenString, _ := jwtManager.Generate(userID.String(), role)
@@ -59,7 +59,7 @@ func TestJWTManager_InvalidToken(t *testing.T) {
 func TestJWTManager_ExpiredToken(t *testing.T) {
 	jwtManager := InitJWT()
 
-	userID, _ := uuid.NewV7()
+	userID := testutil.MustNewID()
 
 	expiredClaims := jwtClaims{
 		UserID: userID.String(),

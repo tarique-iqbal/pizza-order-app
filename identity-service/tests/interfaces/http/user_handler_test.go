@@ -19,7 +19,6 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -276,7 +275,7 @@ func TestUserHandler_FindByID_NotFound(t *testing.T) {
 	router.Use(MockAuthMiddleware(u.ID.String(), u.Role))
 	router.GET("/users/:id", handler.FindByID)
 
-	newID, _ := uuid.NewV7()
+	newID := testutil.MustNewID()
 
 	req := httptest.NewRequest(http.MethodGet, "/users/"+newID.String(), nil)
 	req.Header.Set("Content-Type", "application/json")

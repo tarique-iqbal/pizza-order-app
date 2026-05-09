@@ -4,12 +4,12 @@ import (
 	"identity-service/internal/domain/auth"
 	"identity-service/internal/infrastructure/security"
 	"identity-service/internal/interfaces/http/middlewares"
+	"identity-service/tests/testutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +21,7 @@ func InitJWT() auth.JWTManager {
 func TestAuthMiddleware_ValidToken(t *testing.T) {
 	jwtManager := InitJWT()
 
-	userID, _ := uuid.NewV7()
+	userID := testutil.MustNewID()
 	role := "customer"
 
 	token, _ := jwtManager.Generate(userID.String(), role)

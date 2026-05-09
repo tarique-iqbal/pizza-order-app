@@ -3,10 +3,10 @@ package fixtures
 import (
 	"identity-service/internal/domain/user"
 	"identity-service/internal/infrastructure/security"
+	"identity-service/tests/testutil"
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -36,10 +36,7 @@ func LoadUserFixtures(t *testing.T, db *gorm.DB) error {
 	}
 
 	for _, u := range users {
-		userID, err := uuid.NewV7()
-		require.NoError(t, err)
-
-		u.ID = userID
+		u.ID = testutil.MustNewID()
 		err = db.Create(&u).Error
 		require.NoError(t, err)
 	}

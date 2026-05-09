@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -42,7 +41,7 @@ func TestFindByID_Success(t *testing.T) {
 		CreatedAt: time.Now().UTC(),
 	}
 
-	userID, _ := uuid.NewV7()
+	userID := testutil.MustNewID()
 	u.ID = userID
 
 	err := db.DB.WithContext(ctx).Create(u).Error
@@ -65,7 +64,7 @@ func TestFindByID_NotFound(t *testing.T) {
 	ctx := context.Background()
 	uc := setupFindByID(t)
 
-	userID, _ := uuid.NewV7()
+	userID := testutil.MustNewID()
 
 	res, err := uc.Execute(ctx, userID)
 

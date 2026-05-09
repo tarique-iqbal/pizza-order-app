@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -35,8 +34,7 @@ func TestUserRepository_Create(t *testing.T) {
 		CreatedAt: time.Now().UTC(),
 	}
 
-	userID, _ := uuid.NewV7()
-	usr.ID = userID
+	usr.ID = testutil.MustNewID()
 
 	err := userRepo.Create(context.Background(), &usr)
 
@@ -77,13 +75,12 @@ func TestUserRepository_FindByID_Success(t *testing.T) {
 		CreatedAt: time.Now().UTC(),
 	}
 
-	userID, _ := uuid.NewV7()
-	u.ID = userID
+	u.ID = testutil.MustNewID()
 
 	err := userRepo.Create(ctx, u)
 	require.NoError(t, err)
 
-	res, err := userRepo.FindByID(ctx, userID)
+	res, err := userRepo.FindByID(ctx, u.ID)
 
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -100,7 +97,7 @@ func TestUserRepository_FindByID_NotFound(t *testing.T) {
 	ctx := context.Background()
 	repo := setupUserRepo(t)
 
-	userID, _ := uuid.NewV7()
+	userID := testutil.MustNewID()
 
 	res, err := repo.FindByID(ctx, userID)
 
