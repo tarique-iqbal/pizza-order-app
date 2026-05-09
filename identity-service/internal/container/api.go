@@ -1,40 +1,41 @@
 package container
 
 import (
+	"os"
+
 	authapp "identity-service/internal/application/auth"
 	"identity-service/internal/application/user"
 	authinfra "identity-service/internal/infrastructure/auth"
-	"identity-service/internal/infrastructure/db"
-	"identity-service/internal/infrastructure/messaging"
 	"identity-service/internal/infrastructure/persistence"
 	"identity-service/internal/infrastructure/redis"
 	"identity-service/internal/infrastructure/security"
 	"identity-service/internal/interfaces/http"
 	"identity-service/internal/interfaces/http/middlewares"
-	"os"
-
-	"gorm.io/gorm"
 )
 
-type Container struct {
+type APIContainer struct {
+	*Shared
 	UserHandler *http.UserHandler
 	AuthHandler *http.AuthHandler
-	DB          *gorm.DB
-	Publisher   *messaging.RabbitMQPublisher
 	Middleware  *middlewares.Middleware
 }
 
-func NewContainer() (*Container, error) {
-	amqpURL := os.Getenv("RABBITMQ_URL")
+func NewAPIContainer() (*APIContainer, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	cfg := redis.Config{
 		Addr: os.Getenv("REDIS_ADDR"),
 	}
 
-	database, _ := db.InitDB()
-	rc, _ := redis.InitRedis(cfg)
+	base, err := NewShared()
+	if err != nil {
+		return nil, err
+	}
 
-	publisher := messaging.NewRabbitMQPublisher(amqpURL)
+	rc, err := redis.InitRedis(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	hasher := security.NewPasswordHasher()
 	jwtManager := security.NewJWTManager(jwtSecret)
 	refreshTokenManager := security.NewRefreshTokenManager()
@@ -42,37 +43,28 @@ func NewContainer() (*Container, error) {
 	otp := security.NewOTPGenerator()
 
 	refreshTokenRepo := persistence.NewRefreshTokenRepository(rc)
-	emailVerificationRepo := persistence.NewEmailVerificationRepository(database)
-	userRepo := persistence.NewUserRepository(database)
-	outboxRepo := persistence.NewOutboxRepository(database)
+	emailVerificationRepo := persistence.NewEmailVerificationRepository(base.DB)
+	userRepo := persistence.NewUserRepository(base.DB)
 
 	codeVerifier := authinfra.NewEmailVerifier(emailVerificationRepo)
 
 	// user
-	registerCustomer := user.NewRegisterCustomer(codeVerifier, userRepo, hasher, publisher)
-	registerOwner := user.NewRegisterOwner(database, codeVerifier, hasher, userRepo, outboxRepo, publisher)
+	registerCustomer := user.NewRegisterCustomer(codeVerifier, userRepo, hasher, base.Publisher)
+	registerOwner := user.NewRegisterOwner(base.DB, codeVerifier, hasher, userRepo, base.OutboxRepo, base.Publisher)
 	findByID := user.NewFindByID(userRepo)
 	userHandler := http.NewUserHandler(registerCustomer, registerOwner, findByID)
 
 	// auth
 	login := authapp.NewLogin(userRepo, hasher, jwtManager, refreshTokenRepo, refreshTokenManager)
-	emailOTP := authapp.NewRequestEmailOTP(emailVerificationRepo, otp, publisher)
+	emailOTP := authapp.NewRequestEmailOTP(emailVerificationRepo, otp, base.Publisher)
 	refreshToken := authapp.NewRefreshToken(jwtManager, refreshTokenRepo, refreshTokenManager)
 	logout := authapp.NewLogout(refreshTokenRepo, refreshTokenManager)
 	authHandler := http.NewAuthHandler(login, emailOTP, refreshToken, logout)
 
-	return &Container{
+	return &APIContainer{
+		Shared:      base,
 		UserHandler: userHandler,
 		AuthHandler: authHandler,
-		DB:          database,
-		Publisher:   publisher,
 		Middleware:  middleware,
 	}, nil
-}
-
-func (c *Container) Close() {
-	db, _ := c.DB.DB()
-	db.Close()
-
-	c.Publisher.Close()
 }
