@@ -16,7 +16,7 @@ CMD ["air", "-c", ".air.toml"]
 # Stage 3: Builder (Production Compilation)
 FROM base AS builder
 COPY identity-service/ .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /identity-service ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /identity-service ./cmd/api/main.go
 
 # Stage 4: Final (Production Image)
 FROM alpine:3.21

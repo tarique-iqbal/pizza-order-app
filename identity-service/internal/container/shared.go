@@ -36,8 +36,14 @@ func NewShared() (*Shared, error) {
 }
 
 func (c *Shared) Close() {
-	db, _ := c.DB.DB()
-	db.Close()
+	if c.DB != nil {
+		db, err := c.DB.DB()
+		if err == nil {
+			_ = db.Close()
+		}
+	}
 
-	c.Publisher.Close()
+	if c.Publisher != nil {
+		c.Publisher.Close()
+	}
 }
