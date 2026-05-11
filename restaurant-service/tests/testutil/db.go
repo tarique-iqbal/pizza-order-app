@@ -1,0 +1,53 @@
+package testutil
+
+import (
+	"sync"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
+
+	dbinfra "restaurant-service/internal/infrastructure/db"
+)
+
+const (
+	TableRestaurant        = "restaurants"
+	TableRestaurantAddress = "restaurant_addresses"
+	TablePizzaSize         = "pizza_sizes"
+)
+
+type TestDB struct {
+	DB *gorm.DB
+}
+
+var (
+	dbOnce sync.Once
+	db     *TestDB
+)
+
+func DB(t *testing.T) *TestDB {
+	dbOnce.Do(func() {
+		conn, err := dbinfra.InitDB()
+		if err != nil {
+			panic(err)
+		}
+
+		db = &TestDB{
+			DB: conn,
+		}
+	})
+
+	require.NotNil(t, db)
+
+	return db
+}
+
+func (db *TestDB) TruncateTables(t *testing.T, tables ...string) {
+	for _, table := range tables {
+		err := db.DB.Exec(
+			"TRUNCATE TABLE " + table + " RESTART IDENTITY CASCADE",
+		).Error
+
+		require.NoError(t, err)
+	}
+}
