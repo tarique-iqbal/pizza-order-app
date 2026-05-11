@@ -5,7 +5,7 @@ BEGIN
         SELECT 1 FROM pg_type WHERE typname = 'restaurant_delivery_type_enum'
     ) THEN
         CREATE TYPE restaurant_delivery_type_enum AS ENUM (
-            'own', 'third_party', 'none'
+            'own', 'external', 'none'
         );
     END IF;
 END$$;
@@ -34,7 +34,7 @@ CREATE TABLE restaurants (
     delivery_km SMALLINT
         CONSTRAINT ck_restaurants_delivery_km CHECK (delivery_km BETWEEN 1 AND 25),
 	delivery_type restaurant_delivery_type_enum NOT NULL DEFAULT 'none',
-    specialties VARCHAR(255),
+    specialties JSONB NOT NULL DEFAULT '[]',
     checklist JSONB NOT NULL,
     status restaurant_status_enum NOT NULL DEFAULT 'draft',
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

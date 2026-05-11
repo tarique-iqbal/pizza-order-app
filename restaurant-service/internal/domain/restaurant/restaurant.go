@@ -11,9 +11,9 @@ type DeliveryType string
 type RestaurantStatus string
 
 const (
-	DeliveryOwn        DeliveryType = "own"
-	DeliveryThirdParty DeliveryType = "third_party"
-	DeliveryNone       DeliveryType = "none"
+	DeliveryOwn      DeliveryType = "own"
+	DeliveryExternal DeliveryType = "external"
+	DeliveryNone     DeliveryType = "none"
 )
 
 const (
@@ -36,11 +36,11 @@ type Restaurant struct {
 	Pickup       bool             `gorm:"not null;default:true"`
 	DeliveryKm   *int16           `gorm:"check:delivery_km BETWEEN 1 AND 25"`
 	DeliveryType DeliveryType     `gorm:"type:restaurant_delivery_type_enum;not null;default:'none'"`
-	Specialties  *string          `gorm:"size:255"`
+	Specialties  datatypes.JSON   `gorm:"type:jsonb;default:'[]';not null"`
 	Checklist    datatypes.JSON   `gorm:"type:jsonb;not null"`
 	Status       RestaurantStatus `gorm:"type:restaurant_status_enum;not null;default:'draft'"`
-	CreatedAt    time.Time        `gorm:"autoCreateTime"`
-	UpdatedAt    *time.Time       `gorm:"autoUpdateTime"`
+	CreatedAt    time.Time        `gorm:"type:timestamptz;not null"`
+	UpdatedAt    *time.Time       `gorm:"type:timestamptz"`
 }
 
 func (Restaurant) TableName() string {
