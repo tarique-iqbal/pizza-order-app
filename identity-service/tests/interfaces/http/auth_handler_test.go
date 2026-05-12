@@ -176,7 +176,7 @@ func TestAuthHandler_Refresh_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	claims := auth.UserClaims{
-		UserID: "usr_232",
+		UserID: testutil.MustNewIDString(),
 		Role:   "owner",
 	}
 
@@ -265,7 +265,7 @@ func TestAuthHandler_Refresh_Rotation(t *testing.T) {
 	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
-		UserID: "usr_232",
+		UserID: testutil.MustNewIDString(),
 		Role:   "owner",
 	}
 

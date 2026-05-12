@@ -44,7 +44,7 @@ func TestRefreshToken_Success(t *testing.T) {
 	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
-		UserID: "usr_232",
+		UserID: testutil.MustNewIDString(),
 		Role:   "owner",
 	}
 
@@ -72,7 +72,7 @@ func TestRefreshToken_Rotation_InvalidatesOldToken(t *testing.T) {
 	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
-		UserID: "usr_232",
+		UserID: testutil.MustNewIDString(),
 		Role:   "owner",
 	}
 
@@ -114,7 +114,7 @@ func TestRefreshToken_ExpiredToken(t *testing.T) {
 	hashed := manager.Hash(rawToken)
 
 	claims := auth.UserClaims{
-		UserID: "usr_232",
+		UserID: testutil.MustNewIDString(),
 		Role:   "owner",
 	}
 
