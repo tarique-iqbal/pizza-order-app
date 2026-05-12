@@ -13,11 +13,14 @@ import (
 )
 
 func LoadRestaurantFixtures(t *testing.T, db *gorm.DB) error {
+	checklist := restaurant.NewChecklist()
+	checklist.Complete(restaurant.ChecklistBasic)
+
 	restaurants := []restaurant.Restaurant{
 		{
 			Name:      "Pizza Paradise",
 			VATNumber: "DE987687654",
-			Checklist: datatypes.JSON([]byte(`{"basic_info": true}`)),
+			Checklist: checklist,
 			CreatedAt: time.Now().UTC(),
 		},
 		{
@@ -26,11 +29,17 @@ func LoadRestaurantFixtures(t *testing.T, db *gorm.DB) error {
 			Slug:         testutil.StringPtr("anatolische-kueche"),
 			Email:        testutil.StringPtr("kontakt@anatolisch.de"),
 			Phone:        testutil.StringPtr("+49 40 76543210"),
-			DeliveryType: "own",
+			DeliveryType: restaurant.DeliveryOwn,
 			DeliveryKm:   testutil.Int16Ptr(7),
 			Specialties:  datatypes.JSON([]byte(`["italian"]`)),
-			Checklist:    datatypes.JSON([]byte(`{"basic_info": true}`)),
-			CreatedAt:    time.Now().UTC(),
+			Checklist: restaurant.Checklist{
+				restaurant.ChecklistBasic:    true,
+				restaurant.ChecklistContract: true,
+				restaurant.ChecklistAddress:  true,
+				restaurant.ChecklistDelivery: true,
+				restaurant.ChecklistPayment:  true,
+			},
+			CreatedAt: time.Now().UTC(),
 		},
 	}
 

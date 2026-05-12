@@ -37,7 +37,7 @@ type Restaurant struct {
 	DeliveryKm   *int16           `gorm:"check:delivery_km BETWEEN 1 AND 25"`
 	DeliveryType DeliveryType     `gorm:"type:restaurant_delivery_type_enum;not null;default:'none'"`
 	Specialties  datatypes.JSON   `gorm:"type:jsonb;default:'[]';not null"`
-	Checklist    datatypes.JSON   `gorm:"type:jsonb;not null"`
+	Checklist    Checklist        `gorm:"type:jsonb;serializer:json;not null"`
 	Status       RestaurantStatus `gorm:"type:restaurant_status_enum;not null;default:'draft'"`
 	CreatedAt    time.Time        `gorm:"type:timestamptz;not null"`
 	UpdatedAt    *time.Time       `gorm:"type:timestamptz"`

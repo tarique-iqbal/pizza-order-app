@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	"restaurant-service/internal/domain/restaurant"
@@ -38,18 +37,22 @@ func setupRestaurantRepoEnv(t *testing.T) restaurantRepoEnv {
 func TestRestaurantRepository_Create(t *testing.T) {
 	env := setupRestaurantRepoEnv(t)
 
+	checklist := restaurant.NewChecklist()
+	checklist.Complete(restaurant.ChecklistBasic)
+
 	res := restaurant.Restaurant{
 		ID:        testutil.MustNewID(),
 		OwnerID:   testutil.MustNewID(),
 		Name:      "Pizza Paradise",
 		VATNumber: "DE323678654",
-		Checklist: datatypes.JSON([]byte(`{"basic_info": true}`)),
+		Checklist: checklist,
 		CreatedAt: time.Now().UTC(),
 	}
 
 	err := env.RestaurantRepo.Create(context.Background(), &res)
 	assert.NoError(t, err)
 	assert.NotZero(t, res.ID)
+	assert.True(t, res.Checklist[restaurant.ChecklistBasic])
 }
 
 func TestRestaurantRepository_FindBySlug(t *testing.T) {
