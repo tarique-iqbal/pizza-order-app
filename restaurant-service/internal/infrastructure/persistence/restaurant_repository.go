@@ -5,29 +5,30 @@ import (
 	"errors"
 	"restaurant-service/internal/domain/restaurant"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-type RestaurantRepositoryImpl struct {
+type RestaurantRepository struct {
 	db *gorm.DB
 }
 
 func NewRestaurantRepository(db *gorm.DB) restaurant.RestaurantRepository {
-	return &RestaurantRepositoryImpl{db: db}
+	return &RestaurantRepository{db: db}
 }
 
-func (r *RestaurantRepositoryImpl) WithTx(tx *gorm.DB) restaurant.RestaurantRepository {
-	return &RestaurantRepositoryImpl{db: tx}
+func (r *RestaurantRepository) WithTx(tx *gorm.DB) restaurant.RestaurantRepository {
+	return &RestaurantRepository{db: tx}
 }
 
-func (repo *RestaurantRepositoryImpl) Create(
+func (repo *RestaurantRepository) Create(
 	ctx context.Context,
 	res *restaurant.Restaurant,
 ) error {
 	return repo.db.WithContext(ctx).Create(res).Error
 }
 
-func (repo *RestaurantRepositoryImpl) FindBySlug(
+func (repo *RestaurantRepository) FindBySlug(
 	ctx context.Context,
 	slug string,
 ) (*restaurant.Restaurant, error) {
@@ -39,20 +40,20 @@ func (repo *RestaurantRepositoryImpl) FindBySlug(
 	return &r, err
 }
 
-func (repo *RestaurantRepositoryImpl) IsOwnedBy(
+func (repo *RestaurantRepository) IsOwnedBy(
 	ctx context.Context,
-	restaurantID uint,
-	ownerID uint,
+	restaurantID uuid.UUID,
+	ownerID uuid.UUID,
 ) (bool, error) {
 	var count int64
 	err := repo.db.WithContext(ctx).
 		Model(&restaurant.Restaurant{}).
-		Where("id = ? AND user_id = ?", restaurantID, ownerID).
+		Where("id = ? AND owner_id = ?", restaurantID, ownerID).
 		Count(&count).Error
 	return count > 0, err
 }
 
-func (repo *RestaurantRepositoryImpl) IsSlugExists(
+func (repo *RestaurantRepository) IsSlugExists(
 	ctx context.Context,
 	slug string,
 ) (bool, error) {
@@ -64,7 +65,7 @@ func (repo *RestaurantRepositoryImpl) IsSlugExists(
 	return count > 0, err
 }
 
-func (repo *RestaurantRepositoryImpl) IsEmailExists(
+func (repo *RestaurantRepository) IsEmailExists(
 	ctx context.Context,
 	email string,
 ) (bool, error) {

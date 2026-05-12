@@ -1,80 +1,46 @@
 package fixtures
 
 import (
-	"restaurant-service/internal/domain/restaurant"
-	"restaurant-service/internal/domain/user"
+	"testing"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
+
+	"restaurant-service/internal/domain/restaurant"
+	"restaurant-service/tests/testutil"
 )
 
-func LoadRestaurantFixtures(db *gorm.DB, usr *user.User, restAddr *restaurant.RestaurantAddress) error {
+func LoadRestaurantFixtures(t *testing.T, db *gorm.DB) error {
 	restaurants := []restaurant.Restaurant{
 		{
-			RestaurantUUID: uuid.New(),
-			UserID:         usr.ID,
-			Name:           "Pizza Paradise",
-			Slug:           "pizza-paradise",
-			Email:          "kontakt@pizzaparadise.de",
-			Phone:          "+49 89 98765432",
-			AddressID:      restAddr.ID,
-			DeliveryType:   "own_delivery",
-			DeliveryKm:     5,
-			Specialties:    "italian,wood_fired",
-			CreatedAt:      time.Now(),
+			Name:      "Pizza Paradise",
+			VATNumber: "DE987687654",
+			Checklist: datatypes.JSON([]byte(`{"basic_info": true}`)),
+			CreatedAt: time.Now().UTC(),
 		},
 		{
-			RestaurantUUID: uuid.New(),
-			UserID:         usr.ID,
-			Name:           "Anatolische Küche",
-			Slug:           "anatolische-kueche",
-			Email:          "kontakt@anatolisch.de",
-			Phone:          "+49 40 76543210",
-			AddressID:      restAddr.ID,
-			DeliveryType:   "pick_up",
-			DeliveryKm:     7,
-			Specialties:    "italian",
-			CreatedAt:      time.Now(),
+			Name:         "Anatolische Küche",
+			VATNumber:    "DE987321321",
+			Slug:         testutil.StringPtr("anatolische-kueche"),
+			Email:        testutil.StringPtr("kontakt@anatolisch.de"),
+			Phone:        testutil.StringPtr("+49 40 76543210"),
+			DeliveryType: "own",
+			DeliveryKm:   testutil.Int16Ptr(7),
+			Specialties:  datatypes.JSON([]byte(`["italian"]`)),
+			Checklist:    datatypes.JSON([]byte(`{"basic_info": true}`)),
+			CreatedAt:    time.Now().UTC(),
 		},
 	}
 
 	for _, r := range restaurants {
-		if err := db.Create(&r).Error; err != nil {
-			return err
-		}
+		r.ID = testutil.MustNewID()
+		r.OwnerID = testutil.MustNewID()
+
+		err := db.Create(&r).Error
+		require.NoError(t, err)
 	}
 
 	return nil
-}
-
-func CreateRestaurant(db *gorm.DB) (*restaurant.Restaurant, error) {
-	user, err := CreateUser(db, "owner")
-	if err != nil {
-		return nil, err
-	}
-
-	restAddr, err := CreateRestaurantAddress(db)
-	if err != nil {
-		panic(err)
-	}
-
-	restaurant := restaurant.Restaurant{
-		RestaurantUUID: uuid.New(),
-		UserID:         user.ID,
-		Name:           "Pizza Tonio",
-		Slug:           "pizza-tonio",
-		Email:          "hallo@pizzatonio.de",
-		Phone:          "+49 69 22334455",
-		AddressID:      restAddr.ID,
-		DeliveryType:   "third_party",
-		DeliveryKm:     6,
-		Specialties:    "italian",
-		CreatedAt:      time.Now(),
-	}
-	if err := db.Create(&restaurant).Error; err != nil {
-		return nil, err
-	}
-
-	return &restaurant, nil
 }
