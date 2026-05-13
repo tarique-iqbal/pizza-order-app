@@ -46,3 +46,20 @@ type Restaurant struct {
 func (Restaurant) TableName() string {
 	return "restaurants"
 }
+
+func NewRestaurant(
+	id uuid.UUID,
+	ownerID uuid.UUID,
+	name string,
+	vatNumber string,
+	checklist Checklist,
+) *Restaurant {
+	return &Restaurant{
+		ID:        id,
+		OwnerID:   ownerID,
+		Name:      name,
+		VATNumber: vatNumber,
+		Checklist: checklist,
+		CreatedAt: time.Now().UTC(),
+	}
+}
