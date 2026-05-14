@@ -16,7 +16,7 @@ CMD ["air", "-c", ".air.toml"]
 # Stage 3: Builder (Production Compilation)
 FROM base AS builder
 COPY restaurant-service/ .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /restaurant-service ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /restaurant-service ./cmd/api/main.go
 
 # Stage 4: Final (Production Image)
 FROM alpine:3.21
