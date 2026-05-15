@@ -1,30 +1,76 @@
 package geocoder
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
+	"time"
+
 	"restaurant-service/internal/domain/restaurant"
 )
 
-type openCageGeocoder struct {
+type OpenCageGeocoder struct {
 	apiKey string
+	client *http.Client
 }
 
-func NewOpenCageGeocoder(apiKey string) restaurant.Geocoder {
-	return &openCageGeocoder{apiKey: apiKey}
+func NewOpenCageGeocoder(apiKey string) *OpenCageGeocoder {
+	return &OpenCageGeocoder{
+		apiKey: apiKey,
+		client: &http.Client{
+			Timeout: 5 * time.Second,
+		},
+	}
 }
 
-func (s *openCageGeocoder) GeocodeAddress(addr restaurant.RestaurantAddress) (float64, float64, error) {
-	query := fmt.Sprintf("%s %s, %s %s", addr.House, addr.Street, addr.PostalCode, addr.City)
-	endpoint := fmt.Sprintf("https://api.opencagedata.com/geocode/v1/json?q=%s&key=%s", url.QueryEscape(query), s.apiKey)
+func (g *OpenCageGeocoder) GeocodeAddress(
+	ctx context.Context,
+	addr restaurant.RestaurantAddress,
+) (float64, float64, error) {
+	baseURL := "https://api.opencagedata.com/geocode/v1/json"
 
-	resp, err := http.Get(endpoint)
+	query := strings.TrimSpace(fmt.Sprintf(
+		"%s %s, %s %s",
+		addr.House,
+		addr.Street,
+		addr.PostalCode,
+		addr.City,
+	))
+
+	u, err := url.Parse(baseURL)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, fmt.Errorf("invalid base url: %w", err)
+	}
+
+	q := u.Query()
+	q.Set("q", query)
+	q.Set("key", g.apiKey)
+	u.RawQuery = q.Encode()
+
+	endpoint := u.String()
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		endpoint,
+		nil,
+	)
+	if err != nil {
+		return 0, 0, fmt.Errorf("create request failed: %w", err)
+	}
+
+	resp, err := g.client.Do(req)
+	if err != nil {
+		return 0, 0, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, 0, fmt.Errorf("opencage geocode failed: status=%s", resp.Status)
+	}
 
 	var data struct {
 		Results []struct {
@@ -36,7 +82,7 @@ func (s *openCageGeocoder) GeocodeAddress(addr restaurant.RestaurantAddress) (fl
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return 0, 0, err
+		return 0, 0, fmt.Errorf("decode response failed: %w", err)
 	}
 
 	if len(data.Results) == 0 {
