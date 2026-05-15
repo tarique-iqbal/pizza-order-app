@@ -1,8 +1,6 @@
-package middlewares
+package middleware
 
 import (
-	"restaurant-service/internal/domain/auth"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,9 +9,9 @@ type Middleware struct {
 	EnsureOwner gin.HandlerFunc
 }
 
-func NewMiddleware(jwt auth.JWTService) *Middleware {
+func NewMiddleware() *Middleware {
 	return &Middleware{
-		Auth:        AuthMiddleware(jwt),
+		Auth:        AuthMiddleware(),
 		EnsureOwner: RequireRole("owner"),
 	}
 }
