@@ -39,9 +39,7 @@ func (h *RestaurantInitiated) Handle(ctx context.Context, event restaurant.Event
 	}
 
 	checklist := restaurant.NewChecklist()
-	if err := checklist.Complete(restaurant.ChecklistBasic); err != nil {
-		return err
-	}
+	checklist.Complete(restaurant.ChecklistBasic)
 
 	restaurant := restaurant.NewRestaurant(
 		restaurantID,

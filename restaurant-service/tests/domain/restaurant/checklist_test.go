@@ -21,49 +21,27 @@ func TestNewChecklist(t *testing.T) {
 func TestChecklist_Complete(t *testing.T) {
 	checklist := restaurant.NewChecklist()
 
-	err := checklist.Complete(restaurant.ChecklistBasic)
+	checklist.Complete(restaurant.ChecklistBasic)
 
-	assert.NoError(t, err)
 	assert.True(t, checklist[restaurant.ChecklistBasic])
-}
-
-func TestChecklist_Complete_InvalidItem(t *testing.T) {
-	checklist := restaurant.NewChecklist()
-
-	err := checklist.Complete(restaurant.ChecklistItem("invalid"))
-
-	assert.Error(t, err)
-	assert.Equal(t, "invalid checklist item: invalid", err.Error())
 }
 
 func TestChecklist_Reopen(t *testing.T) {
 	checklist := restaurant.NewChecklist()
 
-	err := checklist.Complete(restaurant.ChecklistBasic)
-	assert.NoError(t, err)
+	checklist.Complete(restaurant.ChecklistBasic)
 
 	assert.True(t, checklist[restaurant.ChecklistBasic])
 
-	err = checklist.Reopen(restaurant.ChecklistBasic)
+	checklist.Reopen(restaurant.ChecklistBasic)
 
-	assert.NoError(t, err)
 	assert.False(t, checklist[restaurant.ChecklistBasic])
-}
-
-func TestChecklist_Reopen_InvalidItem(t *testing.T) {
-	checklist := restaurant.NewChecklist()
-
-	err := checklist.Reopen(restaurant.ChecklistItem("invalid"))
-
-	assert.Error(t, err)
-	assert.Equal(t, "invalid checklist item: invalid", err.Error())
 }
 
 func TestChecklist_IsCompleted_ReturnsFalse(t *testing.T) {
 	checklist := restaurant.NewChecklist()
 
-	err := checklist.Complete(restaurant.ChecklistBasic)
-	assert.NoError(t, err)
+	checklist.Complete(restaurant.ChecklistBasic)
 
 	assert.False(t, checklist.IsCompleted())
 }
@@ -80,8 +58,7 @@ func TestChecklist_IsCompleted_ReturnsTrue(t *testing.T) {
 	}
 
 	for _, item := range items {
-		err := checklist.Complete(item)
-		assert.NoError(t, err)
+		checklist.Complete(item)
 	}
 
 	assert.True(t, checklist.IsCompleted())

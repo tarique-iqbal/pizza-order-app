@@ -1,7 +1,5 @@
 package restaurant
 
-import "fmt"
-
 type ChecklistItem string
 
 const (
@@ -24,24 +22,12 @@ func NewChecklist() Checklist {
 	}
 }
 
-func (c Checklist) Complete(item ChecklistItem) error {
-	if !item.isValid() {
-		return fmt.Errorf("invalid checklist item: %s", item)
-	}
-
+func (c Checklist) Complete(item ChecklistItem) {
 	c[item] = true
-
-	return nil
 }
 
-func (c Checklist) Reopen(item ChecklistItem) error {
-	if !item.isValid() {
-		return fmt.Errorf("invalid checklist item: %s", item)
-	}
-
+func (c Checklist) Reopen(item ChecklistItem) {
 	c[item] = false
-
-	return nil
 }
 
 func (c Checklist) IsCompleted() bool {
@@ -60,17 +46,4 @@ func (c Checklist) IsCompleted() bool {
 	}
 
 	return true
-}
-
-func (i ChecklistItem) isValid() bool {
-	switch i {
-	case ChecklistBasic,
-		ChecklistContract,
-		ChecklistAddress,
-		ChecklistDelivery,
-		ChecklistPayment:
-		return true
-	}
-
-	return false
 }
