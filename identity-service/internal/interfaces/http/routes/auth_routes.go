@@ -10,7 +10,7 @@ import (
 func SetupAuthRoutes(router *gin.Engine, handler *http.AuthHandler, m *middlewares.Middleware) {
 	routes := router.Group("/auth")
 
-	routes.POST("/email-verification", handler.CreateEmailVerification)
+	routes.POST("/email/verify", handler.CreateEmailVerification)
 	routes.POST("/login", handler.Login)
 
 	authRoutes := routes.Group("/")
