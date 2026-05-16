@@ -28,19 +28,49 @@ func (repo *RestaurantRepository) Create(
 	return repo.db.WithContext(ctx).Create(res).Error
 }
 
+func (repo *RestaurantRepository) Update(
+	ctx context.Context,
+	res *restaurant.Restaurant,
+) error {
+	return repo.db.WithContext(ctx).Save(res).Error
+}
+
 func (repo *RestaurantRepository) FindBySlug(
 	ctx context.Context,
 	slug string,
 ) (*restaurant.Restaurant, error) {
 	var r restaurant.Restaurant
-	err := repo.db.WithContext(ctx).Where("slug = ?", slug).First(&r).Error
+
+	err := repo.db.WithContext(ctx).
+		Where("slug = ?", slug).
+		Take(&r).Error
+
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
+
 	return &r, err
 }
 
-func (repo *RestaurantRepository) IsOwnedBy(
+func (repo *RestaurantRepository) FindByIDAndOwner(
+	ctx context.Context,
+	restaurantID uuid.UUID,
+	ownerID uuid.UUID,
+) (*restaurant.Restaurant, error) {
+	var r restaurant.Restaurant
+
+	err := repo.db.WithContext(ctx).
+		Where("id = ? AND owner_id = ?", restaurantID, ownerID).
+		Take(&r).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return &r, err
+}
+
+func (repo *RestaurantRepository) IsOwner(
 	ctx context.Context,
 	restaurantID uuid.UUID,
 	ownerID uuid.UUID,
