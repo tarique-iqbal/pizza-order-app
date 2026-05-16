@@ -1,16 +1,17 @@
 package middlewares_test
 
 import (
-	"identity-service/internal/domain/auth"
-	"identity-service/internal/infrastructure/security"
-	"identity-service/internal/interfaces/http/middlewares"
-	"identity-service/tests/testutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+
+	"identity-service/internal/domain/auth"
+	"identity-service/internal/infrastructure/security"
+	"identity-service/internal/interfaces/http/middlewares"
+	"identity-service/tests/testutil"
 )
 
 func InitJWT() auth.JWTManager {
@@ -34,10 +35,12 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 	ctx.Request = req
 
 	middlewares.AuthMiddleware(jwtManager)(ctx)
-	ctxUserID := ctx.MustGet("userID")
+	ctxUserID := ctx.MustGet(middlewares.CtxUserID)
+	ctxUserRole := ctx.MustGet(middlewares.CtxUserRole)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, userID.String(), ctxUserID)
+	assert.Equal(t, role, ctxUserRole)
 }
 
 func TestAuthMiddleware_InvalidToken(t *testing.T) {

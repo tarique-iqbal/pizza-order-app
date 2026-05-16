@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+
+	"identity-service/internal/interfaces/http/middlewares"
 )
 
 func TestMain(m *testing.M) {
@@ -30,8 +32,9 @@ func MockAuthMiddleware(userID string, role string) gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set("userID", userID)
-		ctx.Set("role", role)
+		ctx.Set(middlewares.CtxUserID, userID)
+		ctx.Set(middlewares.CtxUserRole, role)
+
 		ctx.Next()
 	}
 }

@@ -1,11 +1,17 @@
 package middlewares
 
 import (
-	"identity-service/internal/domain/auth"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+
+	"identity-service/internal/domain/auth"
+)
+
+const (
+	CtxUserID   = "userID"
+	CtxUserRole = "userRole"
 )
 
 func AuthMiddleware(jwtManager auth.JWTManager) gin.HandlerFunc {
@@ -26,8 +32,8 @@ func AuthMiddleware(jwtManager auth.JWTManager) gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set("userID", claims.UserID)
-		ctx.Set("role", claims.Role)
+		ctx.Set(CtxUserID, claims.UserID)
+		ctx.Set(CtxUserRole, claims.Role)
 
 		ctx.Next()
 	}
