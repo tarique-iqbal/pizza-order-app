@@ -69,6 +69,7 @@ func (h *UserHandler) RegisterCustomer(ctx *gin.Context) {
 }
 
 func (h *UserHandler) FindByID(ctx *gin.Context) {
+	reqCtx := ctx.Request.Context()
 	idParam := ctx.Param("id")
 
 	userID, err := uuid.Parse(idParam)
@@ -77,7 +78,7 @@ func (h *UserHandler) FindByID(ctx *gin.Context) {
 		return
 	}
 
-	response, err := h.findByID.Execute(ctx, userID)
+	response, err := h.findByID.Execute(reqCtx, userID)
 	if err != nil {
 		if err.Error() == "user not found" {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

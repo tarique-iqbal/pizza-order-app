@@ -30,8 +30,8 @@ func NewAuthHandler(
 }
 
 func (h *AuthHandler) Login(ctx *gin.Context) {
-	var input auth.LoginRequest
 	reqCtx := ctx.Request.Context()
+	var input auth.LoginRequest
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		errors := validation.ExtractValidationErrors(err)
@@ -49,8 +49,8 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 }
 
 func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {
-	var input auth.EmailVerificationRequest
 	reqCtx := ctx.Request.Context()
+	var input auth.EmailVerificationRequest
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		errors := validation.ExtractValidationErrors(err)
@@ -60,7 +60,9 @@ func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {
 
 	err := h.emailOTP.Execute(reqCtx, input)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create verification"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "could not create verification",
+		})
 		return
 	}
 
@@ -68,6 +70,7 @@ func (h *AuthHandler) CreateEmailVerification(ctx *gin.Context) {
 }
 
 func (h *AuthHandler) Refresh(ctx *gin.Context) {
+	reqCtx := ctx.Request.Context()
 	var input auth.RefreshRequest
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
@@ -75,7 +78,7 @@ func (h *AuthHandler) Refresh(ctx *gin.Context) {
 		return
 	}
 
-	response, err := h.refreshToken.Execute(ctx, input)
+	response, err := h.refreshToken.Execute(reqCtx, input)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -85,6 +88,7 @@ func (h *AuthHandler) Refresh(ctx *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(ctx *gin.Context) {
+	reqCtx := ctx.Request.Context()
 	var input auth.LogoutRequest
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
@@ -97,7 +101,7 @@ func (h *AuthHandler) Logout(ctx *gin.Context) {
 		return
 	}
 
-	if err := h.logout.Execute(ctx, input); err != nil {
+	if err := h.logout.Execute(reqCtx, input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
