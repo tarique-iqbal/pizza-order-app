@@ -127,7 +127,7 @@ func TestUserHandler_RegisterOwner(t *testing.T) {
 			_ = fixtures.LoadUserFixtures(t, db.DB)
 
 			router := gin.Default()
-			router.POST("/owners", handler.RegisterOwner)
+			router.POST("/users/owners", handler.RegisterOwner)
 
 			var reqBody []byte
 			if tt.rawBody != "" {
@@ -136,7 +136,7 @@ func TestUserHandler_RegisterOwner(t *testing.T) {
 				reqBody, _ = json.Marshal(tt.body)
 			}
 
-			req, _ := http.NewRequest("POST", "/owners", bytes.NewBuffer(reqBody))
+			req, _ := http.NewRequest("POST", "/users/owners", bytes.NewBuffer(reqBody))
 			req.Header.Set("Content-Type", "application/json")
 
 			w := httptest.NewRecorder()
@@ -206,7 +206,7 @@ func TestUserHandler_RegisterCustomer(t *testing.T) {
 			_ = fixtures.LoadUserFixtures(t, db.DB)
 
 			router := gin.Default()
-			router.POST("/customers", handler.RegisterCustomer)
+			router.POST("/users/customers", handler.RegisterCustomer)
 
 			var reqBody []byte
 			if tt.rawBody != "" {
@@ -215,7 +215,7 @@ func TestUserHandler_RegisterCustomer(t *testing.T) {
 				reqBody, _ = json.Marshal(tt.body)
 			}
 
-			req, _ := http.NewRequest("POST", "/customers", bytes.NewBuffer(reqBody))
+			req, _ := http.NewRequest("POST", "/users/customers", bytes.NewBuffer(reqBody))
 			req.Header.Set("Content-Type", "application/json")
 
 			w := httptest.NewRecorder()

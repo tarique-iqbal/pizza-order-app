@@ -8,12 +8,13 @@ import (
 )
 
 func SetupUserRoutes(router *gin.Engine, handler *http.UserHandler, m *middlewares.Middleware) {
-	router.POST("/owners", handler.RegisterOwner)
-	router.POST("/customers", handler.RegisterCustomer)
+	users := router.Group("/users")
 
-	authRoutes := router.Group("/users")
-	authRoutes.Use(m.Auth)
-	{
-		authRoutes.GET("/:id", handler.FindByID)
-	}
+	users.POST("/owners", handler.RegisterOwner)
+	users.POST("/customers", handler.RegisterCustomer)
+
+	protected := users.Group("")
+	protected.Use(m.Auth)
+
+	protected.GET("/:id", handler.FindByID)
 }

@@ -8,15 +8,14 @@ import (
 )
 
 func SetupAuthRoutes(router *gin.Engine, handler *http.AuthHandler, m *middlewares.Middleware) {
-	routes := router.Group("/auth")
+	auth := router.Group("/auth")
 
-	routes.POST("/email/verify", handler.CreateEmailVerification)
-	routes.POST("/login", handler.Login)
+	auth.POST("/email/verify", handler.CreateEmailVerification)
+	auth.POST("/login", handler.Login)
 
-	authRoutes := routes.Group("/")
-	authRoutes.Use(m.Auth)
-	{
-		authRoutes.POST("/refresh", handler.Refresh)
-		authRoutes.POST("/logout", handler.Logout)
-	}
+	protected := auth.Group("")
+	protected.Use(m.Auth)
+
+	protected.POST("/refresh", handler.Refresh)
+	protected.POST("/logout", handler.Logout)
 }
