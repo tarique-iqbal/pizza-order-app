@@ -6,6 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	CtxUserID   = "userID"
+	CtxUserRole = "userRole"
+)
+
 func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userID := ctx.GetHeader("X-User-ID")
@@ -25,8 +30,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set("userID", userID)
-		ctx.Set("userRole", userRole)
+		ctx.Set(CtxUserID, userID)
+		ctx.Set(CtxUserRole, userRole)
 
 		ctx.Next()
 	}

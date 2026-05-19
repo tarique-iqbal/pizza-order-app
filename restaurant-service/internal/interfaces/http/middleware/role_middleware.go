@@ -8,7 +8,7 @@ import (
 
 func RequireRole(expectedRole string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userRole := ctx.MustGet("userRole").(string)
+		userRole := ctx.MustGet(CtxUserRole).(string)
 
 		if userRole != expectedRole {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
