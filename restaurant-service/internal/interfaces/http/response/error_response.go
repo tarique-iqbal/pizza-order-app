@@ -1,26 +1,30 @@
 package response
 
 import (
+	"errors"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 
 	"restaurant-service/internal/domain/restaurant"
 	apperr "restaurant-service/internal/shared/errors"
-
-	"github.com/gin-gonic/gin"
 )
 
 func HandleError(ctx *gin.Context, err error) {
-	switch err {
-	case apperr.ErrUnauthorized:
+	switch {
+	case errors.Is(err, apperr.ErrUnauthorized):
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-	case apperr.ErrForbidden:
+
+	case errors.Is(err, apperr.ErrForbidden):
 		ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-	case apperr.ErrNotFound:
+
+	case errors.Is(err, apperr.ErrNotFound):
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-	case apperr.ErrConflict,
-		restaurant.ErrPizzaSizeAlreadyExists,
-		restaurant.ErrEmailAlreadyExists:
+
+	case errors.Is(err, apperr.ErrConflict) ||
+		errors.Is(err, restaurant.ErrEmailAlreadyExists):
 		ctx.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+
 	default:
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 	}
