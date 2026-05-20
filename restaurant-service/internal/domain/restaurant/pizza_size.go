@@ -2,15 +2,14 @@ package restaurant
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type PizzaSize struct {
-	ID           uint       `gorm:"primaryKey"`
-	RestaurantID uint       `gorm:"not null;index"`
-	Title        string     `gorm:"size:63;not null"`
-	Size         int        `gorm:"not null"`
-	CreatedAt    time.Time  `gorm:"autoCreateTime"`
-	UpdatedAt    *time.Time `gorm:"autoUpdateTime;default:null"`
+	ID         uuid.UUID `gorm:"type:uuid;primaryKey"`
+	DiameterCm int16     `gorm:"not null;unique;check:diameter_cm BETWEEN 20 AND 45"`
+	CreatedAt  time.Time `gorm:"type:timestamptz;not null;default:CURRENT_TIMESTAMP"`
 }
 
 func (PizzaSize) TableName() string {
