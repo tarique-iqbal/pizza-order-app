@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"restaurant-service/internal/domain/restaurant"
@@ -28,17 +27,17 @@ func NewOpenCageGeocoder(apiKey string) *OpenCageGeocoder {
 
 func (g *OpenCageGeocoder) GeocodeAddress(
 	ctx context.Context,
-	addr restaurant.RestaurantAddress,
+	addr restaurant.Address,
 ) (float64, float64, error) {
 	baseURL := "https://api.opencagedata.com/geocode/v1/json"
 
-	query := strings.TrimSpace(fmt.Sprintf(
+	query := fmt.Sprintf(
 		"%s %s, %s %s",
 		addr.House,
 		addr.Street,
 		addr.PostalCode,
 		addr.City,
-	))
+	)
 
 	u, err := url.Parse(baseURL)
 	if err != nil {
