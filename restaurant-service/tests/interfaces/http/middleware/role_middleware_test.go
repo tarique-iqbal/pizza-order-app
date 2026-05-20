@@ -5,10 +5,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"restaurant-service/internal/interfaces/http/middleware"
-
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+
+	"restaurant-service/internal/interfaces/http/middleware"
 )
 
 func TestRequireRole(t *testing.T) {
@@ -17,8 +17,16 @@ func TestRequireRole(t *testing.T) {
 		role         string
 		expectedCode int
 	}{
-		{"CorrectRole", "owner", http.StatusOK},
-		{"IncorrectRole", "user", http.StatusForbidden},
+		{
+			name:         "authorized",
+			role:         "owner",
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "forbidden",
+			role:         "user",
+			expectedCode: http.StatusForbidden,
+		},
 	}
 
 	for _, tt := range tests {
@@ -28,21 +36,23 @@ func TestRequireRole(t *testing.T) {
 			r := gin.New()
 
 			r.Use(func(c *gin.Context) {
-				c.Set("userRole", tt.role)
+				c.Set(middleware.CtxUserRole, tt.role)
 				c.Next()
 			})
 
 			r.Use(middleware.RequireRole("owner"))
 
-			url := "/restaurants/019e26ff-37de-7ed2-b093-b3684613c7cc/addresses"
+			url := "/restaurants/019e26ff-37de-7ed2-b093-b3684613c7cc/address"
 
-			r.GET(url, func(c *gin.Context) {
+			r.PATCH(url, func(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{
 					"message": "success",
 				})
 			})
 
-			req, _ := http.NewRequest(http.MethodGet, url, nil)
+			req, err := http.NewRequest(http.MethodPatch, url, nil)
+			assert.NoError(t, err)
+
 			w := httptest.NewRecorder()
 
 			r.ServeHTTP(w, req)

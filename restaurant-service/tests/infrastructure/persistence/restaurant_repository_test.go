@@ -15,12 +15,12 @@ import (
 	"restaurant-service/tests/testutil"
 )
 
-type restaurantRepoEnv struct {
+type restaurantRepoSetup struct {
 	DB             *gorm.DB
 	RestaurantRepo restaurant.RestaurantRepository
 }
 
-func setupRestaurantRepoEnv(t *testing.T) restaurantRepoEnv {
+func setupRestaurantRepo(t *testing.T) restaurantRepoSetup {
 	db := testutil.DB(t)
 	db.TruncateTables(t, testutil.TableRestaurant)
 
@@ -28,14 +28,14 @@ func setupRestaurantRepoEnv(t *testing.T) restaurantRepoEnv {
 
 	restaurantRepo := persistence.NewRestaurantRepository(db.DB)
 
-	return restaurantRepoEnv{
+	return restaurantRepoSetup{
 		DB:             db.DB,
 		RestaurantRepo: restaurantRepo,
 	}
 }
 
 func TestRestaurantRepository_Create(t *testing.T) {
-	env := setupRestaurantRepoEnv(t)
+	setup := setupRestaurantRepo(t)
 
 	checklist := restaurant.NewChecklist()
 	checklist.Complete(restaurant.ChecklistBasic)
@@ -49,17 +49,17 @@ func TestRestaurantRepository_Create(t *testing.T) {
 		CreatedAt: time.Now().UTC(),
 	}
 
-	err := env.RestaurantRepo.Create(context.Background(), &res)
+	err := setup.RestaurantRepo.Create(context.Background(), &res)
 	assert.NoError(t, err)
 	assert.NotZero(t, res.ID)
 	assert.True(t, res.Checklist[restaurant.ChecklistBasic])
 }
 
 func TestRestaurantRepository_Update(t *testing.T) {
-	env := setupRestaurantRepoEnv(t)
+	setup := setupRestaurantRepo(t)
 
 	var res restaurant.Restaurant
-	err := env.DB.First(&res).Error
+	err := setup.DB.First(&res).Error
 	assert.NoError(t, err)
 
 	deliveryKm := int16(5)
@@ -68,11 +68,11 @@ func TestRestaurantRepository_Update(t *testing.T) {
 	res.DeliveryType = restaurant.DeliveryOwn
 	res.Checklist.Complete(restaurant.ChecklistDelivery)
 
-	err = env.RestaurantRepo.Update(context.Background(), &res)
+	err = setup.RestaurantRepo.Update(context.Background(), &res)
 	assert.NoError(t, err)
 
 	var r restaurant.Restaurant
-	err = env.DB.Take(&r, "id = ?", res.ID).Error
+	err = setup.DB.Take(&r, "id = ?", res.ID).Error
 	assert.NoError(t, err)
 
 	assert.NotNil(t, r.DeliveryKm)
@@ -82,9 +82,9 @@ func TestRestaurantRepository_Update(t *testing.T) {
 }
 
 func TestRestaurantRepository_FindBySlug(t *testing.T) {
-	env := setupRestaurantRepoEnv(t)
+	setup := setupRestaurantRepo(t)
 
-	res, err := env.RestaurantRepo.FindBySlug(
+	res, err := setup.RestaurantRepo.FindBySlug(
 		context.Background(),
 		"anatolische-kueche", // from fixture
 	)
@@ -94,7 +94,7 @@ func TestRestaurantRepository_FindBySlug(t *testing.T) {
 	assert.NotNil(t, res.Slug)
 	assert.Equal(t, "anatolische-kueche", *res.Slug)
 
-	res, err = env.RestaurantRepo.FindBySlug(
+	res, err = setup.RestaurantRepo.FindBySlug(
 		context.Background(),
 		"not-exist",
 	)
@@ -103,10 +103,10 @@ func TestRestaurantRepository_FindBySlug(t *testing.T) {
 }
 
 func TestRestaurantRepository_FindByIDAndOwner(t *testing.T) {
-	env := setupRestaurantRepoEnv(t)
+	setup := setupRestaurantRepo(t)
 
 	var existing restaurant.Restaurant
-	err := env.DB.First(&existing).Error
+	err := setup.DB.First(&existing).Error
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -135,7 +135,7 @@ func TestRestaurantRepository_FindByIDAndOwner(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, err := env.RestaurantRepo.FindByIDAndOwner(
+			res, err := setup.RestaurantRepo.FindByIDAndOwner(
 				context.Background(),
 				tt.restaurantID,
 				tt.ownerID,

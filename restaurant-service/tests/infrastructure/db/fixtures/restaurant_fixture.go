@@ -40,7 +40,8 @@ func LoadRestaurantFixtures(t *testing.T, db *gorm.DB) error {
 			},
 			Status: restaurant.StatusDraft,
 			Address: restaurant.Address{
-				Street:     "Musterstraße 12",
+				House:      "12",
+				Street:     "Musterstraße",
 				PostalCode: "20095",
 				City:       "Hamburg",
 			},
