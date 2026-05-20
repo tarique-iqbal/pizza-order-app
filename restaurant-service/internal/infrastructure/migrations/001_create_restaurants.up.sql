@@ -61,10 +61,10 @@ CREATE TABLE restaurants (
         CHECK (delivery_km BETWEEN 1 AND 25),
     delivery_type restaurant_delivery_type_enum
         NOT NULL DEFAULT 'none',
-    delivery_fee SMALLINT NOT NULL DEFAULT 0
+    delivery_fee NUMERIC(5,2) NOT NULL DEFAULT 0.00
         CONSTRAINT ck_restaurants_delivery_fee
         CHECK (delivery_fee >= 0),
-    minimum_order SMALLINT NOT NULL DEFAULT 0
+    minimum_order NUMERIC(6,2) NOT NULL DEFAULT 0.00
         CONSTRAINT ck_restaurants_minimum_order
         CHECK (minimum_order >= 0),
     rating NUMERIC(2,1) NOT NULL DEFAULT 0

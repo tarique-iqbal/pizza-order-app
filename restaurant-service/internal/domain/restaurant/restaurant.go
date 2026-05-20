@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	"gorm.io/datatypes"
 )
 
@@ -52,8 +53,8 @@ type Restaurant struct {
 	Currency     string           `gorm:"type:char(3);not null;default:'EUR';size:3"`
 	DeliveryKm   *int16           `gorm:"check:delivery_km BETWEEN 1 AND 25"`
 	DeliveryType DeliveryType     `gorm:"type:restaurant_delivery_type_enum;not null;default:'none'"`
-	DeliveryFee  int16            `gorm:"not null;default:0;check:delivery_fee >= 0"`
-	MinimumOrder int16            `gorm:"not null;default:0;check:minimum_order >= 0"`
+	DeliveryFee  decimal.Decimal  `gorm:"type:numeric(5,2);not null;default:0"`
+	MinimumOrder decimal.Decimal  `gorm:"type:numeric(6,2);not null;default:0"`
 	Rating       float64          `gorm:"type:numeric(2,1);not null;default:0;check:rating BETWEEN 0 AND 5"`
 	TotalReviews int32            `gorm:"not null;default:0;check:total_reviews >= 0"`
 	CreatedAt    time.Time        `gorm:"type:timestamptz;not null;default:CURRENT_TIMESTAMP"`

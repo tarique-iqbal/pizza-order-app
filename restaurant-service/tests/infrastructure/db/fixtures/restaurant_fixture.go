@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -24,14 +25,12 @@ func LoadRestaurantFixtures(t *testing.T, db *gorm.DB) error {
 			CreatedAt: time.Now().UTC(),
 		},
 		{
-			Name:         "Anatolische Küche",
-			VATNumber:    "DE987321321",
-			Slug:         testutil.StringPtr("anatolische-kueche"),
-			Email:        testutil.StringPtr("kontakt@anatolisch.de"),
-			Phone:        testutil.StringPtr("+49 40 76543210"),
-			DeliveryType: restaurant.DeliveryOwn,
-			DeliveryKm:   testutil.Int16Ptr(7),
-			Specialties:  datatypes.JSON([]byte(`["italian"]`)),
+			Name:      "Anatolische Küche",
+			VATNumber: "DE987321321",
+			Slug:      testutil.StringPtr("anatolische-kueche"),
+			Email:     testutil.StringPtr("kontakt@anatolisch.de"),
+			Phone:     testutil.StringPtr("+49 40 76543210"),
+			Website:   testutil.StringPtr("https://anatolisch.de"),
 			Checklist: restaurant.Checklist{
 				restaurant.ChecklistBasic:    true,
 				restaurant.ChecklistContract: true,
@@ -39,7 +38,34 @@ func LoadRestaurantFixtures(t *testing.T, db *gorm.DB) error {
 				restaurant.ChecklistDelivery: true,
 				restaurant.ChecklistPayment:  true,
 			},
-			CreatedAt: time.Now().UTC(),
+			Status: restaurant.StatusDraft,
+			Address: restaurant.Address{
+				Street:     "Musterstraße 12",
+				PostalCode: "20095",
+				City:       "Hamburg",
+			},
+			Lat: testutil.Float64Ptr(53.5511),
+			Lon: testutil.Float64Ptr(9.9937),
+			OpeningHours: datatypes.JSON([]byte(`{
+				"monday":    [{"open":"11:00","close":"22:00"}],
+				"tuesday":   [{"open":"11:00","close":"22:00"}],
+				"wednesday": [{"open":"11:00","close":"22:00"}],
+				"thursday":  [{"open":"11:00","close":"22:00"}],
+				"friday":    [{"open":"11:00","close":"23:00"}],
+				"saturday":  [{"open":"12:00","close":"23:00"}],
+				"sunday":    [{"open":"12:00","close":"21:00"}]
+			}`)),
+			Tags:         datatypes.JSON([]byte(`["vegetarian","vegan","halal"]`)),
+			Pickup:       true,
+			Currency:     "EUR",
+			DeliveryType: restaurant.DeliveryOwn,
+			DeliveryKm:   testutil.Int16Ptr(7),
+			DeliveryFee:  decimal.NewFromFloat(2.50),
+			MinimumOrder: decimal.NewFromFloat(18.00),
+			Rating:       4.6,
+			TotalReviews: 128,
+			CreatedAt:    time.Now().UTC(),
+			UpdatedAt:    testutil.TimePtr(time.Now().UTC()),
 		},
 	}
 

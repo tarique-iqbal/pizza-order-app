@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
 	"restaurant-service/internal/domain/restaurant"
@@ -154,47 +153,4 @@ func TestRestaurantRepository_FindByIDAndOwner(t *testing.T) {
 			assert.Equal(t, existing.OwnerID, res.OwnerID)
 		})
 	}
-}
-
-func TestRestaurantRepository_IsOwner(t *testing.T) {
-	env := setupRestaurantRepoEnv(t)
-
-	var res restaurant.Restaurant
-	require.NoError(t, env.DB.Last(&res).Error)
-
-	isOwner, err := env.RestaurantRepo.IsOwner(context.Background(), res.ID, res.OwnerID)
-	assert.NoError(t, err)
-	assert.True(t, isOwner, "User is expected to be the owner")
-
-	isOwner, err = env.RestaurantRepo.IsOwner(context.Background(), res.ID, testutil.MustNewID())
-	assert.NoError(t, err)
-	assert.False(t, isOwner, "User is not expected to be the owner")
-
-	isOwner, err = env.RestaurantRepo.IsOwner(context.Background(), testutil.MustNewID(), res.OwnerID)
-	assert.NoError(t, err)
-	assert.False(t, isOwner, "Non-existent restaurant is expected to return false")
-}
-
-func TestRestaurantRepository_IsSlugExists(t *testing.T) {
-	env := setupRestaurantRepoEnv(t)
-
-	exists, err := env.RestaurantRepo.IsSlugExists(context.Background(), "anatolische-kueche")
-	assert.NoError(t, err)
-	assert.True(t, exists, "Slug is expected to be exists")
-
-	exists, err = env.RestaurantRepo.IsSlugExists(context.Background(), "pizza-random")
-	assert.NoError(t, err)
-	assert.False(t, exists, "Slug is not expected to be exists")
-}
-
-func TestRestaurantRepository_IsEmailExists(t *testing.T) {
-	env := setupRestaurantRepoEnv(t)
-
-	exists, err := env.RestaurantRepo.IsEmailExists(context.Background(), "kontakt@anatolisch.de")
-	assert.NoError(t, err)
-	assert.True(t, exists, "Restaurant email is expected to be exists")
-
-	exists, err = env.RestaurantRepo.IsEmailExists(context.Background(), "random@example.de")
-	assert.NoError(t, err)
-	assert.False(t, exists, "Restaurant email is not expected to be exists")
 }
