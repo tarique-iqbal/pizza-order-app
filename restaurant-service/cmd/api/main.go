@@ -20,8 +20,7 @@ func main() {
 
 	router := gin.Default()
 	handlers := &routes.Handlers{
-		RestaurantHandler: app.RestaurantHandler,
-		PizzaSizeHandler:  app.PizzaSizeHandler,
+		AddressHandler: app.AddressHandler,
 	}
 
 	routes.SetupRoutes(router, handlers, app.Middleware)
