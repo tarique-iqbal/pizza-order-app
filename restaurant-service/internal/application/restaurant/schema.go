@@ -1,44 +1,55 @@
 package restaurant
 
-type CreateRequest struct {
-	UserID       uint     `json:"user_id"`
-	Name         string   `json:"name" binding:"required,max=100"`
-	Email        string   `json:"email" binding:"required,email"`
-	Phone        string   `json:"phone" binding:"required"`
-	House        string   `json:"house" binding:"required,max=63"`
-	Street       string   `json:"street" binding:"required,max=127"`
-	City         string   `json:"city" binding:"required,alphaunicode,max=63"`
-	PostalCode   string   `json:"postal_code" binding:"required"`
-	DeliveryType string   `json:"delivery_type" binding:"required,oneof=pick_up own_delivery third_party"`
-	DeliveryKm   int      `json:"delivery_km" binding:"required,min=1,max=25"`
-	Specialties  []string `json:"specialties"`
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+
+	"restaurant-service/internal/domain/restaurant"
+)
+
+type Address = restaurant.Address
+type DeliveryType = restaurant.DeliveryType
+type RestaurantStatus = restaurant.RestaurantStatus
+
+type UpdateAddressRequest struct {
+	House      string `json:"house" binding:"required,max=64"`
+	Street     string `json:"street" binding:"required,max=128"`
+	City       string `json:"city" binding:"required,alphaunicode,max=64"`
+	PostalCode string `json:"postalCode" binding:"required"`
 }
 
-type Response struct {
-	ID           uint     `json:"id"`
-	UserID       uint     `json:"user_id"`
-	Name         string   `json:"name"`
-	Slug         string   `json:"slug"`
-	Email        string   `json:"email"`
-	Phone        string   `json:"phone"`
-	Address      string   `json:"address"`
-	DeliveryType string   `json:"delivery_type"`
-	DeliveryKm   int      `json:"delivery_km"`
-	Specialties  []string `json:"specialties"`
-	CreatedAt    string   `json:"created_at"`
-	UpdatedAt    *string  `json:"updated_at,omitempty"`
+type RestaurantResponse struct {
+	ID             uuid.UUID        `json:"id"`
+	Name           string           `json:"name"`
+	Slug           *string          `json:"slug,omitempty"`
+	Contact        ContactResponse  `json:"contact"`
+	Address        Address          `json:"address"`
+	DisplayAddress string           `json:"displayAddress"`
+	Lat            *float64         `json:"lat,omitempty"`
+	Lon            *float64         `json:"lon,omitempty"`
+	Delivery       DeliveryResponse `json:"delivery"`
+	Currency       string           `json:"currency"`
+	Rating         float64          `json:"rating"`
+	TotalReviews   int32            `json:"totalReviews"`
+	Pickup         bool             `json:"pickup"`
+	Tags           []string         `json:"tags"`
+	OpeningHours   any              `json:"openingHours"`
+	Status         RestaurantStatus `json:"status"`
+	CreatedAt      time.Time        `json:"createdAt"`
+	UpdatedAt      *time.Time       `json:"updatedAt,omitempty"`
 }
 
-type CreatePizzaSizeRequest struct {
-	Title string `json:"title" binding:"required"`
-	Size  int    `json:"size" binding:"required,gt=0"`
+type ContactResponse struct {
+	Email   *string `json:"email,omitempty"`
+	Phone   *string `json:"phone,omitempty"`
+	Website *string `json:"website,omitempty"`
 }
 
-type PizzaSizeResponse struct {
-	ID           uint    `json:"id"`
-	RestaurantID uint    `json:"restaurant_id"`
-	Title        string  `json:"title"`
-	Size         int     `json:"size"`
-	CreatedAt    string  `json:"created_at"`
-	UpdatedAt    *string `json:"updated_at,omitempty"`
+type DeliveryResponse struct {
+	Type         DeliveryType    `json:"type"`
+	RadiusKm     *int16          `json:"radiusKm,omitempty"`
+	Fee          decimal.Decimal `json:"fee"`
+	MinimumOrder decimal.Decimal `json:"minimumOrder"`
 }
