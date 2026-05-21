@@ -1,18 +1,16 @@
 package routes
 
 import (
-	"restaurant-service/internal/interfaces/http"
-	"restaurant-service/internal/interfaces/http/middlewares"
+	"restaurant-service/internal/interfaces/http/handlers"
+	"restaurant-service/internal/interfaces/http/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handlers struct {
-	RestaurantHandler *http.RestaurantHandler
-	PizzaSizeHandler  *http.PizzaSizeHandler
+	AddressHandler *handlers.AddressHandler
 }
 
-func SetupRoutes(router *gin.Engine, h *Handlers, m *middlewares.Middleware) {
-	SetupRestaurantRoutes(router, h.RestaurantHandler, m)
-	SetupPizzaSizeRoutes(router, h.PizzaSizeHandler, m)
+func SetupRoutes(router *gin.Engine, h *Handlers, m *middleware.Middleware) {
+	SetupAddressRoutes(router, h.AddressHandler, m)
 }

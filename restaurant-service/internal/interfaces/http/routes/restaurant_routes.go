@@ -1,16 +1,17 @@
 package routes
 
 import (
-	"restaurant-service/internal/interfaces/http"
-	"restaurant-service/internal/interfaces/http/middlewares"
+	"restaurant-service/internal/interfaces/http/handlers"
+	"restaurant-service/internal/interfaces/http/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRestaurantRoutes(router *gin.Engine, rh *http.RestaurantHandler, m *middlewares.Middleware) {
+func SetupAddressRoutes(router *gin.Engine, h *handlers.AddressHandler, m *middleware.Middleware) {
 	restaurants := router.Group("/restaurants")
-	{
-		authRoutes := restaurants.Use(m.Auth, m.EnsureOwner)
-		authRoutes.POST("", rh.Create)
-	}
+
+	protected := restaurants.Group("")
+	protected.Use(m.Auth, m.EnsureOwner)
+
+	protected.PATCH("/:id/address", h.UpdateAddress)
 }
